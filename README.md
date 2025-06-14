@@ -18,7 +18,7 @@ This program checks whether a given polyhedron, in which all edge lengths are eq
 ## Algorithm Details
 Please refer to the following paper for details:
 
-Takumi Shiota and Toshiki Saitoh, "Overlapping edge unfoldings for convex regular-faced polyhedra", Theoretical Computer Science, Vol. 1002, Article 114593, June 2024.
+Takumi Shiota and Toshiki Saitoh, "Overlapping edge unfoldings for convex regular-faced polyhedra", Theoretical Computer Science, Vol. 1002: 114593, June 2024.
 
 [![DOI®](https://img.shields.io/badge/DOI%C2%AE-10.1016/j.tcs.2024.114593-FAB70C.svg?logo=doi&style=plastic)](https://doi.org/10.1016/j.tcs.2024.114593)
 
