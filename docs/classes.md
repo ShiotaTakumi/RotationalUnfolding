@@ -1,6 +1,6 @@
 # Class / Struct Definitions
-## class `Polyhedron`
-A class representing the structure of a polyhedron.
+## struct `Polyhedron`
+A struct representing the structure of a polyhedron.
 | Variable Name | Type | Description | Note |
 | --- | --- | --- | --- |
 | `num_faces` | `int` | Number of faces in the polyhedron. |  |
@@ -8,8 +8,8 @@ A class representing the structure of a polyhedron.
 | `adj_edges` | `std::vector<std::vector<int>>` | List of edge IDs per face. | Stored in counterclockwise order with respect to the outward normal. |
 | `adj_faces` | `std::vector<std::vector<int>>` | List of adjacent face IDs per face. | Aligned with `adj_edges`. |
 
-## class `UnfoldedFace`
-A class that stores information of a face after it has been unfolded in the plane.
+## struct `UnfoldedFace`
+A struct that stores information of a face after it has been unfolded in the plane.
 
 | Variable Name | Type | Description | Note |
 | --- | --- | --- | --- |
