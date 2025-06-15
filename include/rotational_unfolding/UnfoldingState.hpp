@@ -44,4 +44,4 @@ struct UnfoldingState {
     bool y_moved_off_axis;
 };
 
-#endif // UNFOLDING_STATE_HPP
+#endif  // UNFOLDING_STATE_HPP

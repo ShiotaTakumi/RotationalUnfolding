@@ -24,4 +24,4 @@ struct UnfoldedFace {
     double angle;
 };
 
-#endif // UNFOLDED_FACE_HPP
+#endif  // UNFOLDED_FACE_HPP
