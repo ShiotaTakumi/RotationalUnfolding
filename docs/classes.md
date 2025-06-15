@@ -8,6 +8,11 @@ A struct representing the structure of a polyhedron.
 | `adj_edges` | `std::vector<std::vector<int>>` | List of edge IDs per face. | Stored in counterclockwise order with respect to the outward normal. |
 | `adj_faces` | `std::vector<std::vector<int>>` | List of adjacent face IDs per face. | Aligned with `adj_edges`. |
 
+### Member Functions
+| Function Name | Signature | Description |
+| --- | --- | --- |
+| `getEdgeIndex` | `int getEdgeIndex(int face_id, int edge_id) const` | Returns the index of `edge_id` in `adj_edges[face_id]`. Returns `-1` if not found.
+
 ## struct `UnfoldedFace`
 A struct that stores information of a face after it has been unfolded in the plane.
 
