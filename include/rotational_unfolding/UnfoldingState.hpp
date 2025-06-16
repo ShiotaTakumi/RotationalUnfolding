@@ -8,11 +8,11 @@
 // procesat a recursive step.
 struct UnfoldingState {
     // ID of the face currently being placed.
-    int current_face_id;
+    int face_id;
 
     // ID of the edge used as the pivot for unfolding
     // from the previous face.
-    int pivot_edge_id;
+    int edge_id;
 
     // X-coordinate of the center of the current face.
     double x;

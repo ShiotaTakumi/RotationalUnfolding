@@ -29,8 +29,8 @@ A struct that stores information of a face after it has been unfolded in the pla
 A struct representing the current state of the unfolding process at a recursive step.
 | Variable Name | Type | Description | Note |
 | --- | --- | --- | --- |
-| `current_face_id` | `int` | ID of the face currently being placed. | In other words, the base of the current unfolding step. |
-| `pivot_edge_id` | `int` | ID of the edge used as the pivot for unfolding from the previous face. | Set to `-1` for the initial face. |
+| `face_id` | `int` | ID of the face currently being placed. | In other words, the base of the current unfolding step. |
+| `edge_id` | `int` | ID of the edge used as the pivot for unfolding from the previous face. | Set to `-1` for the initial face. |
 | `x` | `double` | X-coordinate of the center of the current face. | Approximate value. Set to `0.0` for the initial face. |
 | `y` | `double` | Y-coordinate of the center of the current face. | Approximate value. Set to `0.0` for the initial face. |
 | `angle` | `double` | Orientation angle pointing opposite to the unfolding direction. | Approximate value. Normalized to the range `[-180, 180]`. For the initial face, set to `-180`. |
