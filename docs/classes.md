@@ -34,8 +34,6 @@ A struct representing the current state of the unfolding process at a recursive 
 | `x` | `double` | X-coordinate of the center of the current face. | Approximate value. Set to `0.0` for the initial face. |
 | `y` | `double` | Y-coordinate of the center of the current face. | Approximate value. Set to `0.0` for the initial face. |
 | `angle` | `double` | Orientation angle pointing opposite to the unfolding direction. | Approximate value. Normalized to the range `[-180, 180]`. For the initial face, set to `-180`. |
-| `face_usage` | `std::vector<bool>` | A boolean vector indicating whether each face has not yet been unfolded (true if unused). | Size equals the total number of faces. |
-| `unfolding_sequence` | `std::vector<UnfoldedFace>` | List of faces that have already been unfolded before the current one. | Does not include the current face. |
 | `remaining_distance` | `double` |  Sum of the diameters of the circumscribed circle of all unused faces (including the current face). | Used for pruning. |
 | `symmetry_enabled` | `bool` | Whether symmetric pruning is enabled. |  |
 | `y_moved_off_axis` | `bool` | Whether the y-coordinate has ever been non-zero since the base face. | Only used if `symmetry_enabled` is true. |
