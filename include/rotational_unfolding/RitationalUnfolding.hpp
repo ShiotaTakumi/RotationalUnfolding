@@ -21,21 +21,7 @@ public:
         setupInitialState();
       }
 
-    void searchUnfoldingSequence() {
-        searchUnfoldingSequence(initial_state);
-    }
-
-private:
-    const Polyhedron& polyhedron;
-    int base_face_id;
-    int base_edge_id;
-    bool symmetry_enabled;
-    bool y_moved_off_axis;
-    UnfoldingState initial_state;
-
-    void setupInitialState() {
-        int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
-
+    void searchSequence() {
         std::vector<bool> face_usage(polyhedron.num_faces, true);
         face_usage[base_face_id] = false;
 
@@ -48,6 +34,20 @@ private:
             0.0,
             0.0
         });
+
+        searchUnfoldingSequence(initial_state, face_usage, unfolding_sequence);
+    }
+
+private:
+    const Polyhedron& polyhedron;
+    int base_face_id;
+    int base_edge_id;
+    bool symmetry_enabled;
+    bool y_moved_off_axis;
+    UnfoldingState initial_state;
+
+    void setupInitialState() {
+        int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
 
         double remaining_distance = 0.0;
         for (int i = 0; i < polyhedron.num_faces; ++i) {
@@ -72,23 +72,26 @@ private:
             next_face_x,
             next_face_y,
             next_face_angle,
-            face_usage,
-            unfolding_sequence,
             remaining_distance,
             symmetry_enabled,
             y_moved_off_axis
         };
     }
 
-    void searchUnfoldingSequence(UnfoldingState state) {
+    void searchUnfoldingSequence(UnfoldingState state,
+                                 const std::vector<bool>& face_usage,
+                                 const std::vector<UnfoldedFace>& unfolding_sequence) {
         int current_face_id = state.face_id;
         int current_face_gon = polyhedron.gon_list[current_face_id];
 
-        state.face_usage[current_face_id] = false;
+        std::vector<bool> face_usage_copy = face_usage;
+        std::vector<UnfoldedFace> unfolding_sequence_copy = unfolding_sequence;
+
+        face_usage_copy[current_face_id] = false;
         state.remaining_distance -= 2 * GeometryUtil::circumradius(current_face_gon);
         GeometryUtil::normalizeAngle(state.angle);
 
-        state.unfolding_sequence.push_back({
+        unfolding_sequence_copy.push_back({
             current_face_id,
             current_face_gon,
             state.edge_id,
@@ -113,10 +116,9 @@ private:
             if (state.y_moved_off_axis && state.y < 0.0) return;
         }
 
-
         if (distance_from_origin < base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
-            std::cout << state.unfolding_sequence.size() << " ";
-            for (const auto& f : state.unfolding_sequence) {
+            std::cout << unfolding_sequence_copy.size() << " ";
+            for (const auto& f : unfolding_sequence_copy) {
                 std::cout << f.gon << " "
                           << f.edge_id << " "
                           << f.face_id << " "
@@ -136,7 +138,7 @@ private:
 
             int next_face_id = polyhedron.adj_faces[current_face_id][i % current_face_gon];
             int next_edge_id = polyhedron.adj_edges[current_face_id][i % current_face_gon];
-            if (!state.face_usage[next_face_id]) continue;
+            if (!face_usage_copy[next_face_id]) continue;
 
             double current_inradius = GeometryUtil::inradius(current_face_gon);
             double next_inradius = GeometryUtil::inradius(polyhedron.gon_list[next_face_id]);
@@ -144,14 +146,18 @@ private:
             double next_face_x = state.x + (current_inradius + next_inradius) * std::cos(next_face_angle * GeometryUtil::PI / 180.0);
             double next_face_y = state.y + (current_inradius + next_inradius) * std::sin(next_face_angle * GeometryUtil::PI / 180.0);
 
-            UnfoldingState next_state = state;
-            next_state.face_id = next_face_id;
-            next_state.edge_id = next_edge_id;
-            next_state.x = next_face_x;
-            next_state.y = next_face_y;
-            next_state.angle = next_face_angle - 180.0;
+            UnfoldingState next_state = {
+                next_face_id,
+                next_edge_id,
+                next_face_x,
+                next_face_y,
+                next_face_angle - 180.0,
+                state.remaining_distance,
+                state.symmetry_enabled,
+                state.y_moved_off_axis
+            };
 
-            searchUnfoldingSequence(next_state);
+            searchUnfoldingSequence(next_state, face_usage_copy, unfolding_sequence_copy);
         }
     }
 };

@@ -24,13 +24,13 @@ struct UnfoldingState {
     // unfolding direction.
     double angle;
 
-    // A boolean vector indicating whether each face has
-    // not yet been unfolded (true if unused).
-    std::vector<bool> face_usage;
+    // // A boolean vector indicating whether each face has
+    // // not yet been unfolded (true if unused).
+    // std::vector<bool> face_usage;
 
-    // List of faces that have already been unfolded
-    // before the current one.
-    std::vector<UnfoldedFace> unfolding_sequence;
+    // // List of faces that have already been unfolded
+    // // before the current one.
+    // std::vector<UnfoldedFace> unfolding_sequence;
 
     // Sum of the diameters of the circumscribed circles of
     // all unused faces (including the current face).
