@@ -25,7 +25,7 @@ public:
         std::vector<bool> face_usage(polyhedron.num_faces, true);
         face_usage[base_face_id] = false;
 
-        std::vector<UnfoldedFace> unfolding_sequence;
+        unfolding_sequence.clear();
         unfolding_sequence.push_back({
             base_face_id,
             polyhedron.gon_list[base_face_id],
@@ -35,7 +35,7 @@ public:
             0.0
         });
 
-        searchUnfoldingSequence(initial_state, face_usage, unfolding_sequence);
+        searchUnfoldingSequence(initial_state, face_usage);
     }
 
 private:
@@ -45,6 +45,7 @@ private:
     bool symmetry_enabled;
     bool y_moved_off_axis;
     UnfoldingState initial_state;
+    std::vector<UnfoldedFace> unfolding_sequence;
 
     void setupInitialState() {
         int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
@@ -79,19 +80,15 @@ private:
     }
 
     void searchUnfoldingSequence(UnfoldingState state,
-                                 const std::vector<bool>& face_usage,
-                                 const std::vector<UnfoldedFace>& unfolding_sequence) {
+                                 std::vector<bool>& face_usage) {
         int current_face_id = state.face_id;
         int current_face_gon = polyhedron.gon_list[current_face_id];
 
-        std::vector<bool> face_usage_copy = face_usage;
-        std::vector<UnfoldedFace> unfolding_sequence_copy = unfolding_sequence;
-
-        face_usage_copy[current_face_id] = false;
+        face_usage[current_face_id] = false;
         state.remaining_distance -= 2 * GeometryUtil::circumradius(current_face_gon);
         GeometryUtil::normalizeAngle(state.angle);
 
-        unfolding_sequence_copy.push_back({
+        unfolding_sequence.push_back({
             current_face_id,
             current_face_gon,
             state.edge_id,
@@ -108,17 +105,24 @@ private:
 
         double distance_from_origin = GeometryUtil::getDistanceFromOrigin(state.x, state.y);
 
-        if (distance_from_origin > state.remaining_distance + base_face_circumradius + current_face_circumradius + GeometryUtil::buffer)
+        if (distance_from_origin > state.remaining_distance + base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
+            unfolding_sequence.pop_back();
+            face_usage[current_face_id] = true;
             return;
+        }
 
         if (state.symmetry_enabled) {
             if (state.y > 0.0) state.y_moved_off_axis = false;
-            if (state.y_moved_off_axis && state.y < 0.0) return;
+            if (state.y_moved_off_axis && state.y < 0.0) {
+                unfolding_sequence.pop_back();
+                face_usage[current_face_id] = true;
+                return;
+            }
         }
 
         if (distance_from_origin < base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
-            std::cout << unfolding_sequence_copy.size() << " ";
-            for (const auto& f : unfolding_sequence_copy) {
+            std::cout << unfolding_sequence.size() << " ";
+            for (const auto& f : unfolding_sequence) {
                 std::cout << f.gon << " "
                           << f.edge_id << " "
                           << f.face_id << " "
@@ -138,7 +142,7 @@ private:
 
             int next_face_id = polyhedron.adj_faces[current_face_id][i % current_face_gon];
             int next_edge_id = polyhedron.adj_edges[current_face_id][i % current_face_gon];
-            if (!face_usage_copy[next_face_id]) continue;
+            if (!face_usage[next_face_id]) continue;
 
             double current_inradius = GeometryUtil::inradius(current_face_gon);
             double next_inradius = GeometryUtil::inradius(polyhedron.gon_list[next_face_id]);
@@ -157,8 +161,11 @@ private:
                 state.y_moved_off_axis
             };
 
-            searchUnfoldingSequence(next_state, face_usage_copy, unfolding_sequence_copy);
+            searchUnfoldingSequence(next_state, face_usage);
         }
+
+        unfolding_sequence.pop_back();
+        face_usage[current_face_id] = true;
     }
 };
 
