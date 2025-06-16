@@ -5,7 +5,7 @@ Functions are defined within the `GeometryUtil` namespace and do not rely on ext
 
 → For constants used in these functions (e.g., `PI`, `buffer`), see [constants.md](constants.md).
 
-### Member Functions
+### Functions in Namespace
 | Function Name | Signature | Description |
 | --- | --- | --- |
 | `getDistanceFromOrigin` | `double getDistanceFromOrigin(double x, double y)` | Returns the Euclidean distance from the origin to the point `(x, y)`. |
