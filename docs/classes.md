@@ -1,6 +1,8 @@
 # Class / Struct Definitions
 ## struct `Polyhedron`
 A struct representing the structure of a polyhedron.
+
+### Member Variables
 | Variable Name | Type | Description | Note |
 | --- | --- | --- | --- |
 | `num_faces` | `int` | Number of faces in the polyhedron. |  |
@@ -16,6 +18,7 @@ A struct representing the structure of a polyhedron.
 ## struct `UnfoldedFace`
 A struct that stores information of a face after it has been unfolded in the plane.
 
+### Member Variables
 | Variable Name | Type | Description | Note |
 | --- | --- | --- | --- |
 | `face_id` | `int` | ID of the face. |  |
@@ -27,6 +30,8 @@ A struct that stores information of a face after it has been unfolded in the pla
 
 ## struct `UnfoldingState`
 A struct representing the current state of the unfolding process at a recursive step.
+
+### Member Variables
 | Variable Name | Type | Description | Note |
 | --- | --- | --- | --- |
 | `face_id` | `int` | ID of the face currently being placed. | In other words, the base of the current unfolding step. |
