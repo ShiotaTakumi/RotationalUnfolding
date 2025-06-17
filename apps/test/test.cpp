@@ -76,6 +76,13 @@ int main() {
     //     {12, 28, 17, 29, 20, 30, 23, 31, 14, 26}, {12, 17, 27}, {17, 20, 27}, {20, 23, 27}, {23, 14, 27}
     // };
 
+    // Test values for (base_face_id, base_edge_id):
+    // Please input one of the following pairs into the terminal.
+    // (s01): (0,0), (3,0)
+    // (s02): (0,0), (3,0)
+    // (s03): (0,0), (2,0), (2,1)
+    // (s07): (1,2), (0,2), (0,0)
+    // Due to symmetry, checking only these cases is sufficient.
     int base_face_id; std::cin >> base_face_id;
     int base_edge_id; std::cin >> base_edge_id;
     bool enable_symmetry = true;
