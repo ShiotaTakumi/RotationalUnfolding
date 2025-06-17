@@ -23,7 +23,7 @@ A class that explores path-shape partial edge unfolding starting from a specifie
 | Function Name | Signature | Description |
 | --- | --- | --- |
 | `setupInitialState` | `void setupInitialState()` | Computes the initial state after rotating the polyhedron around the base edge used as the unfolding axis. |
-| `searchUnfoldingSequence` | `void searchUnfoldingSequence(UnfoldingState state, std::vector<bool>& face_usage)` | Recursively searches for path-shape edge unfoldings based on the initial state, checking for overlap along the way and applying symmetry pruning if enabled. |
+| `searchUnfoldingSequence` | `void searchUnfoldingSequence(UnfoldingState state, std::vector<bool>& face_usage, std::ostream& out)` | Recursively searches for path-shape edge unfoldings based on the initial state, checking for overlap along the way and applying symmetry pruning if enabled. |
 
 ## struct `Polyhedron`
 A struct representing the structure of a polyhedron.

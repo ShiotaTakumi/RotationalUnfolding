@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <sstream>
 
 // A class that explores path-shape partial edge unfolding
 // starting from a specified face and edge of a polyhedron,
@@ -29,7 +30,7 @@ public:
     // Entry point for launching the recursive search
     // for path-shape edge unfoldings. Internally sets up
     // the first face and delegates to the core search logic.
-    void searchSequence() {
+    void searchSequence(std::ostream& out) {
         std::vector<bool> face_usage(polyhedron.num_faces, true);
         face_usage[base_face_id] = false;
 
@@ -46,7 +47,7 @@ public:
             0.0     // angle
         });
 
-        searchUnfoldingSequence(initial_state, face_usage);
+        searchUnfoldingSequence(initial_state, face_usage, out);
     }
 
 private:
@@ -118,7 +119,8 @@ private:
     // based on the initial state, checking for overlap along
     // the way and applying symmetry pruning if enabled.
     void searchUnfoldingSequence(UnfoldingState state,
-                                 std::vector<bool>& face_usage) {
+                                 std::vector<bool>& face_usage,
+                                 std::ostream& out) {
         int current_face_id = state.face_id;
         int current_face_gon = polyhedron.gon_list[current_face_id];
 
@@ -165,16 +167,16 @@ private:
         // the current face overlap, output the current
         // path-shape edge unfolding as a potential overlap case.
         if (distance_from_origin < base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
-            std::cout << unfolding_sequence.size() << " ";
+            out << unfolding_sequence.size() << " ";
             for (const auto& f : unfolding_sequence) {
-                std::cout << f.gon << " "
+                out << f.gon << " "
                           << f.edge_id << " "
                           << f.face_id << " "
                           << f.x << " "
                           << f.y << " "
                           << f.angle << " ";
             }
-            std::cout << std::endl;
+            out << std::endl;
         }
 
         int current_edge_pos = polyhedron.getEdgeIndex(current_face_id, state.edge_id);
@@ -210,7 +212,7 @@ private:
                 state.y_moved_off_axis
             };
 
-            searchUnfoldingSequence(next_state, face_usage);
+            searchUnfoldingSequence(next_state, face_usage, out);
         }
 
         // Backtrack

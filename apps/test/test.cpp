@@ -1,5 +1,6 @@
 #include "rotational_unfolding/RotationalUnfolding.hpp"
 #include <vector>
+#include <sstream>
 
 int main() {
     Polyhedron poly;
@@ -89,7 +90,9 @@ int main() {
     bool y_moved_off_axis = true;
 
     RotationalUnfolding serch(poly, base_face_id, base_edge_id, enable_symmetry, y_moved_off_axis);
-    serch.searchSequence();
+    std::stringstream buffer;
+    serch.searchSequence(buffer);
+    std::cout << buffer.str();
 
     return 0;
 }
