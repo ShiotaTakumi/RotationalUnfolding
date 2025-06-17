@@ -1,4 +1,30 @@
 # Class / Struct Definitions
+## class `RotationalUnfolding`
+A class that explores path-shape partial edge unfolding starting from a specified face and edge of a polyhedron, and checks for overlap at both endpoints of each path.
+
+### Public Member Functions
+| Function Name | Signature | Description |
+| --- | --- | --- |
+| `RotationalUnfolding` | `RotationalUnfolding(const Polyhedron& poly, int base_face, int base_edge, bool enable_symmetry, bool y_moved_off_axis)` | Constructor. Prepares the path-shape edge unfolding search from the specified base face and edge. |
+| `searchSequence` | `void searchSequence()` | Entry point for launching the recursive search for path-shape edge unfoldings. Internally sets up the first face and delegates to the core search logic. |
+
+### Private Member Variables
+| Variable Name | Type | Description | Note |
+| --- | --- | --- | --- |
+| `polyhedron` | `const Polyhedron&` | Reference to the input polyhedron structure. |  |
+| `base_face_id` | `int` | ID of the initial base face used to begin the unfolding. |  |
+| `base_edge_id` | `int` | ID of the edge on the base face used as the rotation axis to initiate unfolding. |  |
+| `symmetry_enabled` | `bool` | Whether pruning based on symmetry with respect to the y-axis is enabled during the search. |  |
+| `y_moved_off_axis` | `bool` | Whether any face has deviated from the y-axis (y ≠ 0) since the base face. | Used only if `symmetry_enabled` is true. |
+| `initial_state` | `UnfoldingState` | Initial state of the recursive unfolding process, derived from the face that becomes the new base when rotated around the base edge of the base face. |  |
+| `unfolding_sequence` | `std::vector<UnfoldedFace>` | Array storing the current path-shape edge unfolding sequence. |  |
+
+### Private Member Functions
+| Function Name | Signature | Description |
+| --- | --- | --- |
+| `setupInitialState` | `void setupInitialState()` | Computes the initial state after rotating the polyhedron around the base edge used as the unfolding axis. |
+| `searchUnfoldingSequence` | `void searchUnfoldingSequence(UnfoldingState state, std::vector<bool>& face_usage)` | Recursively searches for path-shape edge unfoldings based on the initial state, checking for overlap along the way and applying symmetry pruning if enabled. |
+
 ## struct `Polyhedron`
 A struct representing the structure of a polyhedron.
 
@@ -15,19 +41,6 @@ A struct representing the structure of a polyhedron.
 | --- | --- | --- |
 | `getEdgeIndex` | `int getEdgeIndex(int face_id, int edge_id) const` | Returns the index of `edge_id` in `adj_edges[face_id]`. Returns `-1` if not found.
 
-## struct `UnfoldedFace`
-A struct that stores information of a face after it has been unfolded in the plane.
-
-### Member Variables
-| Variable Name | Type | Description | Note |
-| --- | --- | --- | --- |
-| `face_id` | `int` | ID of the face. |  |
-| `gon` | `int` | Number of edges (gon) of the face. |  |
-| `edge_id` | `int` | ID of the edge that is connected to the previous unfolded face in the unfolding. | Set to `-1` for the initial face. |
-| `x` | `double` | X-coordinate of the face center in the unfolding. | Approximate value. Set to `0.0` for the initial face. |
-| `y` | `double` | Y-coordinate of the face center in the unfolding. | Approximate value. Set to `0.0` for the initial face. |
-| `angle` | `double` | Orientation angle (in degree) from the center of this face to the center of the previously unfolded face. | Approximate value. Normalized to the range `[-180, 180]`. For the initial face, set to `-180`. |
-
 ## struct `UnfoldingState`
 A struct representing the current state of the unfolding process at a recursive step.
 
@@ -42,3 +55,16 @@ A struct representing the current state of the unfolding process at a recursive 
 | `remaining_distance` | `double` |  Sum of the diameters of the circumscribed circle of all unused faces (including the current face). | Used for pruning. |
 | `symmetry_enabled` | `bool` | Whether symmetric pruning is enabled. |  |
 | `y_moved_off_axis` | `bool` | Whether the y-coordinate has ever been non-zero since the base face. | Only used if `symmetry_enabled` is true. |
+
+## struct `UnfoldedFace`
+A struct that stores information of a face after it has been unfolded in the plane.
+
+### Member Variables
+| Variable Name | Type | Description | Note |
+| --- | --- | --- | --- |
+| `face_id` | `int` | ID of the face. |  |
+| `gon` | `int` | Number of edges (gon) of the face. |  |
+| `edge_id` | `int` | ID of the edge that is connected to the previous unfolded face in the unfolding. | Set to `-1` for the initial face. |
+| `x` | `double` | X-coordinate of the face center in the unfolding. | Approximate value. Set to `0.0` for the initial face. |
+| `y` | `double` | Y-coordinate of the face center in the unfolding. | Approximate value. Set to `0.0` for the initial face. |
+| `angle` | `double` | Orientation angle (in degree) from the center of this face to the center of the previously unfolded face. | Approximate value. Normalized to the range `[-180, 180]`. For the initial face, set to `-180`. |
