@@ -9,8 +9,13 @@
 #include <iostream>
 #include <cmath>
 
+// A class that explores path-shape partial edge unfolding
+// starting from a specified face and edge of a polyhedron,
+// and checks for overlap at both endpoints of each path.
 class RotationalUnfolding {
 public:
+    // Constructor. Prepares the path-shape edge unfolding
+    // search from the specified base face and edge.
     RotationalUnfolding(const Polyhedron& poly, int base_face, int base_edge, bool enable_symmetry, bool y_moved_off_axis)
     : polyhedron(poly),
       base_face_id(base_face),
@@ -21,6 +26,9 @@ public:
         setupInitialState();
       }
 
+    // Entry point for launching the recursive search
+    // for path-shape edge unfoldings. Internally sets up
+    // the first face and delegates to the core search logic.
     void searchSequence() {
         std::vector<bool> face_usage(polyhedron.num_faces, true);
         face_usage[base_face_id] = false;
@@ -39,14 +47,29 @@ public:
     }
 
 private:
+    // Reference to the input polyhedron structure.
     const Polyhedron& polyhedron;
+    // ID of the initial base face used to begin the unfolding.
     int base_face_id;
+    // ID of the edge on the base face used as the rotation
+    // axis to initiate unfolding.
     int base_edge_id;
+    // Whether pruning based on symmetry with respect to
+    // the y-axis is enabled during the search.
     bool symmetry_enabled;
+    // Whether any face has deviated from the y-axis (y ≠ 0)
+    // since the base face.
     bool y_moved_off_axis;
+    // Initial state of the recursive unfolding process,
+    // derived from the face that becomes the new base
+    // when rotated around the base edge of the base face.
     UnfoldingState initial_state;
+    // Array storing the current path-shape edge unfolding
+    // sequence.
     std::vector<UnfoldedFace> unfolding_sequence;
 
+    // Computes the initial state after rotating the polyhedron
+    // around the base edge used as the unfolding axis.
     void setupInitialState() {
         int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
 
@@ -79,6 +102,9 @@ private:
         };
     }
 
+    // Recursively searches for path-shape edge unfoldings
+    // based on the initial state, checking for overlap along
+    // the way and applying symmetry pruning if enabled.
     void searchUnfoldingSequence(UnfoldingState state,
                                  std::vector<bool>& face_usage) {
         int current_face_id = state.face_id;
