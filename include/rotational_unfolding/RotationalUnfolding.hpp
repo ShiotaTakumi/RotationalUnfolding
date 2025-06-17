@@ -34,13 +34,16 @@ public:
         face_usage[base_face_id] = false;
 
         unfolding_sequence.clear();
+        // The base face is placed with its center at (0, 0),
+        // and the base edge is perpendicular to the x-axis
+        // and lies in the x > 0.
         unfolding_sequence.push_back({
             base_face_id,
             polyhedron.gon_list[base_face_id],
             base_edge_id,
-            0.0,
-            0.0,
-            0.0
+            0.0,    // x
+            0.0,    // y
+            0.0     // angle
         });
 
         searchUnfoldingSequence(initial_state, face_usage);
@@ -73,6 +76,8 @@ private:
     void setupInitialState() {
         int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
 
+        // Compute initial total remaining radius distance,
+        // excluding the base face.
         double remaining_distance = 0.0;
         for (int i = 0; i < polyhedron.num_faces; ++i) {
             if (i != base_face_id) {
@@ -86,8 +91,15 @@ private:
         double base_face_inradius = GeometryUtil::inradius(polyhedron.gon_list[base_face_id]);
         double next_face_inradius = GeometryUtil::inradius(polyhedron.gon_list[next_face_id]);
 
+        // Since the base edge is perpendicular to the x-axis,
+        // the center of the next face lies on the x-axis.
+        // The x-coordinate is the sum of the inradii of the
+        // base face and the next face.
         double next_face_x = base_face_inradius + next_face_inradius;
         double next_face_y = 0.0;
+        // The base edge lies at 0° from the base face center,
+        // but appears at -180° from the next face center,
+        // so the initial angle is set to -180°.
         double next_face_angle = -180.0;
 
         initial_state = {
@@ -131,12 +143,15 @@ private:
 
         double distance_from_origin = GeometryUtil::getDistanceFromOrigin(state.x, state.y);
 
+        // Prune if the remaining faces are insufficient to
+        // reach the base face.
         if (distance_from_origin > state.remaining_distance + base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
             unfolding_sequence.pop_back();
             face_usage[current_face_id] = true;
             return;
         }
 
+        // Prune based on y-axis symmetry.
         if (state.symmetry_enabled) {
             if (state.y > 0.0) state.y_moved_off_axis = false;
             if (state.y_moved_off_axis && state.y < 0.0) {
@@ -146,6 +161,9 @@ private:
             }
         }
 
+        // If the circumscribed circles of the base face and
+        // the current face overlap, output the current
+        // path-shape edge unfolding as a potential overlap case.
         if (distance_from_origin < base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
             std::cout << unfolding_sequence.size() << " ";
             for (const auto& f : unfolding_sequence) {
@@ -162,6 +180,7 @@ private:
         int current_edge_pos = polyhedron.getEdgeIndex(current_face_id, state.edge_id);
         double next_face_angle = state.angle;
 
+        // Continue recursive search as long as adjacent faces are available
         for (int i = current_edge_pos + 1; i < current_edge_pos + current_face_gon; ++i) {
             next_face_angle -= 360.0 / static_cast<double>(current_face_gon);
             GeometryUtil::normalizeAngle(next_face_angle);
@@ -173,6 +192,10 @@ private:
             double current_inradius = GeometryUtil::inradius(current_face_gon);
             double next_inradius = GeometryUtil::inradius(polyhedron.gon_list[next_face_id]);
 
+            // The distance between the centers of the current
+            //  face and the next face is the sum of their
+            // inradii. Since the angle is known, the position
+            // is computed using trigonometric functions.
             double next_face_x = state.x + (current_inradius + next_inradius) * std::cos(next_face_angle * GeometryUtil::PI / 180.0);
             double next_face_y = state.y + (current_inradius + next_inradius) * std::sin(next_face_angle * GeometryUtil::PI / 180.0);
 
@@ -190,6 +213,7 @@ private:
             searchUnfoldingSequence(next_state, face_usage);
         }
 
+        // Backtrack
         unfolding_sequence.pop_back();
         face_usage[current_face_id] = true;
     }
