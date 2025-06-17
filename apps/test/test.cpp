@@ -1,4 +1,4 @@
-#include "RitationalUnfolding.hpp"
+#include "RotationalUnfolding.hpp"
 #include <vector>
 
 int main() {
