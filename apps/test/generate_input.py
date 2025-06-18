@@ -9,6 +9,11 @@ The configuration includes:
 - A polyhedron category (e.g., platonic, archimedean, prism, etc.)
 - The file name of a .adj adjacency data file
 
+Usage:
+    python3 generate_input.py [output_directory]
+
+If no output_directory is given, the current directory is used.
+
 After generating the configuration file, it can be passed to the C++ executable as follows:
 
     ./a.out unfold_config.ini
@@ -17,11 +22,18 @@ The C++ program will then prompt for base_face_id and base_edge_id interactively
 """
 
 import os
+import sys
 
 # --- Define available categories ---
 categories = ["platonic", "archimedean", "prism", "antiprism", "johnson"]
 
 def main():
+    # --- Parse output directory ---
+    output_dir = sys.argv[1] if len(sys.argv) >= 2 else "."
+    if not os.path.isdir(output_dir):
+        print(f"Error: Output directory does not exist: {output_dir}")
+        exit(1)
+
     # --- Prompt for base data path ---
     base_path = input("Enter base path to data directory (e.g., ../../data): ").strip()
     if not os.path.isdir(base_path):
@@ -57,14 +69,14 @@ def main():
         exit(1)
 
     # --- Write to unfold_config.ini ---
-    output_filename = "unfold_config.ini"
-    with open(output_filename, "w") as f:
+    output_path = os.path.join(output_dir, "unfold_config.ini")
+    with open(output_path, "w") as f:
         f.write("[polyhedron]\n")
         f.write("base_path = " + base_path + "\n")
         f.write("category  = " + category + "\n")
         f.write("adj       = " + adj + "\n")
 
-    print(f"\nWrote configuration to '{output_filename}'.")
+    print(f"\nWrote configuration to '{output_path}'.")
 
 if __name__ == "__main__":
     main()
