@@ -1,6 +1,4 @@
-# RotationalUnfolding.md
-
-## File Structure
+# File Structure
 This component is implemented as a collection of C++ header files under `include/rotational_unfolding/`:
 
 - [`RotationalUnfolding.hpp`](../include/rotational_unfolding/RotationalUnfolding.hpp)
@@ -18,7 +16,7 @@ This component is implemented as a collection of C++ header files under `include
 - [`GeometryUtil.hpp`](../include/rotational_unfolding/GeometryUtil.hpp)
   - Provides utility functions and constants (in the `GeometryUtil` namespace) for geometric computation such as distances, angles, and radii.
 
-## Class / Struct Definitions
+# Class / Struct Definitions
 ## class `RotationalUnfolding` [[RotationalUnfolding.hpp](../include/rotational_unfolding/RotationalUnfolding.hpp)]
 A class that explores path-shape partial edge unfolding starting from a specified face and edge of a polyhedron, and checks for overlap at both endpoints of each path.
 
@@ -89,7 +87,7 @@ A struct that stores information of a face after it has been unfolded in the pla
 | `y` | `double` | Y-coordinate of the face center in the unfolding. | Approximate value. Set to `0.0` for the initial face. |
 | `angle` | `double` | Orientation angle (in degree) from the center of this face to the center of the previously unfolded face. | Approximate value. Normalized to the range `[-180, 180]`. For the initial face, set to `-180`. |
 
-## Function Definitions
+# Function Definitions
 ## `GeometryUtil` namespace [[GeometryUtil.hpp](../include/rotational_unfolding/GeometryUtil.hpp)]
 A header-only utility module providing fundamental geometric functions used throughout the unfolding process.
 Functions are defined within the `GeometryUtil` namespace and do not rely on external state.
@@ -102,7 +100,7 @@ Functions are defined within the `GeometryUtil` namespace and do not rely on ext
 | `circumradius` | `double circumradius(int gon)` | Computes the circumradius of a regular polygon with `gon` sides. |
 | `inradius` | `double inradius(int gon)` | Computes the inradius of a regular polygon with `gon` sides. |
 
-## Constants
+# Constants
 ## `GeometryUtil` namespace [[GeometryUtil.hpp](../include/rotational_unfolding/GeometryUtil.hpp)]
 A header-only utility module providing constants used in geometric calculations throughout the unfolding process.
 Constants are defined within the `GeometryUtil` namespace and are used by functions such as circumradius, inradius, and geometric pruning checks.
