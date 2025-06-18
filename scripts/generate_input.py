@@ -13,12 +13,6 @@ Usage:
     python3 generate_input.py [output_directory]
 
 If no output_directory is given, the current directory is used.
-
-After generating the configuration file, it can be passed to the C++ executable as follows:
-
-    ./a.out unfold_config.ini
-
-The C++ program will then prompt for base_face_id and base_edge_id interactively.
 """
 
 import os
@@ -76,7 +70,8 @@ def main():
         f.write("category  = " + category + "\n")
         f.write("adj       = " + adj + "\n")
 
-    print(f"\nWrote configuration to '{output_path}'.")
+    print("\nSuccess!")
+    print(f"Wrote configuration to unfold_config.ini.")
 
 if __name__ == "__main__":
     main()
