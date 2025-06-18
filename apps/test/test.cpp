@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -18,15 +19,18 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    int base_face_id; std::cin >> base_face_id;
-    int base_edge_id; std::cin >> base_edge_id;
-    bool enable_symmetry = true;
-    bool y_moved_off_axis = true;
+    std::vector<std::pair<int, int>> base_pairs;
+    if (!IOUtil::loadBasePairsFromIni(argv[1], base_pairs)) {
+        std::cerr << "Failed to load base face/edge pairs." << std::endl;
+        return 1;
+    }
 
-    RotationalUnfolding search(poly, base_face_id, base_edge_id, enable_symmetry, y_moved_off_axis);
-    std::stringstream buffer;
-    search.searchSequence(buffer);
-    std::cout << buffer.str();
+    for (const auto& [face, edge] : base_pairs) {
+        RotationalUnfolding search(poly, face, edge, true, true);
+        std::stringstream buffer;
+        search.searchSequence(buffer);
+        std::cout << buffer.str();
+    }
 
     return 0;
 }

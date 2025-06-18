@@ -57,8 +57,8 @@ def main():
     print("  " + "  ".join(adj_files))
 
     # --- Prompt for file name ---
-    adj = input("Enter file name (without .adj extension): ").strip()
-    if adj not in adj_files:
+    file = input("Enter file name (without .adj extension): ").strip()
+    if file not in adj_files:
         print("Error: Invalid file name.")
         exit(1)
 
@@ -68,7 +68,7 @@ def main():
         f.write("[polyhedron]\n")
         f.write("base_path = " + base_path + "\n")
         f.write("category  = " + category + "\n")
-        f.write("adj       = " + adj + "\n")
+        f.write("file      = " + file + "\n")
 
     print("\nSuccess!")
     print(f"Wrote configuration to unfold_config.ini.")
