@@ -1,6 +1,25 @@
 # RotationalUnfolding.md
+
+## File Structure
+This component is implemented as a collection of C++ header files under `include/rotational_unfolding/`:
+
+- [`RotationalUnfolding.hpp`](../include/rotational_unfolding/RotationalUnfolding.hpp)
+  - Defines the `RotationalUnfolding` class, which performs recursive path-shaped edge unfolding and checks for overlaps. Also handles symmetry pruning and search initialization.
+
+- [`Polyhedron.hpp`](../include/rotational_unfolding/Polyhedron.hpp)
+  - Defines the `Polyhedron` structure, which stores the adjacency structure of the input polyhedron, including face-edge and face-face relationships.
+
+- [`UnfoldingState.hpp`](../include/rotational_unfolding/UnfoldingState.hpp)
+  - Defines the `UnfoldingState` structure, which represents a snapshot of the unfolding process during recursion (position, orientation, remaining radius, symmetry info, etc).
+
+- [`UnfoldedFace.hpp`](../include/rotational_unfolding/UnfoldedFace.hpp)
+  - Defines the `UnfoldedFace` structure, which stores the position and rotation of each face after unfolding.
+
+- [`GeometryUtil.hpp`](../include/rotational_unfolding/GeometryUtil.hpp)
+  - Provides utility functions and constants (in the `GeometryUtil` namespace) for geometric computation such as distances, angles, and radii.
+
 ## Class / Struct Definitions
-### class `RotationalUnfolding`
+### class `RotationalUnfolding` [[RotationalUnfolding.hpp](../include/rotational_unfolding/RotationalUnfolding.hpp)]
 A class that explores path-shape partial edge unfolding starting from a specified face and edge of a polyhedron, and checks for overlap at both endpoints of each path.
 
 #### Public Member Functions
@@ -26,7 +45,7 @@ A class that explores path-shape partial edge unfolding starting from a specifie
 | `setupInitialState` | `void setupInitialState()` | Computes the initial state after rotating the polyhedron around the base edge used as the unfolding axis. |
 | `searchUnfoldingSequence` | `void searchUnfoldingSequence(UnfoldingState state, std::vector<bool>& face_usage, std::ostream& out)` | Recursively searches for path-shape edge unfoldings based on the initial state, checking for overlap along the way and applying symmetry pruning if enabled. |
 
-### struct `Polyhedron`
+### struct `Polyhedron` [[Polyhedron.hpp](../include/rotational_unfolding/Polyhedron.hpp)]
 A struct representing the structure of a polyhedron.
 
 #### Member Variables
@@ -34,7 +53,7 @@ A struct representing the structure of a polyhedron.
 | --- | --- | --- | --- |
 | `num_faces` | `int` | Number of faces in the polyhedron. |  |
 | `gon_list` | `std::vector<int>` | Number of edges (gon) for each face. |  |
-| `adj_edges` | `std::vector<std::vector<int>>` | List of edge IDs per face. | Stored in counterclockwise order with respect to the outward normal. |
+| `adj_edges` | `std::vector<std::vector<int>>` | List of edge IDs per face. | Stored in counterclockwise order on each face, as viewed from outside the polyhedron. |
 | `adj_faces` | `std::vector<std::vector<int>>` | List of adjacent face IDs per face. | Aligned with `adj_edges`. |
 
 #### Member Functions
@@ -42,7 +61,7 @@ A struct representing the structure of a polyhedron.
 | --- | --- | --- |
 | `getEdgeIndex` | `int getEdgeIndex(int face_id, int edge_id) const` | Returns the index of `edge_id` in `adj_edges[face_id]`. Returns `-1` if not found.
 
-### struct `UnfoldingState`
+### struct `UnfoldingState` [[UnfoldingState.hpp](../include/rotational_unfolding/UnfoldingState.hpp)]
 A struct representing the current state of the unfolding process at a recursive step.
 
 #### Member Variables
@@ -57,7 +76,7 @@ A struct representing the current state of the unfolding process at a recursive 
 | `symmetry_enabled` | `bool` | Whether symmetric pruning is enabled. |  |
 | `y_moved_off_axis` | `bool` | Whether the y-coordinate has ever been non-zero since the base face. | Only used if `symmetry_enabled` is true. |
 
-### struct `UnfoldedFace`
+### struct `UnfoldedFace` [[UnfoldedFace.hpp](../include/rotational_unfolding/UnfoldedFace.hpp)]
 A struct that stores information of a face after it has been unfolded in the plane.
 
 #### Member Variables
@@ -71,7 +90,7 @@ A struct that stores information of a face after it has been unfolded in the pla
 | `angle` | `double` | Orientation angle (in degree) from the center of this face to the center of the previously unfolded face. | Approximate value. Normalized to the range `[-180, 180]`. For the initial face, set to `-180`. |
 
 ## Function Definitions
-### module `GeometryUtil`
+### `GeometryUtil` namespace [[GeometryUtil.hpp](../include/rotational_unfolding/GeometryUtil.hpp)]
 A header-only utility module providing fundamental geometric functions used throughout the unfolding process.
 Functions are defined within the `GeometryUtil` namespace and do not rely on external state.
 
@@ -84,7 +103,7 @@ Functions are defined within the `GeometryUtil` namespace and do not rely on ext
 | `inradius` | `double inradius(int gon)` | Computes the inradius of a regular polygon with `gon` sides. |
 
 ## Constants
-### module `GeometryUtil`
+### `GeometryUtil` namespace [[GeometryUtil.hpp](../include/rotational_unfolding/GeometryUtil.hpp)]
 A header-only utility module providing constants used in geometric calculations throughout the unfolding process.
 Constants are defined within the `GeometryUtil` namespace and are used by functions such as circumradius, inradius, and geometric pruning checks.
 
