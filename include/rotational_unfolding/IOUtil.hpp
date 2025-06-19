@@ -10,6 +10,8 @@
 
 namespace IOUtil {
 
+// Loads a polyhedron structure from an adjacency file. Fills
+// in num_faces, gon_list, adj_edges_list, and adj_faces_list.
 inline bool loadAdjacencyFile(const std::string& filepath, Polyhedron& poly) {
     std::ifstream file(filepath);
     if (!file) {
@@ -46,6 +48,8 @@ inline bool loadAdjacencyFile(const std::string& filepath, Polyhedron& poly) {
     return true;
 }
 
+// Loads path definitions from a .ini file with [paths] section.
+// Expects adj_path, base_path, and raw_path keys.
 inline bool loadPathListIni(const std::string& ini_path, std::string& adj, std::string& base_path, std::string& raw_path) {
     std::ifstream infile(ini_path);
     if (!infile) {
@@ -77,10 +81,12 @@ inline bool loadPathListIni(const std::string& ini_path, std::string& adj, std::
     return true;
 }
 
+// Wrapper for loading a polyhedron using an adjacency file.
 inline bool loadPolyhedronFromFile(const std::string& adj, Polyhedron& poly) {
     return loadAdjacencyFile(adj, poly);
 }
 
+// Determines symmetry from filename prefix: a, p, r, or s01–s11.
 inline bool isSymmetricFromFilename(const std::string& adj) {
     std::string filename = adj.substr(adj.find_last_of("/\\") + 1);
     if (filename.empty()) return false;
@@ -100,6 +106,7 @@ inline bool isSymmetricFromFilename(const std::string& adj) {
     return false;
 }
 
+// Loads base face/edge ID pairs from a .base file.
 inline bool loadBasePairsFromFile(const std::string& base_path, std::vector<std::pair<int, int>>& base_pairs) {
     std::ifstream infile(base_path);
     if (!infile) {
