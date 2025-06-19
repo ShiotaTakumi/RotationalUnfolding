@@ -42,6 +42,7 @@ int main(int argc, char* argv[]) {
         std::stringstream buffer;
         search.searchSequence(buffer);
         out_file << buffer.str();
+        out_file.flush();
     }
 
     return 0;
