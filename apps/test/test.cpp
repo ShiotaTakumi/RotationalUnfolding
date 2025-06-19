@@ -14,7 +14,8 @@ int main(int argc, char* argv[]) {
     }
 
     Polyhedron poly;
-    if (!IOUtil::loadPolyhedronFromIni(argv[1], poly)) {
+    bool symmetric;
+    if (!IOUtil::loadPolyhedronFromIni(argv[1], poly, symmetric)) {
         std::cerr << "Failed to load polyhedron data from ini file." << std::endl;
         return 1;
     }
@@ -33,10 +34,11 @@ int main(int argc, char* argv[]) {
 
     std::ofstream out_file(output_path);
     int current = 0, total = base_pairs.size();
+    std::cout << (symmetric ? "Symmetric " : "Asymmetric ") << "polyhedron" << std::endl;
     for (const auto& [face, edge] : base_pairs) {
         std::cout << ++current << "/" << total << std::endl;
 
-        RotationalUnfolding search(poly, face, edge, true, true);
+        RotationalUnfolding search(poly, face, edge, symmetric, symmetric);
         std::stringstream buffer;
         search.searchSequence(buffer);
         out_file << buffer.str();

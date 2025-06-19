@@ -52,8 +52,7 @@ inline bool loadPolyhedronFromPath(const std::string& base_path, const std::stri
     return loadAdjacencyFile(path, poly);
 }
 
-
-inline bool loadPolyhedronFromIni(const std::string& ini_path, Polyhedron& poly) {
+inline bool loadPolyhedronFromIni(const std::string& ini_path, Polyhedron& poly, bool& symmetric) {
     std::ifstream infile(ini_path);
     if (!infile) {
         std::cerr << "Error: Cannot open config file: " << ini_path << std::endl;
@@ -83,6 +82,20 @@ inline bool loadPolyhedronFromIni(const std::string& ini_path, Polyhedron& poly)
     if (base_path.empty() || category.empty() || file.empty()) {
         std::cerr << "Error: Missing fields in config file." << std::endl;
         return false;
+    }
+
+    symmetric = false;
+    if (!file.empty()) {
+        char head = file[0];
+        if (head == 'a' || head == 'p' || head == 'r') {
+            symmetric = true;
+        } else if (file.size() == 3 && file[0] == 's') {
+            std::string num_part = file.substr(1, 2);
+            int num = std::stoi(num_part);
+            if (1 <= num && num <= 11) {
+                symmetric = true;
+            }
+        }
     }
 
     return loadPolyhedronFromPath(base_path, category, file, poly);
