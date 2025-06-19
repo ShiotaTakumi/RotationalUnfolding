@@ -25,11 +25,21 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    std::string output_path;
+    if (!IOUtil::loadOutputPathFromIni(argv[1], output_path)) {
+        std::cerr << "Failed to load output path from ini file." << std::endl;
+        return 1;
+    }
+
+    std::ofstream out_file(output_path);
+    int current = 0, total = base_pairs.size();
     for (const auto& [face, edge] : base_pairs) {
+        std::cout << ++current << "/" << total << std::endl;
+
         RotationalUnfolding search(poly, face, edge, true, true);
         std::stringstream buffer;
         search.searchSequence(buffer);
-        std::cout << buffer.str();
+        out_file << buffer.str();
     }
 
     return 0;

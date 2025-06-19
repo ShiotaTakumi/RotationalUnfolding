@@ -138,6 +138,33 @@ inline bool loadBasePairsFromIni(const std::string& ini_path, std::vector<std::p
     return true;
 }
 
+inline bool loadOutputPathFromIni(const std::string& ini_path, std::string& output_path) {
+    std::ifstream infile(ini_path);
+    if (!infile) {
+        std::cerr << "Error: Cannot open config file: " << ini_path << std::endl;
+        return false;
+    }
+
+    std::string line;
+    output_path.clear();
+    while (std::getline(infile, line)) {
+        if (line.empty() || line[0] == '#' || line[0] == '[') continue;
+
+        std::istringstream iss(line);
+        std::string key, eq, value;
+        if (!(iss >> key >> eq) || eq != "=") continue;
+        std::getline(iss, value);
+        value.erase(0, value.find_first_not_of(" \t"));
+
+        if (key == "output_path") {
+            output_path = value;
+            break;
+        }
+    }
+
+    return !output_path.empty();
+}
+
 } // namespace IOUtil
 
 #endif // ROTATIONAL_UNFOLDING_IOUTIL_HPP

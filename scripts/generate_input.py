@@ -8,6 +8,7 @@ The configuration includes:
 - The base path to the data directory
 - A polyhedron category (e.g., platonic, archimedean, prism, etc.)
 - The file name of a .adj adjacency data file
+- The output file path for the resulting unfolding data
 
 Usage:
     python3 generate_input.py [output_directory]
@@ -62,13 +63,26 @@ def main():
         print("Error: Invalid file name.")
         exit(1)
 
+    # --- Prompt for output base path ---
+    out_base = input("Enter path for output directory (e.g., ../../unfolding): ").strip()
+    if not out_base:
+        print("Error: Output path is empty.")
+        exit(1)
+
+    # --- Create output path ---
+    unfolding_base = os.path.join(out_base, "raw", category)
+    os.makedirs(unfolding_base, exist_ok=True)
+    output_path = os.path.join(unfolding_base, file + ".ufd")
+
     # --- Write to unfold_config.ini ---
-    output_path = os.path.join(output_dir, "unfold_config.ini")
-    with open(output_path, "w") as f:
+    config_path = os.path.join(output_dir, "unfold_config.ini")
+    with open(config_path, "w") as f:
         f.write("[polyhedron]\n")
-        f.write("base_path = " + base_path + "\n")
-        f.write("category  = " + category + "\n")
-        f.write("file      = " + file + "\n")
+        f.write("base_path   = " + base_path + "\n")
+        f.write("category    = " + category + "\n")
+        f.write("file        = " + file + "\n\n")
+        f.write("[output]\n")
+        f.write("output_path = " + output_path + "\n")
 
     print("\nSuccess!")
     print(f"Wrote configuration to unfold_config.ini.")
