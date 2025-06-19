@@ -7,7 +7,6 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
-#include <filesystem>
 
 namespace IOUtil {
 
@@ -47,20 +46,15 @@ inline bool loadAdjacencyFile(const std::string& filepath, Polyhedron& poly) {
     return true;
 }
 
-inline bool loadPolyhedronFromPath(const std::string& base_path, const std::string& category, const std::string& file, Polyhedron& poly) {
-    std::string path = base_path + "/polyhedron/" + category + "/adjacent/" + file + ".adj";
-    return loadAdjacencyFile(path, poly);
-}
-
-inline bool loadPolyhedronFromIni(const std::string& ini_path, Polyhedron& poly, bool& symmetric) {
+inline bool loadPathListIni(const std::string& ini_path, std::string& adj, std::string& base_path, std::string& raw_path) {
     std::ifstream infile(ini_path);
     if (!infile) {
         std::cerr << "Error: Cannot open config file: " << ini_path << std::endl;
         return false;
     }
 
-    std::string base_path, category, file;
     std::string line;
+    adj.clear(); base_path.clear(); raw_path.clear();
     while (std::getline(infile, line)) {
         if (line.empty() || line[0] == '#' || line[0] == '[') continue;
 
@@ -70,76 +64,46 @@ inline bool loadPolyhedronFromIni(const std::string& ini_path, Polyhedron& poly,
         std::getline(iss, value);
         value.erase(0, value.find_first_not_of(" \t"));
 
-        if (key == "base_path") {
-            base_path = value;
-        } else if (key == "category") {
-            category = value;
-        } else if (key == "file") {
-            file = value;
-        }
+        if (key == "adj_path") adj = value;
+        else if (key == "base_path") base_path = value;
+        else if (key == "raw_path") raw_path = value;
     }
 
-    if (base_path.empty() || category.empty() || file.empty()) {
-        std::cerr << "Error: Missing fields in config file." << std::endl;
+    if (adj.empty() || base_path.empty() || raw_path.empty()) {
+        std::cerr << "Error: Missing one or more required paths in config." << std::endl;
         return false;
     }
 
-    symmetric = false;
-    if (!file.empty()) {
-        char head = file[0];
-        if (head == 'a' || head == 'p' || head == 'r') {
-            symmetric = true;
-        } else if (file.size() == 3 && file[0] == 's') {
-            std::string num_part = file.substr(1, 2);
+    return true;
+}
+
+inline bool loadPolyhedronFromFile(const std::string& adj, Polyhedron& poly) {
+    return loadAdjacencyFile(adj, poly);
+}
+
+inline bool isSymmetricFromFilename(const std::string& adj) {
+    std::string filename = adj.substr(adj.find_last_of("/\\") + 1);
+    if (filename.empty()) return false;
+
+    char head = filename[0];
+    if (head == 'a' || head == 'p' || head == 'r') return true;
+
+    if (filename.size() >= 3 && filename[0] == 's') {
+        std::string num_part = filename.substr(1, 2);
+        try {
             int num = std::stoi(num_part);
-            if (1 <= num && num <= 11) {
-                symmetric = true;
-            }
+            return (1 <= num && num <= 11);
+        } catch (...) {
+            return false;
         }
     }
-
-    return loadPolyhedronFromPath(base_path, category, file, poly);
+    return false;
 }
 
-inline bool parseIniFile(const std::string& ini_path, std::string& base_path, std::string& category, std::string& file) {
-    std::ifstream infile(ini_path);
+inline bool loadBasePairsFromFile(const std::string& base_path, std::vector<std::pair<int, int>>& base_pairs) {
+    std::ifstream infile(base_path);
     if (!infile) {
-        std::cerr << "Error: Cannot open config file: " << ini_path << std::endl;
-        return false;
-    }
-
-    std::string line;
-    while (std::getline(infile, line)) {
-        if (line.empty() || line[0] == '[') continue;
-
-        std::istringstream iss(line);
-        std::string key, eq, value;
-        if (!(iss >> key >> eq) || eq != "=") continue;
-        std::getline(iss, value);
-        value.erase(0, value.find_first_not_of(" \t"));
-
-        if (key == "base_path") {
-            base_path = value;
-        } else if (key == "category") {
-            category = value;
-        } else if (key == "file") {
-            file = value;
-        }
-    }
-
-    return !(base_path.empty() || category.empty() || file.empty());
-}
-
-inline bool loadBasePairsFromIni(const std::string& ini_path, std::vector<std::pair<int, int>>& base_pairs) {
-    std::string base_path, category, file;
-    if (!parseIniFile(ini_path, base_path, category, file)) {
-        return false;
-    }
-
-    std::string base_file = base_path + "/polyhedron/" + category + "/base/" + file + ".base";
-    std::ifstream infile(base_file);
-    if (!infile) {
-        std::cerr << "Error: Cannot open base file: " << base_file << std::endl;
+        std::cerr << "Error: Cannot open base file: " << base_path << std::endl;
         return false;
     }
 
@@ -149,33 +113,6 @@ inline bool loadBasePairsFromIni(const std::string& ini_path, std::vector<std::p
     }
 
     return true;
-}
-
-inline bool loadOutputPathFromIni(const std::string& ini_path, std::string& output_path) {
-    std::ifstream infile(ini_path);
-    if (!infile) {
-        std::cerr << "Error: Cannot open config file: " << ini_path << std::endl;
-        return false;
-    }
-
-    std::string line;
-    output_path.clear();
-    while (std::getline(infile, line)) {
-        if (line.empty() || line[0] == '#' || line[0] == '[') continue;
-
-        std::istringstream iss(line);
-        std::string key, eq, value;
-        if (!(iss >> key >> eq) || eq != "=") continue;
-        std::getline(iss, value);
-        value.erase(0, value.find_first_not_of(" \t"));
-
-        if (key == "output_path") {
-            output_path = value;
-            break;
-        }
-    }
-
-    return !output_path.empty();
 }
 
 } // namespace IOUtil

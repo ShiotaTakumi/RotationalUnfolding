@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 """
-This script interactively generates a configuration file unfold_config.ini
+This script interactively generates a configuration file path_list.ini
 to be used as input for the rotational unfolding C++ program.
 
 The configuration includes:
-- The base path to the data directory
-- A polyhedron category (e.g., platonic, archimedean, prism, etc.)
-- The file name of a .adj adjacency data file
-- The output file path for the resulting unfolding data
+- Full path to the .adj adjacency data file
+- Full path to the .base base face/edge pair file
+- Output path for the resulting unfolding data
 
 Usage:
     python3 generate_input.py [output_directory]
@@ -29,9 +28,9 @@ def main():
         print(f"Error: Output directory does not exist: {output_dir}")
         exit(1)
 
-    # --- Prompt for base data path ---
-    base_path = input("Enter base path to data directory (e.g., ../../data): ").strip()
-    if not os.path.isdir(base_path):
+    # --- Prompt for data path ---
+    data_path = input("Enter path to data directory (e.g., ../../data): ").strip()
+    if not os.path.isdir(data_path):
         print("Error: Invalid base path.")
         exit(1)
 
@@ -48,7 +47,7 @@ def main():
     category = categories[selection - 1]
 
     # --- List available .adj files ---
-    adj_dir = os.path.join(base_path, "polyhedron", category, "adjacent")
+    adj_dir = os.path.join(data_path, "polyhedron", category, "adjacent")
     if not os.path.isdir(adj_dir):
         print(f"Error: Directory not found: {adj_dir}")
         exit(1)
@@ -69,23 +68,23 @@ def main():
         print("Error: Output path is empty.")
         exit(1)
 
-    # --- Create output path ---
+    # --- Construct full paths ---
+    adj_path = os.path.join(data_path, "polyhedron", category, "adjacent", file + ".adj")
+    base_path = os.path.join(data_path, "polyhedron", category, "base", file + ".base")
     unfolding_base = os.path.join(out_base, "raw", category)
     os.makedirs(unfolding_base, exist_ok=True)
-    output_path = os.path.join(unfolding_base, file + ".ufd")
+    raw_path = os.path.join(unfolding_base, file + ".ufd")
 
-    # --- Write to unfold_config.ini ---
-    config_path = os.path.join(output_dir, "unfold_config.ini")
+    # --- Write to path_list.ini ---
+    config_path = os.path.join(output_dir, "path_list.ini")
     with open(config_path, "w") as f:
-        f.write("[polyhedron]\n")
-        f.write("base_path   = " + base_path + "\n")
-        f.write("category    = " + category + "\n")
-        f.write("file        = " + file + "\n\n")
-        f.write("[output]\n")
-        f.write("output_path = " + output_path + "\n")
+        f.write("[paths]\n")
+        f.write("adj_path  = " + adj_path + "\n")
+        f.write("base_path = " + base_path + "\n")
+        f.write("raw_path  = " + raw_path + "\n")
 
     print("\nSuccess!")
-    print(f"Wrote configuration to unfold_config.ini.")
+    print(f"Wrote configuration to {config_path}")
 
 if __name__ == "__main__":
     main()
