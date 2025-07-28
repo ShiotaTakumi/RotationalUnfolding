@@ -8,29 +8,44 @@
 #include <vector>
 
 int main(int argc, char* argv[]) {
+    // 設定ファイル（.ini）がコマンドライン引数で
+    // 指定されていない場合のエラー
+    // Error if the configuration file is not specified
+    // as a command-line argument
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " path_list.ini" << std::endl;
+        std::cerr << "Error: Please provide the configuration file path_list.ini as the first argument." << std::endl;
         return 1;
     }
 
-    const std::string ini_path = argv[1];
+    const std::string ini_file = argv[1];
 
-    // Load paths from ini file
-    std::string data_path, base_path, raw_path;
-    if (!IOUtil::loadPathListIni(ini_path, data_path, base_path, raw_path)) {
-        std::cerr << "Failed to read required paths from ini file." << std::endl;
+    // .adj ファイル（多面体の隣接関係を表す）へのパス
+    // Path to the .adj file (polyhedron adjacency information)
+    std::string adj_path;
+    // .base ファイル（展開の起点とする面と頂点のペアを格納）へのパス
+    // Path to the .base file (base face–edge pairs)
+    std::string base_path;
+    // 同型な部分展開図も含む生のデータを格納する
+    // .ufd ファイル（部分展開図の面どうしのつながりを表す）へのパス
+    // Path to the .ufd file (unfolding data representing face-to-face connections)
+    // that stores raw unfolding data, including isomorphic ones
+    std::string raw_path;
+
+    // 設定ファイル（.ini）からパスの情報を読み込む
+    // Load paths from the configuration (.ini) file.
+    if (!IOUtil::loadPathListIni(ini_file, adj_path, base_path, raw_path)) {
         return 1;
     }
 
-    // Load polyhedron from data_path (.adj)
+    // Load polyhedron from adj_path (.adj)
     Polyhedron poly;
-    if (!IOUtil::loadPolyhedronFromFile(data_path, poly)) {
+    if (!IOUtil::loadPolyhedronFromFile(adj_path, poly)) {
         std::cerr << "Failed to load polyhedron from .adj file." << std::endl;
         return 1;
     }
 
     // Determine symmetry from filename
-    const bool symmetric = IOUtil::isSymmetricFromFilename(data_path);
+    const bool symmetric = IOUtil::isSymmetricFromFilename(adj_path);
     std::cout << (symmetric ? "Symmetric " : "Asymmetric ") << "polyhedron" << std::endl;
 
     // Load base face/edge pairs
