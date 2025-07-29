@@ -20,15 +20,15 @@ int main(int argc, char* argv[]) {
     const std::string ini_file = argv[1];
 
     // .adj ファイル（多面体の隣接関係を表す）へのパス
-    // Path to the .adj file (polyhedron adjacency information)
+    // Path to the .adj file (polyhedron adjacency information).
     std::string adj_path;
     // .base ファイル（展開の起点とする面と頂点のペアを格納）へのパス
-    // Path to the .base file (base face–edge pairs)
+    // Path to the .base file (base face–edge pairs).
     std::string base_path;
     // 同型な部分展開図も含む生のデータを格納する
     // .ufd ファイル（部分展開図の面どうしのつながりを表す）へのパス
     // Path to the .ufd file (unfolding data representing face-to-face connections)
-    // that stores raw unfolding data, including isomorphic ones
+    // that stores raw unfolding data, including isomorphic ones.
     std::string raw_path;
 
     // 設定ファイル（.ini）からパスの情報を読み込む
@@ -37,10 +37,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Load polyhedron from adj_path (.adj)
+    // 読み込んだ多面体の隣接構造を保持するインスタンス
+    // Polyhedron instance storing the loaded adjacency structure.
     Polyhedron poly;
+
+    // .adj ファイル（多面体の隣接関係を表す）を読み込む
+    // Load the .adj file (polyhedron adjacency information).
     if (!IOUtil::loadPolyhedronFromFile(adj_path, poly)) {
-        std::cerr << "Failed to load polyhedron from .adj file." << std::endl;
         return 1;
     }
 

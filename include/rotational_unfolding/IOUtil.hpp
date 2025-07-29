@@ -10,7 +10,7 @@
 
 namespace IOUtil {
 
-// 設定ファイル（.ini）からパスの設定を読み込み、[paths] セクションの値を取得する。
+// 設定ファイル（.ini）からパスの設定を読み込み、[paths] セクションの値を取得する関数
 // 必須キー：adj_path、base_path、raw_path
 // Loads path settings from a .ini configuration file,
 // reading values from the [paths] section.
@@ -18,15 +18,13 @@ namespace IOUtil {
 inline bool loadPathListIni(const std::string& ini_file, std::string& adj_path, std::string& base_path, std::string& raw_path) {
     std::ifstream infile(ini_file);
     if (!infile) {
-        std::cerr << "Error: Cannot open config file: " << ini_file << std::endl;
+        std::cerr << "Error: Cannot open .ini file: " << ini_file << std::endl;
         return false;
     }
 
     std::string line;
 
-    adj_path.clear();
-    base_path.clear();
-    raw_path.clear();
+    adj_path.clear(); base_path.clear(); raw_path.clear();
 
     while (std::getline(infile, line)) {
         if (line.empty() || line[0] == '[' || line[0] == '#' || line[0] == ';') continue;
@@ -43,24 +41,27 @@ inline bool loadPathListIni(const std::string& ini_file, std::string& adj_path, 
     }
 
     if (adj_path.empty() || base_path.empty() || raw_path.empty()) {
-        std::cerr << "Error: Missing one or more required paths in config." << std::endl;
+        std::cerr << "Error: Missing one or more required keys (adj_path, base_path, raw_path) in the .ini file." << std::endl;
         return false;
     }
 
     return true;
 }
 
-// Loads a polyhedron structure from an adjacency file. Fills
-// in num_faces, gon_list, adj_edges_list, and adj_faces_list.
-inline bool loadAdjacencyFile(const std::string& filepath, Polyhedron& poly) {
-    std::ifstream file(filepath);
+// .adj ファイルから多面体の構造を読み込む関数
+// num_faces、gon_list、adj_edges、adj_faces の各メンバを設定する
+// Loads a polyhedron structure from an adjacency (.adj) file.
+// Fills the members: num_faces, gon_list, adj_edges, and adj_faces.
+inline bool loadPolyhedronFromFile(const std::string& adj_path, Polyhedron& poly) {
+    std::ifstream file(adj_path);
     if (!file) {
-        std::cerr << "Error: Cannot open file " << filepath << std::endl;
+        std::cerr << "Error: Cannot open .adj file: " << adj_path << std::endl;
         return false;
     }
 
     std::string line;
-    int current_face = -1;
+    int current_face = 0;
+    bool hasN = false, hasE = false, hasF = false;
 
     while (std::getline(file, line)) {
         if (line.rfind("NF", 0) == 0) {
@@ -70,27 +71,30 @@ inline bool loadAdjacencyFile(const std::string& filepath, Polyhedron& poly) {
             poly.gon_list.resize(nf);
             poly.adj_edges.resize(nf);
             poly.adj_faces.resize(nf);
-        } else if (line.rfind("# --- Face", 0) == 0) {
-            current_face++;
         } else if (line.rfind("N", 0) == 0) {
             std::istringstream(line.substr(1)) >> poly.gon_list[current_face];
+            hasN = true;
         } else if (line.rfind("E", 0) == 0) {
             std::istringstream iss(line.substr(1));
             int e;
             while (iss >> e) poly.adj_edges[current_face].push_back(e);
+            hasE = true;
         } else if (line.rfind("F", 0) == 0) {
             std::istringstream iss(line.substr(1));
             int f;
             while (iss >> f) poly.adj_faces[current_face].push_back(f);
+            hasF = true;
+        }
+
+        // N, E, F の要素を読み込んだら次の面へ
+        // Move to the next face after reading all N, E, and F elements.
+        if (hasN && hasE && hasF) {
+            current_face++;
+            hasN = hasE = hasF = false; // リセット / Reset
         }
     }
 
     return true;
-}
-
-// Wrapper for loading a polyhedron using an adjacency file.
-inline bool loadPolyhedronFromFile(const std::string& adj, Polyhedron& poly) {
-    return loadAdjacencyFile(adj, poly);
 }
 
 // Determines symmetry from filename prefix: a, p, r, or s01–s11.
