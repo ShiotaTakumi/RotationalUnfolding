@@ -126,6 +126,10 @@ inline bool loadBasePairsFromFile(const std::string& base_path, std::vector<std:
 // - The filename starts with 'a', 'p', or 'r'.
 // - The filename starts with 's' followed by a number between 01 and 11.
 inline bool isSymmetricFromFilename(const std::string& adj) {
+    // パス内で最後に現れるスラッシュ '/' またはバックスラッシュ '\' を探し、
+    // その位置以降の文字列（ファイル名）を取得する
+    // Find the last occurrence of '/' or '\' in the path
+    // and extract the filename that follows it
     std::string filename = adj.substr(adj.find_last_of("/\\") + 1);
     if (filename.empty()) return false;
 
