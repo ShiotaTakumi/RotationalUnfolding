@@ -71,9 +71,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Determine symmetry from filename
+    // 多面体が対称かどうかを示すフラグ（ファイル名から判定）
+    //  Flag indicating whether the polyhedron is symmetric
+    // (determined from the filename)
     const bool symmetric = IOUtil::isSymmetricFromFilename(adj_path);
-    std::cout << (symmetric ? "Symmetric " : "Asymmetric ") << "polyhedron" << std::endl;
+    std::cout << (symmetric ? "Symmetric " : "Asymmetric ") << "polyhedron\n";
 
     // Run unfolding search
     const int total = base_pairs.size();

@@ -117,15 +117,22 @@ inline bool loadBasePairsFromFile(const std::string& base_path, std::vector<std:
     return true;
 }
 
-// Determines symmetry from filename prefix: a, p, r, or s01–s11.
+// .adj ファイルの名前から多面体が対称かどうかを判定する関数
+// 対称とみなす条件:
+// - ファイル名が 'a', 'p', 'r' で始まる場合
+// - ファイル名の 's' に続く数字が 01～11 の場合
+// Determines whether the polyhedron is symmetric based on the .adj filename.
+// It is considered symmetric if:
+// - The filename starts with 'a', 'p', or 'r'.
+// - The filename starts with 's' followed by a number between 01 and 11.
 inline bool isSymmetricFromFilename(const std::string& adj) {
     std::string filename = adj.substr(adj.find_last_of("/\\") + 1);
     if (filename.empty()) return false;
 
-    char head = filename[0];
-    if (head == 'a' || head == 'p' || head == 'r') return true;
+    char prefix = filename[0];
+    if (prefix == 'a' || prefix == 'p' || prefix == 'r') return true;
 
-    if (filename.size() >= 3 && filename[0] == 's') {
+    if (filename.size() >= 3 && prefix == 's') {
         std::string num_part = filename.substr(1, 2);
         try {
             int num = std::stoi(num_part);
