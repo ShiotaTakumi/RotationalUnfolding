@@ -77,16 +77,20 @@ int main(int argc, char* argv[]) {
     const bool symmetric = IOUtil::isSymmetricFromFilename(adj_path);
     std::cout << (symmetric ? "Symmetric " : "Asymmetric ") << "polyhedron\n";
 
-    // Run unfolding search
     const int total = base_pairs.size();
-    int current = 0;
-    for (const auto& [face, edge] : base_pairs) {
-        std::cout << (++current) << "/" << total << std::endl;
+    int current = 1;
 
-        RotationalUnfolding search(poly, face, edge, symmetric, symmetric);
+    // 全ての基準面と基準辺のペアに対して回転展開を実行
+    // Execute rotational unfolding for each base face–edge pair
+    for (const auto& [face, edge] : base_pairs) {
+        std::cout << (current++) << "/" << total << "\n";
+
         std::stringstream buffer;
+        RotationalUnfolding search(poly, face, edge, symmetric, symmetric);
         search.searchSequence(buffer);
         raw_file << buffer.str();
+
+        // 安全のため出力を都度フラッシュ
         // Flush after each output for safety
         raw_file.flush();
     }
