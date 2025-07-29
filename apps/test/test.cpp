@@ -85,10 +85,10 @@ int main(int argc, char* argv[]) {
     for (const auto& [face, edge] : base_pairs) {
         std::cout << (current++) << "/" << total << "\n";
 
-        std::stringstream buffer;
-        RotationalUnfolding search(poly, face, edge, symmetric, symmetric);
-        search.searchSequence(buffer);
-        raw_file << buffer.str();
+        std::stringstream ufd_output;
+        RotationalUnfolding rot_ufd(poly, face, edge, symmetric, symmetric);
+        rot_ufd.runRotationalUnfolding(ufd_output);
+        raw_file << ufd_output.str();
 
         // 安全のため出力を都度フラッシュ
         // Flush after each output for safety

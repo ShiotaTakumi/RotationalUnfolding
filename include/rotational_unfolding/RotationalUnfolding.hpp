@@ -10,34 +10,49 @@
 #include <cmath>
 #include <sstream>
 
-// A class that explores path-shape partial edge unfolding
-// starting from a specified face and edge of a polyhedron,
-// and checks for overlap at both endpoints of each path.
+// 与えられた多面体と基準面および基準辺を基に、パス状の部分展開図を探索するクラス
+// 本クラスでは、各パス状の部分展開図の両端点での重なりチェックも行う
+// A class that explores path-shaped partial edge unfoldings of
+// a given polyhedron starting from a specified base face and edge.
+// This class checks for overlaps at both endpoints of each edge unfolding.
 class RotationalUnfolding {
 public:
-    // Constructor. Prepares the path-shape edge unfolding
-    // search from the specified base face and edge.
-    RotationalUnfolding(const Polyhedron& poly, int base_face, int base_edge, bool enable_symmetry, bool y_moved_off_axis)
-    : polyhedron(poly),
-      base_face_id(base_face),
-      base_edge_id(base_edge),
-      symmetry_enabled(enable_symmetry),
-      y_moved_off_axis(y_moved_off_axis)
-      {
-        setupInitialState();
-      }
+    // コンストラクタ
+    // 多面体の情報、基準面、基準辺、立体の対称性を受け取る
+    // Constructor
+    // Receives the polyhedron data, base face, base edge, and symmetry option
+    RotationalUnfolding(
+        const Polyhedron& poly,
+        int base_face,
+        int base_edge,
+        bool enable_symmetry,
+        bool y_moved_off_axis
+    )
+        : polyhedron(poly),
+        base_face_id(base_face),
+        base_edge_id(base_edge),
+        symmetry_enabled(enable_symmetry),
+        y_moved_off_axis(y_moved_off_axis) {}
 
-    // Entry point for launching the recursive search
-    // for path-shape edge unfoldings. Internally sets up
-    // the first face and delegates to the core search logic.
-    void searchSequence(std::ostream& out) {
+    // 回転展開の探索を開始するメソッド
+    // 初期状態を設定し、基準面を配置したうえで、再起処理を呼び出す
+    // Method to start the rotational unfolding search.
+    // Sets up the initial state, places the base face,
+    // and calls the recursive process.
+    void runRotationalUnfolding(std::ostream& ufd_output) {
+
+        // 各面が未使用（true）か使用済み（false）かを管理する配列
+        // Array tracking whether each face is
+        // unused (true) or already used (false).
         std::vector<bool> face_usage(polyhedron.num_faces, true);
         face_usage[base_face_id] = false;
 
+        // unfolding_sequence を空にする
+        // Clear unfolding_sequence to ensure it is empty
         unfolding_sequence.clear();
-        // The base face is placed with its center at (0, 0),
-        // and the base edge is perpendicular to the x-axis
-        // and lies in the x > 0.
+
+        // unfolding_sequence に最初の面（基準面）を追加する
+        // Add the base face as the first element of unfolding_sequence
         unfolding_sequence.push_back({
             base_face_id,
             polyhedron.gon_list[base_face_id],
@@ -47,7 +62,8 @@ public:
             0.0     // angle
         });
 
-        searchUnfoldingSequence(initial_state, face_usage, out);
+        setupInitialState();
+        searchPartialUnfoldings(initial_state, face_usage, ufd_output);
     }
 
 private:
@@ -118,9 +134,9 @@ private:
     // Recursively searches for path-shape edge unfoldings
     // based on the initial state, checking for overlap along
     // the way and applying symmetry pruning if enabled.
-    void searchUnfoldingSequence(UnfoldingState state,
+    void searchPartialUnfoldings(UnfoldingState state,
                                  std::vector<bool>& face_usage,
-                                 std::ostream& out) {
+                                 std::ostream& ufd_output) {
         int current_face_id = state.face_id;
         int current_face_gon = polyhedron.gon_list[current_face_id];
 
@@ -167,16 +183,16 @@ private:
         // the current face overlap, output the current
         // path-shape edge unfolding as a potential overlap case.
         if (distance_from_origin < base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
-            out << unfolding_sequence.size() << " ";
+            ufd_output << unfolding_sequence.size() << " ";
             for (const auto& f : unfolding_sequence) {
-                out << f.gon << " "
+                ufd_output << f.gon << " "
                           << f.edge_id << " "
                           << f.face_id << " "
                           << f.x << " "
                           << f.y << " "
                           << f.angle << " ";
             }
-            out << std::endl;
+            ufd_output << std::endl;
         }
 
         int current_edge_pos = polyhedron.getEdgeIndex(current_face_id, state.edge_id);
@@ -212,7 +228,7 @@ private:
                 state.y_moved_off_axis
             };
 
-            searchUnfoldingSequence(next_state, face_usage, out);
+            searchPartialUnfoldings(next_state, face_usage, ufd_output);
         }
 
         // Backtrack
