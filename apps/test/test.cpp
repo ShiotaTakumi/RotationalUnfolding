@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     // .adj ファイル（多面体の隣接関係を表す）へのパス
     // Path to the .adj file (polyhedron adjacency information).
     std::string adj_path;
-    // .base ファイル（展開の起点とする面と頂点のペアを格納）へのパス
+    // .base ファイル（基準面と基準辺のペアのリスト）へのパス
     // Path to the .base file (base face–edge pairs).
     std::string base_path;
     // 同型な部分展開図も含む生のデータを格納する
@@ -47,14 +47,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Determine symmetry from filename
-    const bool symmetric = IOUtil::isSymmetricFromFilename(adj_path);
-    std::cout << (symmetric ? "Symmetric " : "Asymmetric ") << "polyhedron" << std::endl;
-
-    // Load base face/edge pairs
+    //  基準面と基準辺のペアのリスト
+    // List of base face–edge pairs
     std::vector<std::pair<int, int>> base_pairs;
+
+    // .base ファイル（基準面と基準辺のペアのリスト）を読み込む
+    // Load the .base file (list of base face–edge pairs).
     if (!IOUtil::loadBasePairsFromFile(base_path, base_pairs)) {
-        std::cerr << "Failed to load base face/edge pairs from .base file." << std::endl;
         return 1;
     }
 
@@ -64,6 +63,10 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error: Cannot open output file: " << raw_path << std::endl;
         return 1;
     }
+
+    // Determine symmetry from filename
+    const bool symmetric = IOUtil::isSymmetricFromFilename(adj_path);
+    std::cout << (symmetric ? "Symmetric " : "Asymmetric ") << "polyhedron" << std::endl;
 
     // Run unfolding search
     const int total = base_pairs.size();

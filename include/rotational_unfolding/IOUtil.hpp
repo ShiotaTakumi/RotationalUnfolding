@@ -97,6 +97,26 @@ inline bool loadPolyhedronFromFile(const std::string& adj_path, Polyhedron& poly
     return true;
 }
 
+// .base ファイルから、初期配置する面と、
+// 最初の回転で軸となる辺のペアのリストを読み込む関数
+// Reads a list of face–edge pairs from a .base file,
+// where each pair specifies the initial face placed on the plane
+// and the edge used as the axis for the first rotation.
+inline bool loadBasePairsFromFile(const std::string& base_path, std::vector<std::pair<int, int>>& base_pairs) {
+    std::ifstream infile(base_path);
+    if (!infile) {
+        std::cerr << "Error: Cannot open .base file: " << base_path << std::endl;
+        return false;
+    }
+
+    int face, edge;
+    while (infile >> face >> edge) {
+        base_pairs.emplace_back(face, edge);
+    }
+
+    return true;
+}
+
 // Determines symmetry from filename prefix: a, p, r, or s01–s11.
 inline bool isSymmetricFromFilename(const std::string& adj) {
     std::string filename = adj.substr(adj.find_last_of("/\\") + 1);
@@ -115,22 +135,6 @@ inline bool isSymmetricFromFilename(const std::string& adj) {
         }
     }
     return false;
-}
-
-// Loads base face/edge ID pairs from a .base file.
-inline bool loadBasePairsFromFile(const std::string& base_path, std::vector<std::pair<int, int>>& base_pairs) {
-    std::ifstream infile(base_path);
-    if (!infile) {
-        std::cerr << "Error: Cannot open base file: " << base_path << std::endl;
-        return false;
-    }
-
-    int face, edge;
-    while (infile >> face >> edge) {
-        base_pairs.emplace_back(face, edge);
-    }
-
-    return true;
 }
 
 } // namespace IOUtil
