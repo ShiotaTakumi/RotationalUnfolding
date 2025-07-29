@@ -47,8 +47,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    //  基準面と基準辺のペアのリスト
-    // List of base face–edge pairs
+    // 基準面と基準辺のペアのリスト
+    // List of base face–edge pairs.
     std::vector<std::pair<int, int>> base_pairs;
 
     // .base ファイル（基準面と基準辺のペアのリスト）を読み込む
@@ -57,10 +57,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Prepare output file stream
-    std::ofstream out_file(raw_path);
-    if (!out_file) {
-        std::cerr << "Error: Cannot open output file: " << raw_path << std::endl;
+    // 回転展開の実行結果を書き込むための出力 .ufd ファイルを開く
+    // Open the output .ufd file for writing the results of the rotational unfolding.
+    std::ofstream raw_file(raw_path);
+
+    // 回転展開の実行結果を出力する .ufd ファイル（部分展開図の面どうしのつながりを表す）を
+    // 開くことができるかの確認
+    // Check if the output .ufd file for writing the results of
+    // the rotational unfolding (representing face-to-face connections
+    // of partial unfoldings) can be opened.
+    if (!raw_file) {
+        std::cerr << "Error: Cannot open .ufd file: " << raw_path << std::endl;
         return 1;
     }
 
@@ -77,9 +84,9 @@ int main(int argc, char* argv[]) {
         RotationalUnfolding search(poly, face, edge, symmetric, symmetric);
         std::stringstream buffer;
         search.searchSequence(buffer);
-        out_file << buffer.str();
+        raw_file << buffer.str();
         // Flush after each output for safety
-        out_file.flush();
+        raw_file.flush();
     }
 
     return 0;
