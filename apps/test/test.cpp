@@ -57,12 +57,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 回転展開の実行結果を書き込むための出力 .ufd ファイルを開く
-    // Open the output .ufd file for writing the results of the rotational unfolding.
+    // 回転展開の結果を書き込むための出力ストリーム
+    // Output stream for writing the results of the rotational unfolding.
     std::ofstream raw_file(raw_path);
 
-    // 回転展開の実行結果を出力する .ufd ファイル（部分展開図の面どうしのつながりを表す）を
-    // 開くことができるかの確認
+    // 回転展開の実行結果を出力する .ufd ファイル
+    // （部分展開図の面どうしのつながりを表す）を開くことができるかの確認
     // Check if the output .ufd file for writing the results of
     // the rotational unfolding (representing face-to-face connections
     // of partial unfoldings) can be opened.
