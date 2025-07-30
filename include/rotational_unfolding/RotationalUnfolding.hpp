@@ -35,7 +35,7 @@ public:
         y_moved_off_axis(y_moved_off_axis) {}
 
     // 回転展開の探索を開始するメソッド
-    // 初期状態を設定し、基準面を配置したうえで、再起処理を呼び出す
+    // 初期状態を設定し、基準面を配置したうえで、再帰処理を呼び出す
     // Method to start the rotational unfolding search.
     // Sets up the initial state, places the base face,
     // and calls the recursive process.
@@ -47,8 +47,6 @@ public:
         std::vector<bool> face_usage(polyhedron.num_faces, true);
         face_usage[base_face_id] = false;
 
-        // partial_unfolding を空にする
-        // Clear partial_unfolding to ensure it is empty
         partial_unfolding.clear();
 
         // partial_unfolding に最初の面（基準面）を追加する
@@ -156,11 +154,11 @@ private:
     }
 
     // 現在の探索の対象となっている面を部分展開図から取り除き、
-    // その面を「未使用」に戻すための補助関数
-    // Helper function that removes the currently searched face
+    // その面を「未使用」に戻すための関数
+    // Function that removes the currently searched face
     // from the partial unfolding and marks it as unused.
-    inline void backtrackCurrentFace(int current_face_id,
-                                     std::vector<bool>& face_usage) {
+    void backtrackCurrentFace(int current_face_id,
+                              std::vector<bool>& face_usage) {
         partial_unfolding.pop_back();
         face_usage[current_face_id] = true;
     }
@@ -258,7 +256,7 @@ private:
                           << f.y << " "
                           << f.angle << " ";
             }
-            ufd_output << std::endl;
+            ufd_output << "\n";
         }
 
         // 隣接する面を探索するため、現在の辺の位置を取得する
