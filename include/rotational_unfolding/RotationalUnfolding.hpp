@@ -2,7 +2,7 @@
 #define ROTATIONAL_UNFOLDING_HPP
 
 #include "Polyhedron.hpp"
-#include "UnfoldingState.hpp"
+#include "FaceState.hpp"
 #include "UnfoldedFace.hpp"
 #include "GeometryUtil.hpp"
 #include <vector>
@@ -62,7 +62,7 @@ public:
             0.0     // angle
         });
 
-        UnfoldingState initial_state = setupInitialState();
+        FaceState initial_state = setupInitialState();
         searchPartialUnfoldings(initial_state, face_usage, ufd_output);
     }
 
@@ -98,7 +98,7 @@ private:
 
     // Computes the initial state after rotating the polyhedron
     // around the base edge used as the unfolding axis.
-    UnfoldingState setupInitialState() {
+    FaceState setupInitialState() {
         int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
 
         // Compute initial total remaining radius distance,
@@ -127,7 +127,7 @@ private:
         // so the initial angle is set to -180°.
         double next_face_angle = -180.0;
 
-        UnfoldingState initial_state = {
+        FaceState initial_state = {
             next_face_id,
             next_edge_id,
             next_face_x,
@@ -144,7 +144,7 @@ private:
     // Recursively searches for path-shape edge unfoldings
     // based on the initial state, checking for overlap along
     // the way and applying symmetry pruning if enabled.
-    void searchPartialUnfoldings(UnfoldingState state,
+    void searchPartialUnfoldings(FaceState state,
                                  std::vector<bool>& face_usage,
                                  std::ostream& ufd_output) {
         int current_face_id = state.face_id;
@@ -227,7 +227,7 @@ private:
             double next_face_x = state.x + (current_inradius + next_inradius) * std::cos(next_face_angle * GeometryUtil::PI / 180.0);
             double next_face_y = state.y + (current_inradius + next_inradius) * std::sin(next_face_angle * GeometryUtil::PI / 180.0);
 
-            UnfoldingState next_state = {
+            FaceState next_state = {
                 next_face_id,
                 next_edge_id,
                 next_face_x,
