@@ -47,13 +47,13 @@ public:
         std::vector<bool> face_usage(polyhedron.num_faces, true);
         face_usage[base_face_id] = false;
 
-        // unfolding_sequence を空にする
-        // Clear unfolding_sequence to ensure it is empty
-        unfolding_sequence.clear();
+        // partial_unfolding を空にする
+        // Clear partial_unfolding to ensure it is empty
+        partial_unfolding.clear();
 
-        // unfolding_sequence に最初の面（基準面）を追加する
-        // Add the base face as the first element of unfolding_sequence
-        unfolding_sequence.push_back({
+        // partial_unfolding に最初の面（基準面）を追加する
+        // Add the base face as the first element of partial_unfolding
+        partial_unfolding.push_back({
             base_face_id,
             polyhedron.gon_list[base_face_id],
             base_edge_id,
@@ -62,8 +62,12 @@ public:
             0.0     // angle
         });
 
-        FaceState initial_state = setupInitialState();
-        searchPartialUnfoldings(initial_state, face_usage, ufd_output);
+        // 2面目だけは、基準面と基準辺を起点にした特別な処理が必要のため別途計算
+        // The second face requires a special calculation
+        // based on the base face and base edge.
+        FaceState second_face_state = getSecondFaceState();
+
+        searchPartialUnfoldings(second_face_state, face_usage, ufd_output);
     }
 
 private:
@@ -94,15 +98,19 @@ private:
     // 現在、探索している部分展開図に含まれる面の情報の配列
     // Array storing information of faces included
     // in the currently explored partial unfolding.
-    std::vector<UnfoldedFace> unfolding_sequence;
+    std::vector<UnfoldedFace> partial_unfolding;
 
-    // Computes the initial state after rotating the polyhedron
-    // around the base edge used as the unfolding axis.
-    FaceState setupInitialState() {
+    // 多面体を基準辺を回転軸として展開したあとの底面
+    // （つまり部分展開図の 2 つ目の面）の状態を計算する関数
+    // Computes the state of the base face after unfolding
+    // the polyhedron around the base edge as the rotation axis
+    // (i.e., the second face in the partial unfolding).
+    FaceState getSecondFaceState() {
         int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
 
-        // Compute initial total remaining radius distance,
-        // excluding the base face.
+        // 基準面を除いた、残りの全ての面の外接円の直径の合計を計算
+        // Calculate the sum of the diameters of the circumscribed circles
+        // of all remaining faces, excluding the base face.
         double remaining_distance = 0.0;
         for (int i = 0; i < polyhedron.num_faces; ++i) {
             if (i != base_face_id) {
@@ -110,35 +118,39 @@ private:
             }
         }
 
-        int next_face_id = polyhedron.adj_faces[base_face_id][base_edge_pos];
-        int next_edge_id = polyhedron.adj_edges[base_face_id][base_edge_pos];
+        int second_face_id = polyhedron.adj_faces[base_face_id][base_edge_pos];
+        int second_edge_id = polyhedron.adj_edges[base_face_id][base_edge_pos];
 
         double base_face_inradius = GeometryUtil::inradius(polyhedron.gon_list[base_face_id]);
-        double next_face_inradius = GeometryUtil::inradius(polyhedron.gon_list[next_face_id]);
+        double second_face_inradius = GeometryUtil::inradius(polyhedron.gon_list[second_face_id]);
 
-        // Since the base edge is perpendicular to the x-axis,
-        // the center of the next face lies on the x-axis.
-        // The x-coordinate is the sum of the inradii of the
-        // base face and the next face.
-        double next_face_x = base_face_inradius + next_face_inradius;
-        double next_face_y = 0.0;
-        // The base edge lies at 0° from the base face center,
-        // but appears at -180° from the next face center,
+        // 基準辺は、x 軸に対して垂直に配置する
+        // 正多面体を考えているため、second face の中心の y 座標は 0、
+        // x 座標は、基準面と second face の半径の合計となる
+        // Since we consider a regular-faced polyhedron where the base edge
+        // is placed perpendicular to the x-axis, the y-coordinate of the
+        // second face's center is 0, and the x-coordinate is the sum of
+        // the inradii of the base face and the second face.
+
+        double second_face_x = base_face_inradius + second_face_inradius;
+        double second_face_y = 0.0;
+
+        // Second face の中心から見て、基準辺は -180° の位置にあるため、
+        // 初期角度は -180° に設定される。
+        // From the center of the second face, the base edge is located at -180°,
         // so the initial angle is set to -180°.
-        double next_face_angle = -180.0;
+        double second_face_angle = -180.0;
 
-        FaceState initial_state = {
-            next_face_id,
-            next_edge_id,
-            next_face_x,
-            next_face_y,
-            next_face_angle,
+        return {
+            second_face_id,
+            second_edge_id,
+            second_face_x,
+            second_face_y,
+            second_face_angle,
             remaining_distance,
             symmetry_enabled,
             y_moved_off_axis
         };
-
-        return initial_state;
     }
 
     // Recursively searches for path-shape edge unfoldings
@@ -154,7 +166,7 @@ private:
         state.remaining_distance -= 2 * GeometryUtil::circumradius(current_face_gon);
         GeometryUtil::normalizeAngle(state.angle);
 
-        unfolding_sequence.push_back({
+        partial_unfolding.push_back({
             current_face_id,
             current_face_gon,
             state.edge_id,
@@ -174,7 +186,7 @@ private:
         // Prune if the remaining faces are insufficient to
         // reach the base face.
         if (distance_from_origin > state.remaining_distance + base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
-            unfolding_sequence.pop_back();
+            partial_unfolding.pop_back();
             face_usage[current_face_id] = true;
             return;
         }
@@ -183,7 +195,7 @@ private:
         if (state.symmetry_enabled) {
             if (state.y > 0.0) state.y_moved_off_axis = false;
             if (state.y_moved_off_axis && state.y < 0.0) {
-                unfolding_sequence.pop_back();
+                partial_unfolding.pop_back();
                 face_usage[current_face_id] = true;
                 return;
             }
@@ -193,8 +205,8 @@ private:
         // the current face overlap, output the current
         // path-shape edge unfolding as a potential overlap case.
         if (distance_from_origin < base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
-            ufd_output << unfolding_sequence.size() << " ";
-            for (const auto& f : unfolding_sequence) {
+            ufd_output << partial_unfolding.size() << " ";
+            for (const auto& f : partial_unfolding) {
                 ufd_output << f.gon << " "
                           << f.edge_id << " "
                           << f.face_id << " "
@@ -242,7 +254,7 @@ private:
         }
 
         // Backtrack
-        unfolding_sequence.pop_back();
+        partial_unfolding.pop_back();
         face_usage[current_face_id] = true;
     }
 };
