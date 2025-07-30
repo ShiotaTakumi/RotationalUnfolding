@@ -28,10 +28,10 @@ struct FaceState {
     double angle;
 
     // 現在、部分展開図として使用されていない面
-    // （現在注目している面 face_id も含む）の外接円の合計
+    // （現在注目している面 face_id は含まない）の外接円の合計
     // Sum of the diameters of the circumscribed circles of
     // all faces that are not yet used in the partial unfolding,
-    // including the current face (face_id).
+    // excluding the current face (face_id).
     double remaining_distance;
 
     // y 軸対称性に基づく枝刈りを有効にするかどうかのフラグ
