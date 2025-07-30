@@ -62,35 +62,43 @@ public:
             0.0     // angle
         });
 
-        setupInitialState();
+        UnfoldingState initial_state = setupInitialState();
         searchPartialUnfoldings(initial_state, face_usage, ufd_output);
     }
 
 private:
-    // Reference to the input polyhedron structure.
+    // 入力として与えられる多面体の構造体（変更が無いため参照型）
+    // Input polyhedron structure
+    // (held as a reference since it is not modified).
     const Polyhedron& polyhedron;
-    // ID of the initial base face used to begin the unfolding.
+
+    // 初期配置する面（基準面）の番号
+    // ID of the base face used for the initial placement.
     int base_face_id;
-    // ID of the edge on the base face used as the rotation
-    // axis to initiate unfolding.
+    // 最初の回転で軸となる辺（基準辺）の番号
+    // ID of the base edge used as the rotation axis
+    // for the first unfolding step.
     int base_edge_id;
-    // Whether pruning based on symmetry with respect to
-    // the y-axis is enabled during the search.
+
+    // y 軸対称性に基づく枝刈りを有効にするかどうかのフラグ
+    // Flag indicating whether pruning based on y-axis symmetry is enabled.
     bool symmetry_enabled;
-    // Whether any face has deviated from the y-axis (y ≠ 0)
-    // since the base face.
+    // 新たに展開した面の中心座標が y 軸上以外に
+    // なったことがあるかを管理するフラグ
+    // symmetry_enabled が true の時にのみ使用
+    // Flag indicating whether the center of any newly unfolded face
+    // has deviated from the y-axis.
+    // Used only when symmetry_enabled is true.
     bool y_moved_off_axis;
-    // Initial state of the recursive unfolding process,
-    // derived from the face that becomes the new base
-    // when rotated around the base edge of the base face.
-    UnfoldingState initial_state;
-    // Array storing the current path-shape edge unfolding
-    // sequence.
+
+    // 現在、探索している部分展開図に含まれる面の情報の配列
+    // Array storing information of faces included
+    // in the currently explored partial unfolding.
     std::vector<UnfoldedFace> unfolding_sequence;
 
     // Computes the initial state after rotating the polyhedron
     // around the base edge used as the unfolding axis.
-    void setupInitialState() {
+    UnfoldingState setupInitialState() {
         int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
 
         // Compute initial total remaining radius distance,
@@ -119,7 +127,7 @@ private:
         // so the initial angle is set to -180°.
         double next_face_angle = -180.0;
 
-        initial_state = {
+        UnfoldingState initial_state = {
             next_face_id,
             next_edge_id,
             next_face_x,
@@ -129,6 +137,8 @@ private:
             symmetry_enabled,
             y_moved_off_axis
         };
+
+        return initial_state;
     }
 
     // Recursively searches for path-shape edge unfoldings
