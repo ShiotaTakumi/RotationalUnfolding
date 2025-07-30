@@ -67,6 +67,8 @@ public:
         // based on the base face and base edge.
         FaceState second_face_state = getSecondFaceState();
 
+        // 再帰的な探索を開始
+        // Start recursive search.
         searchPartialUnfoldings(second_face_state, face_usage, ufd_output);
     }
 
@@ -97,7 +99,7 @@ private:
 
     // 現在、探索している部分展開図に含まれる面の情報の配列
     // Array storing information of faces included
-    // in the currently explored partial unfolding.
+    // in the currently searched partial unfolding.
     std::vector<UnfoldedFace> partial_unfolding;
 
     // 多面体を基準辺を回転軸として展開したあとの底面
@@ -153,19 +155,42 @@ private:
         };
     }
 
-    // Recursively searches for path-shape edge unfoldings
-    // based on the initial state, checking for overlap along
-    // the way and applying symmetry pruning if enabled.
+    // 現在の探索の対象となっている面を部分展開図から取り除き、
+    // その面を「未使用」に戻すための補助関数
+    // Helper function that removes the currently searched face
+    // from the partial unfolding and marks it as unused.
+    inline void backtrackCurrentFace(int current_face_id,
+                                     std::vector<bool>& face_usage) {
+        partial_unfolding.pop_back();
+        face_usage[current_face_id] = true;
+    }
+
+    // 基準面と second face の情報に基づき、部分展開図を再帰的に探索する関数
+    // 面を追加する都度に、基準面と新たに追加した面の重なりの有無を確認する
+    // Recursively searches for partial unfoldings based on the base face
+    // and second face information. At each step of adding a new face,
+    // checks for overlaps between the base face and the newly added face.
     void searchPartialUnfoldings(FaceState state,
                                  std::vector<bool>& face_usage,
                                  std::ostream& ufd_output) {
+
         int current_face_id = state.face_id;
         int current_face_gon = polyhedron.gon_list[current_face_id];
 
+        // 現在の面を使用済みにする
+        // Mark the current face as used.
         face_usage[current_face_id] = false;
+
+        // 現在の面の外接円の直径の値を、
+        // 部分展開図として使用されていない面の合計値から減算する
+        // Subtract the diameter of the current face's circumscribed circle
+        // from the total diameter of the unused faces in the partial unfolding.
         state.remaining_distance -= 2 * GeometryUtil::circumradius(current_face_gon);
+
         GeometryUtil::normalizeAngle(state.angle);
 
+        // 現在の面を部分展開図に追加する
+        // Add the current face to the partial unfolding.
         partial_unfolding.push_back({
             current_face_id,
             current_face_gon,
@@ -175,36 +200,55 @@ private:
             state.angle
         });
 
-        double base_face_circumradius = GeometryUtil::circumradius(polyhedron.gon_list[base_face_id]);
-        double current_face_circumradius = GeometryUtil::circumradius(current_face_gon);
-
+        // 数値誤差を防ぐため、非常に小さい値を 0 に丸める
+        // Avoid floating-point noise by rounding near-zero values to 0.
         if (std::fabs(state.x) < 1e-10) state.x = 0.0;
         if (std::fabs(state.y) < 1e-10) state.y = 0.0;
 
         double distance_from_origin = GeometryUtil::getDistanceFromOrigin(state.x, state.y);
 
-        // Prune if the remaining faces are insufficient to
-        // reach the base face.
-        if (distance_from_origin > state.remaining_distance + base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
-            partial_unfolding.pop_back();
-            face_usage[current_face_id] = true;
+        // 基準面の外接円の半径
+        // Circumradius of the base face
+        double base_face_circumradius = GeometryUtil::circumradius(polyhedron.gon_list[base_face_id]);
+        // 現在の面の外接円の半径
+        // Circumradius of the current face
+        double current_face_circumradius = GeometryUtil::circumradius(current_face_gon);
+
+        // 未使用の面だけでは基準面まで到達できない場合、枝刈りを行う
+        // 数値誤差による誤判定を防ぐため、バッファーを加えて判定する
+        // Prune the search if the remaining unused faces alone
+        // cannot reach the base face.
+        // A buffer is added to prevent misjudgment due to numerical errors.
+        if (distance_from_origin > state.remaining_distance
+                                 + base_face_circumradius
+                                 + current_face_circumradius
+                                 + GeometryUtil::buffer) {
+            backtrackCurrentFace(current_face_id, face_usage);
             return;
         }
 
-        // Prune based on y-axis symmetry.
+        // 多面体が対称性を持つ場合、y 軸方向の対称性に基づいて枝刈りを行う
+        // 面の中心 y 座標が初めて 0 から変化し、負の値となった場合には、
+        // 正の側に対称な展開図が既に存在しているため、探索を打ち切る
+        // If the polyhedron has symmetry, prune the search based on y-axis symmetry.
+        // When the face center’s y-coordinate first deviates from 0 and becomes negative,
+        // a symmetric unfolding exists on the positive side, so the search is pruned.
         if (state.symmetry_enabled) {
             if (state.y > 0.0) state.y_moved_off_axis = false;
             if (state.y_moved_off_axis && state.y < 0.0) {
-                partial_unfolding.pop_back();
-                face_usage[current_face_id] = true;
+                backtrackCurrentFace(current_face_id, face_usage);
                 return;
             }
         }
 
-        // If the circumscribed circles of the base face and
-        // the current face overlap, output the current
-        // path-shape edge unfolding as a potential overlap case.
-        if (distance_from_origin < base_face_circumradius + current_face_circumradius + GeometryUtil::buffer) {
+        // 基準面と現在の面の外接円が重なる場合、現状の部分展開図の
+        // 両端に位置する面が重なる可能性があるとして出力をする
+        // If the circumscribed circles of the base face and the current face overlap,
+        // output the current partial unfolding as it may indicate an overlap
+        // between the both end-faces.
+        if (distance_from_origin < base_face_circumradius
+                                 + current_face_circumradius
+                                 + GeometryUtil::buffer) {
             ufd_output << partial_unfolding.size() << " ";
             for (const auto& f : partial_unfolding) {
                 ufd_output << f.gon << " "
@@ -217,27 +261,45 @@ private:
             ufd_output << std::endl;
         }
 
+        // 隣接する面を探索するため、現在の辺の位置を取得する
+        // Get the index of the current edge to determine
+        // the starting position for exploring adjacent faces.
         int current_edge_pos = polyhedron.getEdgeIndex(current_face_id, state.edge_id);
+
         double next_face_angle = state.angle;
 
-        // Continue recursive search as long as adjacent faces are available
+        // 一つ前の面を除き、すべての隣接する面に対して探索する
+        // Search all adjacent faces except the one we came from.
         for (int i = current_edge_pos + 1; i < current_edge_pos + current_face_gon; ++i) {
+            // 隣接する各面を探索するため、回転角度を順次ずらす
+            // Incrementally adjust the rotation angle to search each adjacent face.
             next_face_angle -= 360.0 / static_cast<double>(current_face_gon);
             GeometryUtil::normalizeAngle(next_face_angle);
 
             int next_face_id = polyhedron.adj_faces[current_face_id][i % current_face_gon];
-            int next_edge_id = polyhedron.adj_edges[current_face_id][i % current_face_gon];
+
+            // 隣接する面がすでに使用済みの場合はスキップ
+            // Skip if the adjacent face is already used.
             if (!face_usage[next_face_id]) continue;
+
+            int next_edge_id = polyhedron.adj_edges[current_face_id][i % current_face_gon];
+
+            // 現在の面と次の面の中心間の距離は、両面の内接円の半径の合計となる
+            // 中心間の角度は計算済みであるため、三角関数を用いて次の面の座標位置を計算する
+            // The distance between the centers of the current face and the next face
+            // is the sum of their inradii. Since the angle between the centers has
+            // already been calculated, the coordinates of the next face are computed
+            // using trigonometric functions.
 
             double current_inradius = GeometryUtil::inradius(current_face_gon);
             double next_inradius = GeometryUtil::inradius(polyhedron.gon_list[next_face_id]);
 
-            // The distance between the centers of the current
-            //  face and the next face is the sum of their
-            // inradii. Since the angle is known, the position
-            // is computed using trigonometric functions.
-            double next_face_x = state.x + (current_inradius + next_inradius) * std::cos(next_face_angle * GeometryUtil::PI / 180.0);
-            double next_face_y = state.y + (current_inradius + next_inradius) * std::sin(next_face_angle * GeometryUtil::PI / 180.0);
+            double next_face_x = state.x
+                               + (current_inradius + next_inradius)
+                               * std::cos(next_face_angle * GeometryUtil::PI / 180.0);
+            double next_face_y = state.y
+                               + (current_inradius + next_inradius)
+                               * std::sin(next_face_angle * GeometryUtil::PI / 180.0);
 
             FaceState next_state = {
                 next_face_id,
@@ -253,9 +315,7 @@ private:
             searchPartialUnfoldings(next_state, face_usage, ufd_output);
         }
 
-        // Backtrack
-        partial_unfolding.pop_back();
-        face_usage[current_face_id] = true;
+        backtrackCurrentFace(current_face_id, face_usage);
     }
 };
 
