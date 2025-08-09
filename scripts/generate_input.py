@@ -1,81 +1,80 @@
 #!/usr/bin/env python3
 
-"""
-This script interactively generates a configuration file path_list.ini
-to be used as input for the rotational unfolding C++ program.
-
-The configuration includes:
-- Full path to the .adj adjacency data file
-- Full path to the .base base face/edge pair file
-- Output path for the resulting unfolding data
-
-Usage:
-    python3 generate_input.py [output_directory]
-
-If no output_directory is given, the current directory is used.
-"""
-
 import os
 import sys
 
-# --- Define available categories ---
-categories = ["platonic", "archimedean", "prism", "antiprism", "johnson"]
+# 整面凸多面体のクラスの一覧
+# List of classes of convex regular-faced polyhedra
+poly_classes = ["platonic", "archimedean", "prism", "antiprism", "johnson"]
 
 def main():
-    # --- Parse output directory ---
-    output_dir = sys.argv[1] if len(sys.argv) >= 2 else "."
-    if not os.path.isdir(output_dir):
-        print(f"Error: Output directory does not exist: {output_dir}")
-        exit(1)
-
-    # --- Prompt for data path ---
+    # data ディレクトリへのパスを取得
+    # Get the path to the data directory
     data_path = input("Enter path to data directory (e.g., ../../data): ").strip()
     if not os.path.isdir(data_path):
-        print("Error: Invalid base path.")
+        print("Error: Invalid data directory path.")
         exit(1)
 
-    # --- Prompt for category selection ---
-    print("\nSelect a polyhedron category:")
-    print("  " + "  ".join(f"{idx}: {name}" for idx, name in enumerate(categories, start=1)))
+    # 多面体のクラスの選択
+    # Select the polyhedron class
+    print("\nSelect the class of the polyhedron:")
+    print("  " + "  ".join(f"{idx}: {name}" for idx, name in enumerate(poly_classes, start=1)))
     try:
-        selection = int(input("Enter category number: "))
-        if not (1 <= selection <= len(categories)):
+        selection = int(input("Enter polyhedron class number: "))
+        if not (1 <= selection <= len(poly_classes)):
             raise ValueError
     except ValueError:
         print("Error: Invalid category number.")
         exit(1)
-    category = categories[selection - 1]
+    poly_class = poly_classes[selection - 1]
 
-    # --- List available .adj files ---
-    adj_dir = os.path.join(data_path, "polyhedron", category, "adjacent")
+    # 選択したクラスから、多面体を選択（.adj ファイルからファイル名は取得）
+    # Select a polyhedron from the chosen class (file name taken from .adj files)
+    adj_dir = os.path.join(data_path, "polyhedron", poly_class, "adjacent")
     if not os.path.isdir(adj_dir):
         print(f"Error: Directory not found: {adj_dir}")
         exit(1)
 
     adj_files = sorted(f[:-4] for f in os.listdir(adj_dir) if f.endswith(".adj"))
-    print(f"\nAvailable .adj files in {adj_dir}:")
+    print(f"\nAvailable polyhedron files are:")
     print("  " + "  ".join(adj_files))
 
-    # --- Prompt for file name ---
-    file = input("Enter file name (without .adj extension): ").strip()
+    file = input("Enter the polyhedron file name: ").strip()
     if file not in adj_files:
         print("Error: Invalid file name.")
         exit(1)
 
-    # --- Prompt for output base path ---
-    out_base = input("Enter path for output directory (e.g., ../../unfolding): ").strip()
-    if not out_base:
+    # 回転展開の結果（.ufd ファイル）を保存するディレクトリの親のパスを取得
+    # Get the parent directory path to save the
+    # rotational unfolding results (.ufd files)
+    output_path = input("Enter path for output directory (e.g., ../../unfolding): ").strip()
+    if not output_path:
         print("Error: Output path is empty.")
         exit(1)
 
-    # --- Construct full paths ---
-    adj_path = os.path.join(data_path, "polyhedron", category, "adjacent", file + ".adj")
-    base_path = os.path.join(data_path, "polyhedron", category, "base", file + ".base")
-    unfolding_base = os.path.join(out_base, "raw", category)
-    os.makedirs(unfolding_base, exist_ok=True)
-    raw_path = os.path.join(unfolding_base, file + ".ufd")
+    # .ufd ファイルを保存する raw/<poly_class> ディレクトリを生成
+    # Create the raw/<poly_class> directory to save the .ufd file
+    poly_class_path = os.path.join(output_path, "raw", poly_class)
+    os.makedirs(poly_class_path, exist_ok=True)
 
-    # --- Write to path_list.ini ---
+    # 選択した多面体の各種パスを生成
+    # Generate the paths for the selected polyhedron
+    adj_path = os.path.join(data_path, "polyhedron", poly_class, "adjacent", file + ".adj")
+    base_path = os.path.join(data_path, "polyhedron", poly_class, "base", file + ".base")
+    raw_path = os.path.join(poly_class_path, file + ".ufd")
+
+    # コマンドライン引数から出力先ディレクトリを取得（指定がなければカレントディレクトリ）
+    # Get the output directory from the command-line argument
+    # (use the current directory if not specified)
+    output_dir = sys.argv[1] if len(sys.argv) >= 2 else "."
+    if not os.path.isdir(output_dir):
+        print(f"Error: Output directory does not exist: {output_dir}")
+        exit(1)
+
+    # 出力先ディレクトリに設定ファイル（path_list.ini）を生成し、
+    # 各パスの情報を書き込む
+    # Create the configuration file (path_list.ini) in the output directory
+    # and write the path information for the file
     config_path = os.path.join(output_dir, "path_list.ini")
     with open(config_path, "w") as f:
         f.write("[paths]\n")
