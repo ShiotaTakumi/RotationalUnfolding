@@ -1,33 +1,31 @@
 #!/usr/bin/env python3
 
-"""
-This script calls scripts/generate_input.py to generate an unfold_config.ini
-file in the current working directory.
-
-Usage:
-    python3 make_ini.py
-
-After generating the configuration file, it can be passed to the C++ executable as follows:
-
-    ./a.out unfold_config.ini
-
-The C++ program will then prompt for base_face_id and base_edge_id interactively.
-"""
+# generate_input.py のラッパー用スクリプト
+# Wrapper script for generate_input.py
 
 import subprocess
 import os
 import sys
 
 def main():
-    # Relative path to scripts/generate_input.py
+    # scripts/generate_input.py への相対パスを
+    # script_path に指定する（必要に応じてパスの場所を変更）
+    # Specify the relative path to scripts/generate_input.py
+    # as script_path (modify the path as needed)
     script_path = os.path.join(os.path.dirname(__file__), "../../scripts/generate_input.py")
-    # Get current working directory
+
+    # カレントディレクトリを設定ファイル（.ini）の出力先として指定
+    # Set the current directory as the output destination for the configuration (.ini) file
     output_dir = os.getcwd()
 
+    # scripts/generate_input.py が存在するか確認
+    # Check if scripts/generate_input.py exists
     if not os.path.isfile(script_path):
         print("Error: scripts/generate_input.py not found.")
         sys.exit(1)
 
+    # generate_input.py を実行（第 1 引数に出力先ディレクトリを渡す）
+    # Execute generate_input.py (pass the output directory as the first argument)
     try:
         subprocess.run(["python3", script_path, output_dir], check=True)
     except subprocess.CalledProcessError as e:
