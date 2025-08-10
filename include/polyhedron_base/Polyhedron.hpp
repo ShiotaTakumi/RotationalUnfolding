@@ -1,5 +1,5 @@
-#ifndef POLYHEDRON_HPP
-#define POLYHEDRON_HPP
+#ifndef POLYHEDRON_BASE_POLYHEDRON_HPP
+#define POLYHEDRON_BASE_POLYHEDRON_HPP
 
 #include <vector>
 
@@ -39,4 +39,4 @@ struct Polyhedron {
     }
 };
 
-#endif  // POLYHEDRON_HPP
+#endif  // POLYHEDRON_BASE_POLYHEDRON_HPP

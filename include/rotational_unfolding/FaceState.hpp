@@ -1,5 +1,5 @@
-#ifndef FACE_STATE_HPP
-#define FACE_STATE_HPP
+#ifndef ROTATIONAL_UNFOLDING_FACE_STATE_HPP
+#define ROTATIONAL_UNFOLDING_FACE_STATE_HPP
 
 // 現在注目している面の情報を保持する構造体
 // A struct that stores information for
@@ -48,4 +48,4 @@ struct FaceState {
     bool y_moved_off_axis;
 };
 
-#endif  // FACE_STATE_HPP
+#endif  // ROTATIONAL_UNFOLDING_FACE_STATE_HPP

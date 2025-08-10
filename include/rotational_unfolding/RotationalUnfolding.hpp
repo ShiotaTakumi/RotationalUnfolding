@@ -1,10 +1,10 @@
 #ifndef ROTATIONAL_UNFOLDING_HPP
 #define ROTATIONAL_UNFOLDING_HPP
 
-#include "Polyhedron.hpp"
-#include "FaceState.hpp"
-#include "UnfoldedFace.hpp"
-#include "GeometryUtil.hpp"
+#include "rotational_unfolding/FaceState.hpp"
+#include "rotational_unfolding/UnfoldedFace.hpp"
+#include "polyhedron_base/Polyhedron.hpp"
+#include "polyhedron_base/GeometryUtil.hpp"
 #include <vector>
 #include <iostream>
 #include <cmath>

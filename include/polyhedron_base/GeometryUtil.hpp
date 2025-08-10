@@ -1,5 +1,5 @@
-#ifndef GEOMETRY_UTIL_HPP
-#define GEOMETRY_UTIL_HPP
+#ifndef POLYHEDRON_BASE_GEOMETRY_UTIL_HPP
+#define POLYHEDRON_BASE_GEOMETRY_UTIL_HPP
 
 #include <cmath>
 
@@ -39,4 +39,4 @@ namespace GeometryUtil {
     }
 }
 
-#endif  // GEOMETRY_UTIL_HPP
+#endif  // POLYHEDRON_BASE_GEOMETRY_UTIL_HPP
