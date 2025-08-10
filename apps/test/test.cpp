@@ -1,5 +1,5 @@
 #include "rotational_unfolding/RotationalUnfolding.hpp"
-#include "polyhedron_base/IOUtil.hpp"
+#include "rotational_unfolding/IOUtil.hpp"
 
 #include <sstream>
 #include <iostream>

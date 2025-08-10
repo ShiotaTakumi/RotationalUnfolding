@@ -1,7 +1,7 @@
-#ifndef POLYHEDRON_BASE_IOUTIL_HPP
-#define POLYHEDRON_BASE_IOUTIL_HPP
+#ifndef ROTATIONAL_UNFOLDING_IOUTIL_HPP
+#define ROTATIONAL_UNFOLDING_IOUTIL_HPP
 
-#include "polyhedron_base/Polyhedron.hpp"
+#include "rotational_unfolding/Polyhedron.hpp"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -150,4 +150,4 @@ inline bool isSymmetricFromFilename(const std::string& adj) {
 
 } // namespace IOUtil
 
-#endif // POLYHEDRON_BASE_IOUTIL_HPP
+#endif // ROTATIONAL_UNFOLDING_IOUTIL_HPP

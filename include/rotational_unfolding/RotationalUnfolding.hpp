@@ -3,8 +3,8 @@
 
 #include "rotational_unfolding/FaceState.hpp"
 #include "rotational_unfolding/UnfoldedFace.hpp"
-#include "polyhedron_base/Polyhedron.hpp"
-#include "polyhedron_base/GeometryUtil.hpp"
+#include "rotational_unfolding/Polyhedron.hpp"
+#include "rotational_unfolding/GeometryUtil.hpp"
 #include <vector>
 #include <iostream>
 #include <cmath>
