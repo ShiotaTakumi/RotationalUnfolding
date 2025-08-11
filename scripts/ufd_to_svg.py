@@ -59,16 +59,19 @@ def write_svg(output_path, gon, edge_id, face_id, x_coord, y_coord, degree,
     # List of vertex lists for faces
     face_vertices = []
 
-    # 各面の頂点計算 / compute vertices for each face
-    # degree は辺の法線の向きを表すので、頂点を向くように半角ずらす
-    # Degree is the direction of the edge normal; shift by half step to point to the vertex
+    # 各面の頂点計算
+    # Compute vertices for each face
     adjusted_degrees = []
     for i in range(len(gon)):
         rot = 360.0 / float(gon[i])  # 各辺の角度 / step angle between vertices
+        # degree は辺の法線の向きを表すので、頂点を向くように半角ずらす
+        # Degree is the direction of the edge normal;
+        # shift by half step to point to the vertex
         d = degree[i] - rot / 2.0
         adjusted_degrees.append(d)
 
-        # n 角形の外接円の半径 / Circumradius of the n‑gon
+        # n 角形の外接円の半径
+        # Circumradius of the n‑gon
         radius = 1.0 / (2.0 * math.sin(math.pi / float(gon[i])))
 
         coords = []
@@ -76,7 +79,9 @@ def write_svg(output_path, gon, edge_id, face_id, x_coord, y_coord, degree,
             vx = x_coord[i] + radius * math.cos(math.pi * d / 180.0)
             vy = y_coord[i] + radius * math.sin(math.pi * d / 180.0)
             coords.append((vx, vy))
-            d -= rot  # 次の頂点へ / Move to next vertex
+            # 次の頂点へ
+            # Move to next vertex
+            d -= rot
 
             # 境界の更新 / Update bounds
             if vx < bx_min: bx_min = vx
@@ -86,7 +91,8 @@ def write_svg(output_path, gon, edge_id, face_id, x_coord, y_coord, degree,
 
         face_vertices.append(coords)
 
-    # 少し余白を追加 / Add small margins
+    # 少し余白を追加
+    # Add small margins
     bx_min -= 0.05
     bx_max += 0.05
     by_min -= 0.05
@@ -243,7 +249,8 @@ def main():
         print(f"Error: Failed to create output directory: {drawing_out_dir}\n{e}")
         exit(1)
 
-    # ラベル描画の有無を確認 / Ask whether to draw labels
+    # ラベル描画の有無を確認
+    # Ask whether to draw labels
     draw_faces = input("Draw face IDs at face centers? (y/n) ").strip().lower().startswith("y")
     draw_edges = input("Draw edge IDs on edges (red)? (y/n) ").strip().lower().startswith("y")
 
