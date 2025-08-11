@@ -70,7 +70,6 @@ venv/
 # Generated images and figures
 # ------------------------------
 *.png
-*.svg
 *.pdf
 *.eps
 
