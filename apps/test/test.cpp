@@ -7,6 +7,44 @@
 #include <string>
 #include <vector>
 
+// [paths] セクションの adj_path/base_path/raw_path を読む
+// Read adj_path, base_path, and raw_path from the [paths] section
+static bool readPathsFromIni(const std::string& ini_file,
+                             std::string& adj_path,
+                             std::string& base_path,
+                             std::string& raw_path)
+{
+    std::ifstream infile(ini_file);
+    if (!infile) {
+        std::cerr << "Error: Cannot open .ini file: " << ini_file << std::endl;
+        return false;
+    }
+
+    std::string line;
+    adj_path.clear(); base_path.clear(); raw_path.clear();
+
+    while (std::getline(infile, line)) {
+        if (line.empty() || line[0] == '[' || line[0] == '#' || line[0] == ';') continue;
+
+        std::istringstream iss(line);
+        std::string key, eq, value;
+        if (!(iss >> key >> eq) || eq != "=") continue;
+        std::getline(iss, value);
+        // 先頭の空白を削除 / trim leading spaces
+        value.erase(0, value.find_first_not_of(" \t"));
+
+        if (key == "adj_path")  adj_path  = value;
+        else if (key == "base_path") base_path = value;
+        else if (key == "raw_path")  raw_path  = value;
+    }
+
+    if (adj_path.empty() || base_path.empty() || raw_path.empty()) {
+        std::cerr << "Error: Missing one or more required keys (adj_path, base_path, raw_path) in the .ini file." << std::endl;
+        return false;
+    }
+    return true;
+}
+
 int main(int argc, char* argv[]) {
     // 設定ファイル（.ini）がコマンドライン引数で
     // 指定されていない場合のエラー
@@ -33,7 +71,7 @@ int main(int argc, char* argv[]) {
 
     // 設定ファイル（.ini）からパスの情報を読み込む
     // Load paths from the configuration (.ini) file.
-    if (!IOUtil::loadPathListIni(ini_file, adj_path, base_path, raw_path)) {
+    if (!readPathsFromIni(ini_file, adj_path, base_path, raw_path)) {
         return 1;
     }
 

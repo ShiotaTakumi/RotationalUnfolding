@@ -10,44 +10,6 @@
 
 namespace IOUtil {
 
-// 設定ファイル（.ini）からパスの設定を読み込み、[paths] セクションの値を取得する関数
-// 必須キー：adj_path、base_path、raw_path
-// Loads path settings from a .ini configuration file,
-// reading values from the [paths] section.
-// Requires the keys: adj_path, base_path, and raw_path.
-inline bool loadPathListIni(const std::string& ini_file, std::string& adj_path, std::string& base_path, std::string& raw_path) {
-    std::ifstream infile(ini_file);
-    if (!infile) {
-        std::cerr << "Error: Cannot open .ini file: " << ini_file << std::endl;
-        return false;
-    }
-
-    std::string line;
-
-    adj_path.clear(); base_path.clear(); raw_path.clear();
-
-    while (std::getline(infile, line)) {
-        if (line.empty() || line[0] == '[' || line[0] == '#' || line[0] == ';') continue;
-
-        std::istringstream iss(line);
-        std::string key, eq, value;
-        if (!(iss >> key >> eq) || eq != "=") continue;
-        std::getline(iss, value);
-        value.erase(0, value.find_first_not_of(" \t"));
-
-        if (key == "adj_path") adj_path = value;
-        else if (key == "base_path") base_path = value;
-        else if (key == "raw_path") raw_path = value;
-    }
-
-    if (adj_path.empty() || base_path.empty() || raw_path.empty()) {
-        std::cerr << "Error: Missing one or more required keys (adj_path, base_path, raw_path) in the .ini file." << std::endl;
-        return false;
-    }
-
-    return true;
-}
-
 // .adj ファイルから多面体の構造を読み込む関数
 // num_faces、gon_list、adj_edges、adj_faces の各メンバを設定する
 // Loads a polyhedron structure from an adjacency (.adj) file.
