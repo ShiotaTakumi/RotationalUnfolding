@@ -62,6 +62,16 @@ def main():
     noniso_ufd_path = os.path.join(output_path, "nonisomorphic", poly_class)
     os.makedirs(noniso_ufd_path, exist_ok=True)
 
+    # 描画結果（SVG ファイル）を保存する親ディレクトリのパスを取得
+    # Get the parent directory path to save the drawing results (SVG files)
+    drawing_parent_path = input("Enter path for drawing parent directory (e.g., ../../drawing): ").strip()
+    if not drawing_parent_path:
+        print("Error: Drawing parent path is empty.")
+        exit(1)
+    if not os.path.isdir(drawing_parent_path):
+        print(f"Error: Drawing parent directory does not exist: {drawing_parent_path}")
+        exit(1)
+
     # 選択した多面体の各種パスを生成
     # Generate the paths for the selected polyhedron
     adj_path = os.path.join(data_path, "polyhedron", poly_class, "adjacent", file + ".adj")
@@ -88,6 +98,7 @@ def main():
         f.write("base_path = " + base_path + "\n")
         f.write("raw_path  = " + raw_path + "\n")
         f.write("noniso_path = " + noniso_path + "\n")
+        f.write("drawing_parent_path = " + drawing_parent_path + "\n")
 
     print("\nSuccess!")
     print(f"Wrote configuration to {config_path}")
