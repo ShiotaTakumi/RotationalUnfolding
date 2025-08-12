@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="-0.9006508083520399 -0.8590169943749475 2.504867077541666 1.718033988749895" style="enable-background:new -0.9006508083520399 -0.8590169943749475 2.504867077541666 1.718033988749895;" xml:space="preserve">
+<style type="text/css">
+  .no_fill_black_stroke {fill:none; stroke:#000000; stroke-width:0.02; stroke-miterlimit:10;}
+  .face_text {fill:#000000; font-family:monospace;}
+  .edge_text {fill:#ff0000; font-family:monospace;}
+  .edge_bg {fill:#f3f3f3; stroke:#606060; stroke-width:0.02;}
+</style>
+<polygon class="no_fill_black_stroke" points="0.6881909602355868, -0.5 -0.26286555605956674, -0.8090169943749475 -0.8506508083520399, -1.0417467896404342e-16 -0.2628655560595669, 0.8090169943749473 0.6881909602355867, 0.5000000000000001"/>
+<polygon class="no_fill_black_stroke" points="0.6881908654051868, 0.4999999999999999 1.554216269189626, 1.414100318299876e-16 0.6881908654051876, -0.5000000000000003"/>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.00343606797749979 0 0 0.00343606797749979 0.0 0.0)">0</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.00343606797749979 0 0 0.00343606797749979 0.976866 0.0)">3</text>
+<rect class="edge_bg" x="0.6538301856301891" y="-0.03436067977499793" width="0.0687213595499958" height="0.0687213595499958"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.00343606797749979 0 0 0.00343606797749979 0.688190865405187 -3.535250795749691e-17)">0</text>
+</svg>
