@@ -54,14 +54,20 @@ def main():
 
     # .ufd ファイルを保存する raw/<poly_class> ディレクトリを生成
     # Create the raw/<poly_class> directory to save the .ufd file
-    poly_class_path = os.path.join(output_path, "raw", poly_class)
-    os.makedirs(poly_class_path, exist_ok=True)
+    raw_ufd_path = os.path.join(output_path, "raw", poly_class)
+    os.makedirs(raw_ufd_path, exist_ok=True)
+
+    # 非同型な展開図を保存する nonisomorphic/<poly_class> ディレクトリを生成
+    # Create the nonisomorphic/<poly_class> directory to save the non-isomorphic unfoldings
+    noniso_ufd_path = os.path.join(output_path, "nonisomorphic", poly_class)
+    os.makedirs(noniso_ufd_path, exist_ok=True)
 
     # 選択した多面体の各種パスを生成
     # Generate the paths for the selected polyhedron
     adj_path = os.path.join(data_path, "polyhedron", poly_class, "adjacent", file + ".adj")
     base_path = os.path.join(data_path, "polyhedron", poly_class, "base", file + ".base")
-    raw_path = os.path.join(poly_class_path, file + ".ufd")
+    raw_path = os.path.join(raw_ufd_path, file + ".ufd")
+    noniso_path = os.path.join(noniso_ufd_path, file + ".ufd")
 
     # コマンドライン引数から出力先ディレクトリを取得（指定がなければカレントディレクトリ）
     # Get the output directory from the command-line argument
@@ -81,6 +87,7 @@ def main():
         f.write("adj_path  = " + adj_path + "\n")
         f.write("base_path = " + base_path + "\n")
         f.write("raw_path  = " + raw_path + "\n")
+        f.write("noniso_path = " + noniso_path + "\n")
 
     print("\nSuccess!")
     print(f"Wrote configuration to {config_path}")
