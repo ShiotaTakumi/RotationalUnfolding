@@ -8,7 +8,6 @@
 <img src="https://img.shields.io/badge/Shell-bash-FFD500.svg?logo=shell&style=plastic">
 <img src="https://img.shields.io/badge/C++-GCC%2014.2.0-00599C.svg?logo=cplusplus&style=plastic">
 <img src="https://img.shields.io/badge/Python-3.12.0-3776AB.svg?logo=python&style=plastic">
-<img src="https://img.shields.io/badge/WolframScript-1.12.0-DD1100.svg?logo=wolframmathematica&style=plastic">
 
 
 ## Overview
