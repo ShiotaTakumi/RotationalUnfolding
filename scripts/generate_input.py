@@ -62,6 +62,11 @@ def main():
     noniso_ufd_path = os.path.join(output_path, "nonisomorphic", poly_class)
     os.makedirs(noniso_ufd_path, exist_ok=True)
 
+    # 厳密に重なりを持つ展開図を保存する exact/<poly_class> ディレクトリを生成
+    # Create the exact/<poly_class> directory to save the exactly overlapping unfoldings
+    exact_ufd_path = os.path.join(output_path, "exact", poly_class)
+    os.makedirs(exact_ufd_path, exist_ok=True)
+
     # 描画結果（SVG ファイル）を保存する親ディレクトリのパスを取得
     # Get the parent directory path to save the drawing results (SVG files)
     drawing_parent_path = input("Enter path for drawing parent directory (e.g., ../../drawing): ").strip()
@@ -78,6 +83,7 @@ def main():
     base_path = os.path.join(data_path, "polyhedron", poly_class, "base", file + ".base")
     raw_path = os.path.join(raw_ufd_path, file + ".ufd")
     noniso_path = os.path.join(noniso_ufd_path, file + ".ufd")
+    exact_path = os.path.join(exact_ufd_path, file + ".ufd")
 
     # コマンドライン引数から出力先ディレクトリを取得（指定がなければカレントディレクトリ）
     # Get the output directory from the command-line argument
@@ -98,6 +104,7 @@ def main():
         f.write("base_path = " + base_path + "\n")
         f.write("raw_path  = " + raw_path + "\n")
         f.write("noniso_path = " + noniso_path + "\n")
+        f.write("exact_path = " + exact_path + "\n")
         f.write("drawing_parent_path = " + drawing_parent_path + "\n")
 
     print("\nSuccess!")
