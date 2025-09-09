@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -O3 -std=c++17 -I../include/
 
 TARGET = a.out
-SRC = test.cpp
+SRC = main.cpp
 
 all: $(TARGET)
 
