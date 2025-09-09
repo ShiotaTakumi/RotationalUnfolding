@@ -35,6 +35,17 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 ```
+## Contents
+- [apps/](apps/): Wrapper scripts providing example entry points for running the program
+- [drawing/](drawing/): Output directory for SVG drawings of partial unfoldings
+- [include/rotational_unfolding/](include/rotational_unfolding/): Core program implementing the rotational unfolding algorithm
+- [polyhedron/](polyhedron/): Directory containing polyhedron adjacency and base face data
+- [scripts/](scripts/): Core scripts for various processing tasks
+- [unfolding/](unfolding/): Directory storing unfolding results
+- [.gitignore](.gitignore): Specifies intentionally untracked files to ignore by Git
+- [LICENSE](LICENSE): License information for this repository
+- [README.md](README.md): This file
+- [requirements.txt](requirements.txt): Python dependencies required for running the project
 
 ## Acknowledgements
 This work was supported in part by JSPS KAKENHI Grant Numbers JP18H04091, JP19K12098, and JP21H05857.
