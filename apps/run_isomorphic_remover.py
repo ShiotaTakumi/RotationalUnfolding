@@ -39,7 +39,7 @@ def main():
     # （必要に応じてパスの場所を変更）
     # Specify the relative path to scripts/isomorphic_remover.py
     # (modify the path as needed)
-    script_path = os.path.join(os.path.dirname(__file__), "../../scripts/isomorphic_remover.py")
+    script_path = os.path.join(os.path.dirname(__file__), "../scripts/isomorphic_remover.py")
 
     if not os.path.isfile(script_path):
         print(f"Error: isomorphic_remover.py not found at {script_path}")

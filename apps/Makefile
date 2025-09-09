@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -O3 -std=c++17 -I../../include/
+CXXFLAGS = -O3 -std=c++17 -I../include/
 
 TARGET = a.out
 SRC = test.cpp

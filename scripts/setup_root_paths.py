@@ -12,15 +12,15 @@ def _ask_dir(prompt):
 def main():
     # 多面体データファイルのルートディレクトリを尋ねる
     # Ask for the root directory of polyhedron data files
-    data_root = _ask_dir("Enter the root directory of polyhedron data files (e.g., ../../polyhedron): ")
+    data_root = _ask_dir("Enter the root directory of polyhedron data files (e.g., ../polyhedron): ")
 
     # 展開図(.ufd)の出力先ルートディレクトリを尋ねる
     # Ask for the root directory for unfolding (.ufd) outputs
-    unfolding_root = _ask_dir("Enter the root directory for unfolding (.ufd) outputs (e.g., ../../unfolding): ")
+    unfolding_root = _ask_dir("Enter the root directory for unfolding (.ufd) outputs (e.g., ../unfolding): ")
 
     # 描画結果(.svg)のルートディレクトリを尋ねる
     # Ask for the root directory for drawing (.svg) results
-    drawing_root = _ask_dir("Enter the root directory for drawing (.svg) results (e.g., ../../drawing): ")
+    drawing_root = _ask_dir("Enter the root directory for drawing (.svg) results (e.g., ../drawing): ")
 
     # config/paths.ini を出力
     # Write config/paths.ini

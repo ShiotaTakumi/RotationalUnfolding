@@ -64,7 +64,7 @@ def main():
     # （必要に応じてパスの場所を変更）
     # Specify the relative path to scripts/draw_partial_unfolding.py
     # (modify the path as needed)
-    script_path = os.path.join(os.path.dirname(__file__), "../../scripts/draw_partial_unfolding.py")
+    script_path = os.path.join(os.path.dirname(__file__), "../scripts/draw_partial_unfolding.py")
 
     if not os.path.isfile(script_path):
         print(f"Error: draw_partial_unfolding.py not found at {script_path}")

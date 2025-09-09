@@ -12,7 +12,7 @@ def main():
     # （必要に応じてパスの場所を変更）
     # Specify the relative path to scripts/setup_root_paths.py
     # (modify the path as needed)
-    script_path = os.path.join(os.path.dirname(__file__), "../../scripts/setup_root_paths.py")
+    script_path = os.path.join(os.path.dirname(__file__), "../scripts/setup_root_paths.py")
 
     if not os.path.isfile(script_path):
         print("Error: scripts/setup_root_paths.py not found.")
