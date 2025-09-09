@@ -20,5 +20,21 @@ Takumi Shiota and Toshiki Saitoh, "Overlapping edge unfoldings for convex regula
 
 [![DOI®](https://img.shields.io/badge/DOI%C2%AE-10.1016/j.tcs.2024.114593-FAB70C.svg?logo=doi&style=plastic)](https://doi.org/10.1016/j.tcs.2024.114593)
 
+## Environment Setup
+This project uses Python 3.12.0.
+If you want to match the environment, please set up the virtual environment using the following steps:
+```bash
+# Install Python 3.12.0 with pyenv
+pyenv install 3.12.0
+pyenv local 3.12.0
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
 ## Acknowledgements
 This work was supported in part by JSPS KAKENHI Grant Numbers JP18H04091, JP19K12098, and JP21H05857.
