@@ -101,9 +101,11 @@ def write_svg(output_path, gon, edge_id, face_id, x_coord, y_coord, degree):
     font_scale = 0.002 * ref    # 文字サイズ
     pad = 0.02 * ref            # 背景ボックスの半径的な余白
 
-    # SVG 書き出し / Write SVG
+    # SVG 書き出し
+    # Write SVG
     with open(output_path, "w", encoding="utf-8") as out:
-        # ヘッダ / Header
+        # ヘッダ
+        # Header
         out.write('<?xml version="1.0" encoding="utf-8"?>\n')
         out.write(
             f'<svg version="1.1" id="layer_1" '
@@ -119,12 +121,14 @@ def write_svg(output_path, gon, edge_id, face_id, x_coord, y_coord, degree):
         out.write('  .edge_bg {fill:#f3f3f3; stroke:#606060; stroke-width:0.02;}\n')
         out.write('</style>\n')
 
-        # 多角形の描画 / Draw polygons
+        # 多角形の描画
+        # Draw polygons
         for verts in face_vertices:
             pts = " ".join(f"{vx}, {vy}" for (vx, vy) in verts)
             out.write(f'<polygon class="no_fill_black_stroke" points="{pts}"/>\n')
 
-        # 面番号の描画（中心に描画）/ Draw face IDs at face centers
+        # 面番号の描画（中心に描画）
+        # Draw face IDs at face centers
         for i in range(len(gon)):
             # SVG の text はユーザ単位なので、変換で相対スケールを掛ける
             # Use a transform to scale text relative to geometry
@@ -146,7 +150,8 @@ def write_svg(output_path, gon, edge_id, face_id, x_coord, y_coord, degree):
             ey = y_coord[i] + inradius * math.sin(theta)
 
             # 辺の上に矩形を描く（辺番号の視認性向上のため）
-            # Draw a rectangle on the edge (to improve the visibility of the edge number)
+            # Draw a rectangle on the edge
+            # (to improve the visibility of the edge number)
             out.write(
                 f'<rect class="edge_bg" x="{ex - pad}" y="{ey - pad}" width="{2*pad}" height="{2*pad}"/>\n'
             )
@@ -160,18 +165,21 @@ def write_svg(output_path, gon, edge_id, face_id, x_coord, y_coord, degree):
 
 
 def build_output_dir_path(ufd_path, drawing_base):
-    # .ufd の絶対パスを取得 / Get absolute path to the .ufd
+    # .ufd の絶対パスを取得
+    # Get absolute path to the .ufd
     ufd_abs = os.path.abspath(ufd_path)
 
-    # ディレクトリ部分を階層ごとに分割 / Split the directory part into components
+    # ディレクトリ部分を階層ごとに分割
+    # Split the directory part into components
     parts = os.path.normpath(os.path.dirname(ufd_abs)).split(os.sep)
 
-    # 末尾2階層を category / poly_class とみなす（不足時は 'unknown' を補う）
-    # Treat the last two directories as category / poly_class (fallback to 'unknown' if missing)
-    poly_class = parts[-1] if len(parts) >= 1 else "unknown"
-    category   = parts[-2] if len(parts) >= 2 else "unknown"
+    # 末尾2階層を category / poly_class とみなす
+    # Treat the last two directories as category / poly_class
+    poly_class = parts[-1]
+    category   = parts[-2]
 
-    # 拡張子を除いたファイル名を取得 / Get filename without extension
+    # 拡張子を除いたファイル名を取得
+    # Get filename without extension
     file_stem = os.path.splitext(os.path.basename(ufd_abs))[0]
 
     # 出力先パスを組み立てる：<drawing_base>/<category>/<poly_class>/<file_stem>/
@@ -209,7 +217,8 @@ def main():
         print(f"Error: .ufd file is empty: {ufd_path}")
         sys.exit(1)
 
-    # ゼロ埋め幅を計算 / Compute zero-padding width
+    # ゼロ埋め幅を計算
+    # Compute zero-padding width
     width = len(str(len(lines)))
 
     # .ufd ファイルを 1 行ずつ読み込んで SVG を描画

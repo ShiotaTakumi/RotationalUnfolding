@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os
 import sys
 import subprocess
@@ -16,8 +17,8 @@ def main():
         print(f"Error: .ini file not found: {ini_file}")
         sys.exit(1)
 
-    # 設定ファイル（.ini）の読み込み
-    # Read paths from the configuration (.ini) file
+    # .ini ファイルを読み込み
+    # Read paths from the .ini file
     adj_path = ""
     raw_path = ""
     noniso_path = ""
@@ -34,11 +35,12 @@ def main():
         print("Error: Missing required paths in the .ini file")
         sys.exit(1)
 
-    # scripts/isomorphic_remover.py への相対パスを
-    # script_path に指定する（必要に応じてパスの場所を変更）
+    # scripts/isomorphic_remover.py への相対パスを指定
+    # （必要に応じてパスの場所を変更）
     # Specify the relative path to scripts/isomorphic_remover.py
-    # as script_path (modify the path as needed)
+    # (modify the path as needed)
     script_path = os.path.join(os.path.dirname(__file__), "../../scripts/isomorphic_remover.py")
+
     if not os.path.isfile(script_path):
         print(f"Error: isomorphic_remover.py not found at {script_path}")
         sys.exit(1)

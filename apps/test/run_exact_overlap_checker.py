@@ -1,26 +1,20 @@
 #!/usr/bin/env python3
+
 import os
 import sys
 import subprocess
 
-# exact_overlap_checker.py のラッパースクリプト
+# exact_overlap_checker.py のラッパー用スクリプト
 # Wrapper script for exact_overlap_checker.py
 
 def main():
-    # scripts/exact_overlap_checker.py への相対パスを指定
-    # Specify the relative path to scripts/exact_overlap_checker.py
-    script_path = os.path.join(os.path.dirname(__file__), "../../scripts/exact_overlap_checker.py")
-
-    # カレントディレクトリにある path_list.ini を読み込む前提
-    # Assume path_list.ini exists in the current directory
-    ini_file = os.path.join(os.getcwd(), "path_list.ini")
-
-    if not os.path.isfile(script_path):
-        print("Error: scripts/exact_overlap_checker.py not found.")
+    if len(sys.argv) < 2:
+        print(f"Usage: {sys.argv[0]} <path_list.ini>")
         sys.exit(1)
 
+    ini_file = sys.argv[1]
     if not os.path.isfile(ini_file):
-        print("Error: path_list.ini not found in current directory.")
+        print(f"Error: .ini file not found: {ini_file}")
         sys.exit(1)
 
     # .ini ファイルを読み込み
@@ -39,6 +33,16 @@ def main():
 
     if not adj_path or not noniso_path or not exact_path:
         print("Error: Missing required paths in the .ini file")
+        sys.exit(1)
+
+    # scripts/exact_overlap_checker.py への相対パスを指定
+    # （必要に応じてパスの場所を変更）
+    # Specify the relative path to scripts/exact_overlap_checker.py
+    # (modify the path as needed)
+    script_path = os.path.join(os.path.dirname(__file__), "../../scripts/exact_overlap_checker.py")
+
+    if not os.path.isfile(script_path):
+        print(f"Error: exact_overlap_checker.py not found at {script_path}")
         sys.exit(1)
 
     # exact_overlap_checker.py を実行
