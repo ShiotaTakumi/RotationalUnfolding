@@ -241,7 +241,7 @@ def main():
 
             # デバック用の出力
             # Debug output
-            print(numeric_line.strip())
+            # print(numeric_line.strip())
 
 
 if __name__ == "__main__":
