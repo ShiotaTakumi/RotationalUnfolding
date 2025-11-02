@@ -19,16 +19,19 @@ def main():
 
     # .ini ファイルを読み込み
     # Read paths from the .ini file
+    adj_path = ""
     expr_path = ""
     exact_path = ""
     with open(ini_file) as f:
         for line in f:
-            if line.startswith("expr_path"):
+            if line.startswith("adj_path"):
+                adj_path = line.split("=", 1)[1].strip()
+            elif line.startswith("expr_path"):
                 expr_path = line.split("=", 1)[1].strip()
             elif line.startswith("exact_path"):
                 exact_path= line.split("=", 1)[1].strip()
 
-    if not expr_path or not exact_path:
+    if not adj_path or not expr_path or not exact_path:
         print("Error: Missing required paths in the .ini file")
         sys.exit(1)
 
@@ -45,7 +48,7 @@ def main():
     # exact_overlap_checker.py を実行
     # Execute exact_overlap_checker.py
     try:
-        subprocess.run(["python3", script_path, expr_path, exact_path], check=True)
+        subprocess.run(["python3", script_path, adj_path, expr_path, exact_path], check=True)
     except subprocess.CalledProcessError as e:
         print("Error: Failed to execute exact_overlap_checker.py.")
         sys.exit(e.returncode)
