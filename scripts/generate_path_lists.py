@@ -68,10 +68,11 @@ def main():
         print("Error: Invalid file name.")
         exit(1)
 
-    # 展開図(.ufd)を保存する raw/nonisomorphic/exact の各ディレクトリを生成
+    # 展開図(.ufd)を保存する raw/nonisomorphic/expr/exact の各ディレクトリを生成
     # Create raw / nonisomorphic / exact directories to save .ufd files
     raw_ufd_path     = os.path.join(unfolding_root, "raw",           poly_class)
     noniso_ufd_path  = os.path.join(unfolding_root, "nonisomorphic", poly_class)
+    expr_ufd_path    = os.path.join(unfolding_root, "expression",    poly_class)
     exact_ufd_path   = os.path.join(unfolding_root, "exact",         poly_class)
     os.makedirs(raw_ufd_path,    exist_ok=True)
     os.makedirs(noniso_ufd_path, exist_ok=True)
@@ -79,11 +80,12 @@ def main():
 
     # 選択した多面体の各種パスを生成
     # Generate the paths for the selected polyhedron
-    adj_path   = os.path.join(data_root, poly_class, "adjacent", file + ".adj")
-    base_path  = os.path.join(data_root, poly_class, "base",     file + ".base")
-    raw_path   = os.path.join(raw_ufd_path,    file + ".ufd")
-    noniso_path= os.path.join(noniso_ufd_path, file + ".ufd")
-    exact_path = os.path.join(exact_ufd_path,  file + ".ufd")
+    adj_path    = os.path.join(data_root, poly_class, "adjacent", file + ".adj")
+    base_path   = os.path.join(data_root, poly_class, "base",     file + ".base")
+    raw_path    = os.path.join(raw_ufd_path,    file + ".ufd")
+    noniso_path = os.path.join(noniso_ufd_path, file + ".ufd")
+    expr_path   = os.path.join( expr_ufd_path,  file + ".ufd")
+    exact_path  = os.path.join(exact_ufd_path,  file + ".ufd")
 
     # 出力先ディレクトリ（指定がなければカレント）に path_list.ini を出力
     # Write path_list.ini to the output directory (current dir by default)
@@ -99,6 +101,7 @@ def main():
         f.write("base_path = " + base_path + "\n")
         f.write("raw_path  = " + raw_path + "\n")
         f.write("noniso_path = " + noniso_path + "\n")
+        f.write("expr_path = " + expr_path + "\n")
         f.write("exact_path = " + exact_path + "\n")
         f.write("drawing_path = " + drawing_root + "\n")
 
