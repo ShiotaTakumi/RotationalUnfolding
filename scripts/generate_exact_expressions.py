@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from sympy import S, pi, sin, cos, tan
+from sympy import S, pi, sin, cos, tan, sstr
 
 # .adj ファイルから多面体の構造を読み込む関数
 # Loads a polyhedron structure from an adjacency (.adj) file.
@@ -121,6 +121,11 @@ def norm_deg(rad_expr):
     # 小数点以下 6 桁を出力
     return f"{deg:.6f}"
 
+# SymPy の式を空白なしで出力する関数
+# Function to output a SymPy expression as a string without any spaces
+def sstr_compact(expr):
+    return sstr(expr).replace(" ", "")
+
 def main():
     if len(sys.argv) != 4:
         print("Usage: generate_exact_expressions.py <input.adj> <input.ufd> <output.ufd>")
@@ -160,7 +165,7 @@ def main():
 
             # 式の書き出し
             # Write the symbolic expressions
-            fout.write(f"{gon0} {edge0} {face0} {x0_expr} {y0_expr} {ang0_expr} ")
+            fout.write(f"{gon0} {edge0} {face0} {sstr_compact(x0_expr)} {sstr_compact(y0_expr)} {sstr_compact(ang0_expr)} ")
 
             # [デバック] 小数点以下 6 桁で出力
             # [Debug] Output with six decimal places
@@ -178,7 +183,7 @@ def main():
 
                 # 式の書き出し
                 # Write the symbolic expressions
-                fout.write(f"{gon1} {edge1} {face1} {x1_expr} {y1_expr} {ang1_expr} ")
+                fout.write(f"{gon1} {edge1} {face1} {sstr_compact(x1_expr)} {sstr_compact(y1_expr)} {sstr_compact(ang1_expr)} ")
 
                 # [デバック] 小数点以下 6 桁で出力
                 # [Debug] Output with six decimal places
@@ -219,7 +224,7 @@ def main():
 
                     # 式の書き出し
                     # Write the symbolic expressions
-                    fout.write(f"{gon_i} {edge_i} {face_i} {cx_expr} {cy_expr} {ang_i_expr} ")
+                    fout.write(f"{gon_i} {edge_i} {face_i} {sstr_compact(cx_expr)} {sstr_compact(cy_expr)} {sstr_compact(ang_i_expr)} ")
 
                     # [デバック] 小数点以下 6 桁で出力
                     # [Debug] Output with six decimal places
