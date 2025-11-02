@@ -117,6 +117,18 @@ def enumerate_candidate_pairs(poly, faces):
 
     return sorted(pairs)
 
+# 2 面 (i, j) とその「間」にあるすべての面が共有する頂点が1つ以上あるかを判定
+# （＝連鎖がずっと続いているか。続いているならペアを除外）
+def shares_vertex_chain_all(poly, faces, i, j):
+    face_ids = [fi for (_, _, fi, *_) in faces]
+    V = poly["vertices"]
+    common = set(V[face_ids[i]])
+    for t in range(i + 1, j + 1):
+        common &= set(V[face_ids[t]])
+        if not common:
+            return False
+    return len(common) > 0
+
 def polygons_overlap(poly1, poly2):
     # TODO: 後で exact 判定をここに実装
     return False
@@ -178,7 +190,10 @@ def main():
                     id1, poly1 = polygons[i]
                     id2, poly2 = polygons[j]
 
-                    # TODO: 元から隣接してる面の組みは除外
+                    # 2面間の面をとってきて、すべてに共通する頂点が1以上ならばペア削除
+                    # （i..j の全ての面の共通頂点が非空なら、元の立体で連鎖的に接触していたとみなし除外）
+                    if shares_vertex_chain_all(poly, faces, i, j):
+                        continue
 
                     overlap = polygons_overlap(poly1, poly2)
                     fout.write(f"{id1} {id2} {overlap}\n")  # 出力ファイルに結果を書き出す
