@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from sympy import sqrt, pi, sin, cos, tan
+from sympy import S, pi, sin, cos, tan
 
 # .adj ファイルから多面体の構造を読み込む関数
 # Loads a polyhedron structure from an adjacency (.adj) file.
@@ -107,10 +107,6 @@ def next_center_position(x_prev, y_prev, ir_prev, ir_curr, theta_center):
     y_next = y_prev + delta * sin(theta_center)
     return x_next, y_next
 
-# 要検討
-def face_orientation_from_center(theta_center):
-    return theta_center - pi
-
 # 角度 (rad) を度数法 [-180,180] で正規化するデバック用の関数
 # Function to normalize an angle (in radians) to
 # degrees within the range [-180, 180] for debugging purposes
@@ -159,8 +155,8 @@ def main():
             # 基準面（1つ目の面）
             # Base face (the first face)
             gon0, edge0, face0, *_ = faces[0]
-            x0_expr, y0_expr = 0, 0
-            ang0_expr = 0
+            x0_expr, y0_expr = S.Zero, S.Zero
+            ang0_expr = S.Zero
 
             # 式の書き出し
             # Write the symbolic expressions
@@ -177,7 +173,7 @@ def main():
                 ir0 = inradius(gon0)
                 ir1 = inradius(gon1)
                 x1_expr = ir0 + ir1
-                y1_expr = 0
+                y1_expr = S.Zero
                 ang1_expr = ang0_expr - pi
 
                 # 式の書き出し
@@ -187,7 +183,7 @@ def main():
                 # [デバック] 小数点以下 6 桁で出力
                 # [Debug] Output with six decimal places
                 x1_num = float(x1_expr.evalf())
-                y1_num = float(0)
+                y1_num = float(y1_expr.evalf())
                 numeric_line += f"{gon1} {edge1} {face1} {x1_num:.6f} {y1_num:.6f} {norm_deg(ang1_expr)} "
 
                 # 次の面を計算するために、現在の面の状態を保持する
@@ -203,37 +199,48 @@ def main():
                 for idx in range(2, len(faces)):
                     gon_i, edge_i, face_i, *_ = faces[idx]
 
-                    # 時計回りの辺巡回差分（step 数）/ clockwise step count on previous face
+                    # pre_edge から edge_i までのステップ数（反時計回りにカウント）
+                    # Step count from pre_edge to edge_i (counted counterclockwise)
                     cnt = step_count_counterclockwise(poly, prev_face_id, prev_edge_id, edge_i)
 
-                    # 中心方向角 θ_center / center direction angle
+                    # 次の面の中心方向への角度
+                    # Angle toward the center direction of the next face
                     theta_center = next_center_angle(prev_ang_expr, prev_gon, cnt)
 
-                    # 中心座標 (cx, cy) / center position
+                    # 次の面の中心座標
+                    # Center coordinates of the next face
                     ir_prev = inradius(prev_gon)
                     ir_curr = inradius(gon_i)
                     cx_expr, cy_expr = next_center_position(prev_cx_expr, prev_cy_expr, ir_prev, ir_curr, theta_center)
 
-                    # 面の向き（出力 angle）/ face orientation angle
-                    ang_i_expr = face_orientation_from_center(theta_center)
+                    # 次の面の向きの角度
+                    # Orientation angle of the next face
+                    ang_i_expr = theta_center - pi
 
-                    # 式版
+                    # 式の書き出し
+                    # Write the symbolic expressions
                     fout.write(f"{gon_i} {edge_i} {face_i} {cx_expr} {cy_expr} {ang_i_expr} ")
 
-                    # 数値版
+                    # [デバック] 小数点以下 6 桁で出力
+                    # [Debug] Output with six decimal places
                     cx_num = float(cx_expr.evalf())
                     cy_num = float(cy_expr.evalf())
                     numeric_line += f"{gon_i} {edge_i} {face_i} {cx_num:.5f} {cy_num:.5f} {norm_deg(ang_i_expr)} "
 
-                    # 次のループのため更新 / advance
+                    # 次の面の式を取得するための更新
+                    # Update to obtain the expressions for the next face
                     prev_cx_expr, prev_cy_expr = cx_expr, cy_expr
                     prev_ang_expr = ang_i_expr
                     prev_gon = gon_i
                     prev_face_id = face_i
                     prev_edge_id = edge_i
 
-            # 行終了 / finalize one unfolding line
+            # 行の読み込みの終了にともなう改行
+            # Newline at the end of processing each line
             fout.write("\n")
+
+            # デバック用の出力
+            # Debug output
             print(numeric_line.strip())
 
 
