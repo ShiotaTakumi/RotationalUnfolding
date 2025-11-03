@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="-0.916025403784439 -1.0500000000000003 4.430130807568878 3.6" style="enable-background:new -0.916025403784439 -1.0500000000000003 4.430130807568878 3.6;" xml:space="preserve">
+<style type="text/css">
+  .no_fill_black_stroke {fill:none; stroke:#000000; stroke-width:0.02; stroke-miterlimit:10;}
+  .face_text {fill:#000000; font-family:monospace;}
+  .edge_text {fill:#ff0000; font-family:monospace;}
+  .edge_bg {fill:#f3f3f3; stroke:#606060; stroke-width:0.02;}
+</style>
+<polygon class="no_fill_black_stroke" points="0.8660254037844389, -0.5 6.123233995736767e-17, -1.0000000000000002 -0.8660254037844389, -0.5 -0.8660254037844388, 0.5000000000000002 -1.8369701987210302e-16, 1.0000000000000002 0.8660254037844386, 0.5000000000000006"/>
+<polygon class="no_fill_black_stroke" points="0.8660245962155613, 0.5000000000000002 1.7320499999999999, 1.0000000000000002 2.5980754037844385, 0.5000000000000006 2.5980754037844394, -0.4999999999999994 1.7320500000000003, -1.0000000000000002 0.866024596215561, -0.4999999999999999"/>
+<polygon class="no_fill_black_stroke" points="1.7320545962155611, 1.0 1.7320545962155611, 2.0 2.59808, 2.5 3.4641054037844388, 2.0000000000000004 3.464105403784439, 1.0000000000000007 2.5980800000000004, 0.4999999999999998"/>
+<polygon class="no_fill_black_stroke" points="1.7320509602355867, 1.0 0.7809944439404333, 0.6909830056250525 0.19320919164796013, 1.5 0.780994443940433, 2.3090169943749475 1.7320509602355867, 2.0"/>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.007200000000000001 0 0 0.007200000000000001 0.0 0.0)">1</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.007200000000000001 0 0 0.007200000000000001 1.73205 0.0)">2</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.007200000000000001 0 0 0.007200000000000001 2.59808 1.5)">4</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.007200000000000001 0 0 0.007200000000000001 1.04386 1.5)">3</text>
+<rect class="edge_bg" x="0.7940245962155612" y="-0.07200000000000012" width="0.14400000000000002" height="0.14400000000000002"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.007200000000000001 0 0 0.007200000000000001 0.8660245962155613 -1.0605752387249072e-16)">0</text>
+<rect class="edge_bg" x="2.0930672981077807" y="0.6779999999999997" width="0.14400000000000002" height="0.14400000000000002"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.007200000000000001 0 0 0.007200000000000001 2.1650672981077808 0.7499999999999998)">5</text>
+<rect class="edge_bg" x="1.6600509602355866" y="1.428" width="0.14400000000000002" height="0.14400000000000002"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.007200000000000001 0 0 0.007200000000000001 1.7320509602355867 1.5)">6</text>
+</svg>
