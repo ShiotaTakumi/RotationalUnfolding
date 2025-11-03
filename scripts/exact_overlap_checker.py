@@ -130,7 +130,108 @@ def shares_vertex_chain_all(poly, faces, i, j):
     return len(common) > 0
 
 def polygons_overlap(poly1, poly2):
-    # TODO: 後で exact 判定をここに実装
+    """
+    Mathematica版と同値の意味論（交差／端点接触／同一直線上の重なりを True）。
+    ハイブリッド実装：
+      1) 高精度 evalf による数値判定（高速）
+      2) 数値的に不安定（符号が不確実/ほぼ共線/端点・辺にほぼ載る）なら
+         SymPy の厳密幾何 Segment.intersection() にフォールバック（完全厳密）
+    """
+    from sympy import sympify, Abs
+    from sympy.geometry import Point, Segment
+
+    # --- 数値フェーズの設定 ---------------------------------------------------
+    prec_fast = 80                 # 数値段階の作業桁（必要に応じて 60〜100 で調整）
+    eps      = sympify('1e-30')    # 外積・投影のしきい値（prec_fast に見合う絶対閾）
+
+    def _num(x):
+        return sympify(x).evalf(prec_fast)
+
+    # (* Polygon の頂点列から辺リストを作る：最後と最初も結ぶ *)
+    def edges_of(poly):
+        verts = poly
+        m = len(verts)
+        return [(verts[i], verts[(i + 1) % m]) for i in range(m)]
+
+    # AABB の高速除外（数値）
+    def aabb_overlap(a1, a2, b1, b2):
+        ax1, ay1 = _num(a1[0]), _num(a1[1]); ax2, ay2 = _num(a2[0]), _num(a2[1])
+        bx1, by1 = _num(b1[0]), _num(b1[1]); bx2, by2 = _num(b2[0]), _num(b2[1])
+        minAx, maxAx = min(ax1, ax2), max(ax1, ax2)
+        minAy, maxAy = min(ay1, ay2), max(ay1, ay2)
+        minBx, maxBx = min(bx1, bx2), max(bx1, bx2)
+        minBy, maxBy = min(by1, by2), max(by1, by2)
+        # !(maxA < minB || maxB < minA) を eps マージンつきで
+        return not (
+            (maxAx < minBx - eps) or
+            (maxBx < minAx - eps) or
+            (maxAy < minBy - eps) or
+            (maxBy < minAy - eps)
+        )
+
+    # 外積（有向面積×2）
+    def orient(a, b, c):
+        ax, ay = _num(a[0]), _num(a[1])
+        bx, by = _num(b[0]), _num(b[1])
+        cx, cy = _num(c[0]), _num(c[1])
+        return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+
+    # 点 p が線分 ab 上（数値）かどうか：共線＆射影が区間内
+    def on_segment_num(p, a, b):
+        ax, ay = _num(a[0]), _num(a[1])
+        bx, by = _num(b[0]), _num(b[1])
+        px, py = _num(p[0]), _num(p[1])
+
+        cross = (px - ax) * (by - ay) - (py - ay) * (bx - ax)
+        if Abs(cross) > eps:
+            return False
+
+        dot  = (px - ax) * (bx - ax) + (py - ay) * (by - ay)
+        seg2 = (bx - ax) * (bx - ax) + (by - ay) * (by - ay)
+        if dot < -eps or dot > seg2 + eps:
+            return False
+        return True
+
+    # --- ここから辺ペアの走査（数値 → 必要時に厳密）--------------------------
+    edges1 = edges_of(poly1)
+    edges2 = edges_of(poly2)
+
+    for (a1, a2) in edges1:
+        for (b1, b2) in edges2:
+            if not aabb_overlap(a1, a2, b1, b2):
+                continue
+
+            d1 = orient(a1, a2, b1)
+            d2 = orient(a1, a2, b2)
+            d3 = orient(b1, b2, a1)
+            d4 = orient(b1, b2, a2)
+
+            if (d1 * d2 < -eps) and (d3 * d4 < -eps):
+                return True
+
+            clear_touch = (
+                on_segment_num(b1, a1, a2) or
+                on_segment_num(b2, a1, a2) or
+                on_segment_num(a1, b1, b2) or
+                on_segment_num(a2, b1, b2)
+            )
+            if clear_touch and all(Abs(x) > eps for x in (d1, d2, d3, d4)):
+                return True
+
+            ambiguous = (
+                (Abs(d1) <= eps) or (Abs(d2) <= eps) or
+                (Abs(d3) <= eps) or (Abs(d4) <= eps) or
+                clear_touch
+            )
+            if ambiguous:
+                from sympy.geometry import Point, Segment
+                seg1 = Segment(Point(sympify(a1[0]), sympify(a1[1])),
+                               Point(sympify(a2[0]), sympify(a2[1])))
+                seg2 = Segment(Point(sympify(b1[0]), sympify(b1[1])),
+                               Point(sympify(b2[0]), sympify(b2[1])))
+                if seg1.intersection(seg2):
+                    return True
+
     return False
 
 def main():
@@ -152,12 +253,15 @@ def main():
         for raw in fin:
             if not raw.strip():
                 continue
+            # コメント行（例: '# ...'）はスキップ
+            if raw.lstrip().startswith('#'):
+                continue
+
             faces = parse_ufd_line_symbolic(raw)
             if faces is None:
                 continue
 
             partial_count += 1
-            print(f"\nPartial unfolding: {partial_count}\n")  # ← ここで出力
 
             polygons = []
             # 各面の頂点列を計算して表示（最後の行にはカンマを付けない）
@@ -183,25 +287,75 @@ def main():
                 # nline = "" if idx < len(faces) - 1 else "\n"  # 最後の行は改行
                 # print(f"Polygon[{{{coords}}}]{comma}  (* face {face_id} *) {nline}")
 
-            # --- 隣接していない全ての面の組み合わせをチェック ---
-            num_faces = len(polygons)
-            for i in range(num_faces):
-                for j in range(i + 1, num_faces):
-                    id1, poly1 = polygons[i]
-                    id2, poly2 = polygons[j]
+            # --- ここから、両端→必要なら内側候補の順に判定 ----------------------
 
-                    # 2面間の面をとってきて、すべてに共通する頂点が1以上ならばペア削除
-                    # （i..j の全ての面の共通頂点が非空なら、元の立体で連鎖的に接触していたとみなし除外）
-                    if shares_vertex_chain_all(poly, faces, i, j):
-                        continue
+            n = len(polygons)
+            result = False  # 行ごとの True/False 最終結果
 
-                    overlap = polygons_overlap(poly1, poly2)
-                    fout.write(f"{id1} {id2} {overlap}\n")  # 出力ファイルに結果を書き出す
+            if n >= 2:
+                # 両端 (0, n-1) が“存在しうる”候補か？
+                # 2面間の面をとってきて、すべてに共通する頂点が1以上ならばペア削除
+                # （i..j の全ての面の共通頂点が非空なら、元の立体で連鎖的に接触していたとみなし除外）
+                endpoint_candidate = (not shares_vertex_chain_all(poly, faces, 0, n - 1))
 
-                    # [デバッグ出力]
-                    print(f"Check faces ({id1}, {id2}) → {overlap}")
+                if endpoint_candidate:
+                    # 両端の重なりをまず判定
+                    _, poly_first = polygons[0]
+                    _, poly_last  = polygons[-1]
+                    end_overlap = polygons_overlap(poly_first, poly_last)
 
-            print('\n')
+                    if end_overlap:
+                        # 他の候補ペア（(0,n-1) 以外で shares_vertex_chain_all == False）に
+                        # 重なりが一つも無ければ True
+                        ok = True
+                        for i in range(n):
+                            for j in range(i + 1, n):
+                                if i == 0 and j == n - 1:
+                                    continue
+                                if shares_vertex_chain_all(poly, faces, i, j):
+                                    continue
+                                _, p1 = polygons[i]
+                                _, p2 = polygons[j]
+                                if polygons_overlap(p1, p2):
+                                    ok = False
+                                    break
+                            if not ok:
+                                break
+                        result = ok
+                    else:
+                        # 両端が重ならないなら False
+                        result = False
+                else:
+                    # 両端自体が候補でないなら False
+                    result = False
+            else:
+                # 面が 0 or 1 の場合は両端が定義できないので False
+                result = False
+
+            # 出力：各行につき True/False を1回だけ（標準出力）
+            print(f"Partial unfolding: {partial_count} → {result}")
+
+            # --- ここからファイル出力の変更点 -----------------------------------
+            # True の行だけ、元の .ufd 行の「中身」を evalf(6) で数値化して1行として出力
+            if result:
+                # faces: [(gon, edge_id, face_id, x, y, ang), ...]
+                out_tokens = [str(len(faces))]
+                for (gon, edge_id, face_id, x, y, ang) in faces:
+                    out_tokens.append(str(int(gon)))
+                    out_tokens.append(str(int(edge_id)))
+                    out_tokens.append(str(int(face_id)))
+                    # evalf(6) で 6 桁精度（有効桁）に評価
+                    out_tokens.append(str(sympify(x).evalf(6)))
+                    out_tokens.append(str(sympify(y).evalf(6)))
+
+                    # 角度はラジアン→度へ変換し、[-180, 180] に正規化してから evalf(6)
+                    ang_deg = (sympify(ang) * 180 / pi).evalf(12)   # まず度に
+                    ang_deg = float(ang_deg)                        # 数値化
+                    ang_deg_norm = ((ang_deg + 180.0) % 360.0) - 180.0  # [-180,180]
+                    out_tokens.append(str(sympify(ang_deg_norm).evalf(6)))
+
+                fout.write(" ".join(out_tokens) + "\n")
+            # False の場合はファイルへは何も書かない
 
 if __name__ == "__main__":
     main()
