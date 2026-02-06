@@ -6,9 +6,15 @@
 *.swo
 *~
 
-# VSCode settings (ignore user-specific configs)
+# ------------------------------
+# VSCode settings
+# ------------------------------
+# Ignore user-specific configs, but allow shared project settings
 .vscode/*
 !.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
 
 # ------------------------------
 # C/C++ build artifacts
@@ -27,6 +33,11 @@
 *.gch
 *.pch
 
+# Executables in apps/ directory
+apps/a.out
+apps/main
+apps/*.exe
+
 # ------------------------------
 # Python-related files
 # ------------------------------
@@ -36,18 +47,18 @@ __pycache__/
 *.pyd
 *.log
 *.sqlite
-*.ipynb_checkpoints
+.ipynb_checkpoints/
 
 # Virtual environments
 venv/
 .env/
+env/
+ENV/
 
 # ------------------------------
 # LaTeX temporary and auxiliary files
 # ------------------------------
 *.aux
-*.log
-*.out
 *.toc
 *.fls
 *.fdb_latexmk
@@ -67,33 +78,88 @@ venv/
 *.wl.cache
 
 # ------------------------------
-# Generated images and figures
+# Research output directories
 # ------------------------------
+# Generated unfolding data (keep structure, ignore generated files)
+unfolding/raw/**/*.ufd
+unfolding/raw/**/*.jsonl
+unfolding/nonisomorphic/**/*.ufd
+unfolding/nonisomorphic/**/*.jsonl
+unfolding/expression/**/*.ufd
+unfolding/expression/**/*.jsonl
+unfolding/exact/**/*.ufd
+unfolding/exact/**/*.jsonl
+
+# Generated drawings (keep structure, ignore generated SVG files)
+drawing/raw/**/*.svg
+drawing/nonisomorphic/**/*.svg
+drawing/exact/**/*.svg
+
+# Build directory (if present)
+build/
+dist/
+outputs/
+
+# ------------------------------
+# Documentation and figures
+# ------------------------------
+# Allow figures in documentation
+!docs/**/*.png
+!docs/**/*.pdf
+!docs/**/*.eps
+!figures/**/*.png
+!figures/**/*.pdf
+!figures/**/*.eps
+!paper/**/*.png
+!paper/**/*.pdf
+!paper/**/*.eps
+
+# But ignore large generated figures elsewhere
 *.png
 *.pdf
 *.eps
 
 # ------------------------------
-# Compressed and temporary archive files
+# Configuration files
+# ------------------------------
+# Ignore user-specific runtime configs, but keep templates and examples
+apps/config/root_paths.ini
+apps/config/path_lists.ini
+
+# Allow example/template configs to be committed
+!apps/config/root_paths.ini.example
+!apps/config/path_lists.ini.example
+!**/*.ini.template
+!**/*.ini.example
+
+# ------------------------------
+# Compressed and temporary files
 # ------------------------------
 *.zip
 *.tar.gz
 *.rar
 *.tmp
 *.temp
+*.bak
+*.backup
 
 # ------------------------------
-# Configuration files
+# IDE and tool-specific files
 # ------------------------------
-*.ini
+# Cursor IDE
+.cursor/
+.cache/
+
+# CLion / IntelliJ
+.idea/
+cmake-build-*/
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
 
 # ------------------------------
-# Cursor files
+# Development tools
 # ------------------------------
-*.cursor/
-*.cache/
-
-# ------------------------------
-# Compile commands
-# ------------------------------
-compile_commands.json
+# Keep compile_commands.json for clangd/LSP support
+# (This file helps with IDE autocompletion and navigation)
