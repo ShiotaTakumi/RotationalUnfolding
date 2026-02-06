@@ -91,3 +91,9 @@ venv/
 # Cursor files
 # ------------------------------
 *.cursor/
+*.cache/
+
+# ------------------------------
+# Compile commands
+# ------------------------------
+compile_commands.json
