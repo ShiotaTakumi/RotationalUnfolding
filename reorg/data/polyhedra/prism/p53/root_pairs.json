@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "root_pairs": [
+    {
+      "base_face": 0,
+      "base_edge": 0
+    },
+    {
+      "base_face": 0,
+      "base_edge": 1
+    },
+    {
+      "base_face": 53,
+      "base_edge": 1
+    }
+  ]
+}

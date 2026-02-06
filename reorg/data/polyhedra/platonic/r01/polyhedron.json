@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "polyhedron": {
+    "class": "platonic",
+    "name": "r01"
+  },
+  "faces": [
+    {
+      "face_id": 0,
+      "gon": 3,
+      "neighbors": [
+        {
+          "edge_id": 0,
+          "face_id": 2
+        },
+        {
+          "edge_id": 4,
+          "face_id": 3
+        },
+        {
+          "edge_id": 2,
+          "face_id": 1
+        }
+      ]
+    },
+    {
+      "face_id": 1,
+      "gon": 3,
+      "neighbors": [
+        {
+          "edge_id": 2,
+          "face_id": 0
+        },
+        {
+          "edge_id": 5,
+          "face_id": 3
+        },
+        {
+          "edge_id": 1,
+          "face_id": 2
+        }
+      ]
+    },
+    {
+      "face_id": 2,
+      "gon": 3,
+      "neighbors": [
+        {
+          "edge_id": 1,
+          "face_id": 1
+        },
+        {
+          "edge_id": 3,
+          "face_id": 3
+        },
+        {
+          "edge_id": 0,
+          "face_id": 0
+        }
+      ]
+    },
+    {
+      "face_id": 3,
+      "gon": 3,
+      "neighbors": [
+        {
+          "edge_id": 3,
+          "face_id": 2
+        },
+        {
+          "edge_id": 5,
+          "face_id": 1
+        },
+        {
+          "edge_id": 4,
+          "face_id": 0
+        }
+      ]
+    }
+  ]
+}

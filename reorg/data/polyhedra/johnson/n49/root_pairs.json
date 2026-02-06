@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "root_pairs": [
+    {
+      "base_face": 0,
+      "base_edge": 2
+    },
+    {
+      "base_face": 0,
+      "base_edge": 9
+    },
+    {
+      "base_face": 0,
+      "base_edge": 7
+    },
+    {
+      "base_face": 0,
+      "base_edge": 1
+    },
+    {
+      "base_face": 1,
+      "base_edge": 1
+    },
+    {
+      "base_face": 1,
+      "base_edge": 4
+    },
+    {
+      "base_face": 1,
+      "base_edge": 0
+    },
+    {
+      "base_face": 2,
+      "base_edge": 0
+    },
+    {
+      "base_face": 2,
+      "base_edge": 6
+    },
+    {
+      "base_face": 2,
+      "base_edge": 3
+    },
+    {
+      "base_face": 3,
+      "base_edge": 3
+    },
+    {
+      "base_face": 3,
+      "base_edge": 10
+    },
+    {
+      "base_face": 3,
+      "base_edge": 2
+    },
+    {
+      "base_face": 4,
+      "base_edge": 4
+    },
+    {
+      "base_face": 4,
+      "base_edge": 7
+    },
+    {
+      "base_face": 4,
+      "base_edge": 11
+    },
+    {
+      "base_face": 4,
+      "base_edge": 5
+    },
+    {
+      "base_face": 5,
+      "base_edge": 5
+    },
+    {
+      "base_face": 5,
+      "base_edge": 12
+    },
+    {
+      "base_face": 5,
+      "base_edge": 6
+    },
+    {
+      "base_face": 6,
+      "base_edge": 8
+    },
+    {
+      "base_face": 6,
+      "base_edge": 11
+    },
+    {
+      "base_face": 6,
+      "base_edge": 9
+    },
+    {
+      "base_face": 7,
+      "base_edge": 10
+    },
+    {
+      "base_face": 7,
+      "base_edge": 12
+    },
+    {
+      "base_face": 7,
+      "base_edge": 8
+    }
+  ]
+}

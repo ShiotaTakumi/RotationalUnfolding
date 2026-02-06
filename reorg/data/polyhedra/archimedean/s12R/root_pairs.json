@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "root_pairs": [
+    {
+      "base_face": 0,
+      "base_edge": 1
+    },
+    {
+      "base_face": 0,
+      "base_edge": 4
+    },
+    {
+      "base_face": 1,
+      "base_edge": 4
+    },
+    {
+      "base_face": 1,
+      "base_edge": 2
+    },
+    {
+      "base_face": 2,
+      "base_edge": 2
+    },
+    {
+      "base_face": 2,
+      "base_edge": 3
+    },
+    {
+      "base_face": 3,
+      "base_edge": 3
+    },
+    {
+      "base_face": 3,
+      "base_edge": 0
+    },
+    {
+      "base_face": 4,
+      "base_edge": 0
+    },
+    {
+      "base_face": 4,
+      "base_edge": 1
+    }
+  ]
+}
