@@ -1,0 +1,413 @@
+"""
+Runner module for executing rotational unfolding.
+
+Handles:
+- Path resolution for polyhedron data
+- C++ binary invocation via subprocess
+- run.json generation with metadata
+
+実行ロジックを提供：
+- 多面体データのパス解決
+- C++ バイナリのサブプロセス呼び出し
+- メタデータを含む run.json の生成
+"""
+
+import json
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+def find_repo_root():
+    """
+    Finds the repository root by searching upward for the 'reorg' directory.
+    
+    reorg ディレクトリを上方向に探索してリポジトリルートを見つける。
+    
+    Returns:
+        Path: Absolute path to the repository root.
+    
+    Raises:
+        RuntimeError: If the repository root cannot be found.
+    """
+    current = Path(__file__).resolve().parent
+    while current != current.parent:
+        reorg_dir = current / "reorg"
+        if reorg_dir.is_dir():
+            return current
+        current = current.parent
+    
+    raise RuntimeError("Could not find repository root (reorg/ directory)")
+
+
+def resolve_polyhedron_paths(repo_root, poly_id):
+    """
+    Resolves polyhedron data paths from a CLASS/NAME identifier.
+    
+    CLASS/NAME 識別子から多面体データのパスを解決する。
+    
+    Args:
+        repo_root (Path): Repository root path.
+        poly_id (str): Polyhedron identifier in CLASS/NAME format.
+    
+    Returns:
+        tuple: (polyhedron_json_path, root_pairs_json_path, poly_class, poly_name)
+    
+    Raises:
+        ValueError: If the identifier format is invalid.
+        FileNotFoundError: If the polyhedron data files do not exist.
+    """
+    parts = poly_id.split("/")
+    if len(parts) != 2:
+        raise ValueError(
+            f"Invalid poly_id format: {poly_id}. Expected CLASS/NAME (e.g., archimedean/s05)"
+        )
+    
+    poly_class, poly_name = parts
+    
+    poly_dir = repo_root / "reorg" / "data" / "polyhedra" / poly_class / poly_name
+    
+    if not poly_dir.is_dir():
+        raise FileNotFoundError(f"Polyhedron directory not found: {poly_dir}")
+    
+    polyhedron_json = poly_dir / "polyhedron.json"
+    root_pairs_json = poly_dir / "root_pairs.json"
+    
+    if not polyhedron_json.is_file():
+        raise FileNotFoundError(f"polyhedron.json not found: {polyhedron_json}")
+    
+    if not root_pairs_json.is_file():
+        raise FileNotFoundError(f"root_pairs.json not found: {root_pairs_json}")
+    
+    return polyhedron_json, root_pairs_json, poly_class, poly_name
+
+
+def find_cpp_binary(repo_root):
+    """
+    Locates the C++ binary (rotunfold) in the repository.
+    
+    リポジトリ内の C++ バイナリ（rotunfold）を見つける。
+    
+    Args:
+        repo_root (Path): Repository root path.
+    
+    Returns:
+        Path: Absolute path to the rotunfold binary.
+    
+    Raises:
+        FileNotFoundError: If the binary does not exist.
+    """
+    cpp_binary = repo_root / "reorg" / "cpp" / "rotunfold"
+    
+    if not cpp_binary.is_file():
+        raise FileNotFoundError(
+            f"C++ binary not found: {cpp_binary}. "
+            "Please build the C++ code first (cd reorg/cpp && make)."
+        )
+    
+    return cpp_binary
+
+
+def generate_experiment_id(poly_name):
+    """
+    Generates a unique experiment ID based on timestamp and polyhedron name.
+    
+    タイムスタンプと多面体名に基づいて実験IDを生成する。
+    
+    Args:
+        poly_name (str): Polyhedron name.
+    
+    Returns:
+        str: Experiment ID in the format YYYY-MM-DDTHHMMSSZ_<poly_name>
+    """
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
+    return f"{timestamp}_{poly_name}"
+
+
+def load_json_metadata(json_path):
+    """
+    Loads metadata from a JSON file.
+    
+    JSON ファイルからメタデータを読み込む。
+    
+    Args:
+        json_path (Path): Path to the JSON file.
+    
+    Returns:
+        dict: Parsed JSON content.
+    """
+    with open(json_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def count_jsonl_records(jsonl_path):
+    """
+    Counts the number of records in a JSONL file.
+    
+    JSONL ファイル内のレコード数をカウントする。
+    
+    Args:
+        jsonl_path (Path): Path to the JSONL file.
+    
+    Returns:
+        int: Number of records (lines) in the file.
+    """
+    if not jsonl_path.is_file():
+        return 0
+    
+    with open(jsonl_path, "r", encoding="utf-8") as f:
+        return sum(1 for line in f if line.strip())
+
+
+def create_run_metadata(
+    run_id,
+    started_at,
+    finished_at,
+    exit_code,
+    cpp_binary,
+    argv,
+    cwd,
+    polyhedron_json,
+    root_pairs_json,
+    poly_class,
+    poly_name,
+    symmetric_mode,
+    raw_jsonl_path,
+    num_records
+):
+    """
+    Creates the run.json metadata structure.
+    
+    run.json メタデータ構造を作成する。
+    
+    Args:
+        run_id (str): Unique run identifier.
+        started_at (str): ISO8601 UTC timestamp of run start.
+        finished_at (str): ISO8601 UTC timestamp of run end.
+        exit_code (int): Exit code of the C++ process.
+        cpp_binary (Path): Path to the C++ binary.
+        argv (list): Command-line arguments passed to C++.
+        cwd (str): Current working directory at invocation.
+        polyhedron_json (Path): Path to polyhedron.json.
+        root_pairs_json (Path): Path to root_pairs.json.
+        poly_class (str): Polyhedron class.
+        poly_name (str): Polyhedron name.
+        symmetric_mode (str): Symmetry mode requested.
+        raw_jsonl_path (Path): Path to raw.jsonl output.
+        num_records (int): Number of records written to raw.jsonl.
+    
+    Returns:
+        dict: run.json metadata structure.
+    """
+    # Load input metadata
+    polyhedron_data = load_json_metadata(polyhedron_json)
+    root_pairs_data = load_json_metadata(root_pairs_json)
+    
+    # Determine symmetric_used based on mode
+    symmetric_used = None
+    auto_basis = None
+    
+    if symmetric_mode == "on":
+        symmetric_used = True
+    elif symmetric_mode == "off":
+        symmetric_used = False
+    elif symmetric_mode == "auto":
+        # For auto mode, we need to infer from poly_name (same logic as C++)
+        # This should match IOUtil::isSymmetricFromPolyName
+        if poly_name:
+            prefix = poly_name[0]
+            if prefix in ['a', 'p', 'r']:
+                symmetric_used = True
+            elif prefix == 's' and len(poly_name) >= 3:
+                try:
+                    num = int(poly_name[1:3])
+                    symmetric_used = (1 <= num <= 11)
+                except ValueError:
+                    symmetric_used = False
+            else:
+                symmetric_used = False
+        else:
+            symmetric_used = False
+        
+        auto_basis = {"poly_name": poly_name}
+    
+    return {
+        "schema_version": 1,
+        "record_type": "run_metadata",
+        "run": {
+            "run_id": run_id,
+            "started_at_utc": started_at,
+            "finished_at_utc": finished_at,
+            "exit_code": exit_code
+        },
+        "command": {
+            "executable_path": str(cpp_binary.resolve()),
+            "argv": argv,
+            "cwd": cwd
+        },
+        "inputs": {
+            "polyhedron": {
+                "path": str(polyhedron_json.resolve()),
+                "schema_version": polyhedron_data.get("schema_version", 1),
+                "poly_class": poly_class,
+                "poly_name": poly_name,
+                "num_faces": len(polyhedron_data.get("faces", []))
+            },
+            "root_pairs": {
+                "path": str(root_pairs_json.resolve()),
+                "schema_version": root_pairs_data.get("schema_version", 1),
+                "num_root_pairs": len(root_pairs_data.get("root_pairs", []))
+            }
+        },
+        "options": {
+            "symmetric": {
+                "mode_requested": symmetric_mode,
+                "symmetric_used": symmetric_used,
+                **({"auto_basis": auto_basis} if auto_basis else {})
+            }
+        },
+        "outputs": {
+            "raw_jsonl": {
+                "path": str(raw_jsonl_path.resolve()),
+                "schema_version": 1,
+                "record_type": "partial_unfolding",
+                "num_records_written": num_records
+            }
+        }
+    }
+
+
+def run_rotational_unfolding(poly_id, output_dir, symmetric_mode):
+    """
+    Runs rotational unfolding for a specified polyhedron.
+    
+    指定された多面体について回転展開を実行する。
+    
+    Args:
+        poly_id (str): Polyhedron identifier in CLASS/NAME format.
+        output_dir (str): Output directory path.
+        symmetric_mode (str): Symmetry mode (auto, on, or off).
+    
+    Returns:
+        bool: True if successful, False otherwise.
+    
+    Workflow:
+        1. Resolve paths (polyhedron data, C++ binary, output directory)
+        2. Create experiment directory
+        3. Invoke C++ binary via subprocess
+        4. Generate run.json metadata
+        5. Report results
+    
+    手順:
+        1. パス解決（多面体データ、C++ バイナリ、出力ディレクトリ）
+        2. 実験ディレクトリの作成
+        3. C++ バイナリのサブプロセス呼び出し
+        4. run.json メタデータの生成
+        5. 結果の報告
+    """
+    print(f"Starting rotational unfolding for: {poly_id}")
+    print(f"Symmetry mode: {symmetric_mode}")
+    print("")
+    
+    # Find repository root
+    repo_root = find_repo_root()
+    print(f"Repository root: {repo_root}")
+    
+    # Resolve polyhedron paths
+    polyhedron_json, root_pairs_json, poly_class, poly_name = resolve_polyhedron_paths(
+        repo_root, poly_id
+    )
+    print(f"Polyhedron: {polyhedron_json}")
+    print(f"Root pairs: {root_pairs_json}")
+    
+    # Find C++ binary
+    cpp_binary = find_cpp_binary(repo_root)
+    print(f"C++ binary: {cpp_binary}")
+    print("")
+    
+    # Generate experiment ID and create output directory
+    experiment_id = generate_experiment_id(poly_name)
+    output_base = Path(output_dir).resolve()
+    experiment_dir = output_base / experiment_id
+    
+    experiment_dir.mkdir(parents=True, exist_ok=False)
+    print(f"Experiment directory: {experiment_dir}")
+    
+    raw_jsonl_path = experiment_dir / "raw.jsonl"
+    run_json_path = experiment_dir / "run.json"
+    
+    # Prepare C++ command
+    argv = [
+        str(cpp_binary),
+        "--polyhedron", str(polyhedron_json),
+        "--roots", str(root_pairs_json),
+        "--symmetric", symmetric_mode,
+        "--out", str(raw_jsonl_path)
+    ]
+    
+    print("Invoking C++ binary...")
+    print(f"Command: {' '.join(argv)}")
+    print("")
+    
+    # Record start time
+    started_at = datetime.now(timezone.utc).isoformat()
+    
+    # Execute C++ binary
+    try:
+        result = subprocess.run(
+            argv,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            check=False
+        )
+        exit_code = result.returncode
+    except Exception as e:
+        print(f"Error executing C++ binary: {e}", file=sys.stderr)
+        return False
+    
+    # Record end time
+    finished_at = datetime.now(timezone.utc).isoformat()
+    
+    print("")
+    print(f"C++ process exited with code: {exit_code}")
+    
+    if exit_code != 0:
+        print("Warning: C++ process did not exit successfully.", file=sys.stderr)
+    
+    # Count records in raw.jsonl
+    num_records = count_jsonl_records(raw_jsonl_path)
+    print(f"Records written: {num_records}")
+    
+    # Generate run.json
+    print("Generating run.json...")
+    
+    cwd = str(Path.cwd().resolve())
+    
+    run_metadata = create_run_metadata(
+        run_id=experiment_id,
+        started_at=started_at,
+        finished_at=finished_at,
+        exit_code=exit_code,
+        cpp_binary=cpp_binary,
+        argv=argv,
+        cwd=cwd,
+        polyhedron_json=polyhedron_json,
+        root_pairs_json=root_pairs_json,
+        poly_class=poly_class,
+        poly_name=poly_name,
+        symmetric_mode=symmetric_mode,
+        raw_jsonl_path=raw_jsonl_path,
+        num_records=num_records
+    )
+    
+    with open(run_json_path, "w", encoding="utf-8") as f:
+        json.dump(run_metadata, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    
+    print(f"run.json written: {run_json_path}")
+    print("")
+    print("Done.")
+    
+    return exit_code == 0
