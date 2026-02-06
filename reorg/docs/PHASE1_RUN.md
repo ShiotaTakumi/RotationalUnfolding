@@ -1,0 +1,353 @@
+# Phase 1: Run — Rotational Unfolding Execution
+
+**Status**: Implemented  
+**Version**: 0.1.0  
+**Last Updated**: 2026-02-06
+
+---
+
+## Overview / 概要
+
+Phase 1 implements the basic execution layer for the rotational unfolding algorithm. It provides a command-line interface (CLI) for running the C++ core and generates machine-readable output in JSONL format.
+
+Phase 1 は回転展開アルゴリズムの基本実行層を実装します。C++ コアを実行するためのコマンドラインインターフェース（CLI）を提供し、JSONL 形式で機械可読な出力を生成します。
+
+**This is a transitional phase.** Phase 1 establishes the foundation for future processing stages (nonisomorphic filtering, exact overlap detection, drawing) but does not implement them.
+
+**これは過渡期のフェーズです。** Phase 1 は将来の処理段階（同型除去、厳密重なり判定、描画）の基盤を確立しますが、それら自体は実装しません。
+
+---
+
+## Purpose and Scope / 目的と範囲
+
+### What Phase 1 Does / Phase 1 が行うこと
+
+Phase 1 focuses on **reproducible execution** of the rotational unfolding algorithm:
+
+1. **Unified entry point**: `python -m rotational_unfolding run` serves as the canonical way to run experiments.
+2. **Input standardization**: Polyhedron data is stored in JSON format (`polyhedron.json`, `root_pairs.json`).
+3. **Output standardization**: Raw partial unfoldings are emitted as JSONL (`raw.jsonl`).
+4. **Experiment metadata**: Each run generates `run.json` containing all information needed to reproduce the experiment.
+5. **cwd-independence**: The CLI resolves paths relative to the repository root, not the current working directory.
+
+Phase 1 は回転展開アルゴリズムの**再現可能な実行**に焦点を当てます：
+
+1. **統一された入口**: `python -m rotational_unfolding run` が実験を実行する正規の方法として機能します。
+2. **入力の標準化**: 多面体データは JSON 形式（`polyhedron.json`, `root_pairs.json`）で保存されます。
+3. **出力の標準化**: 生の部分展開図は JSONL（`raw.jsonl`）として出力されます。
+4. **実験メタデータ**: 各実行は、実験を再現するために必要なすべての情報を含む `run.json` を生成します。
+5. **cwd 非依存**: CLI はリポジトリルートを基準にパスを解決し、現在の作業ディレクトリには依存しません。
+
+### What Phase 1 Does NOT Do / Phase 1 が行わないこと
+
+Phase 1 intentionally **does not** implement:
+
+- **Nonisomorphic filtering**: All candidate unfoldings are output, including isomorphic duplicates.
+- **Exact overlap detection**: Overlap is detected approximately (circumradius proximity) by the C++ core.
+- **Drawing/visualization**: No SVG or graphical output is generated.
+- **Post-processing pipeline**: No automated workflow for filtering or analysis.
+- **Batch processing**: Each polyhedron must be run separately.
+
+Phase 1 は意図的に以下を**実装しません**：
+
+- **同型除去**: すべての候補展開図（同型な重複を含む）が出力されます。
+- **厳密重なり判定**: 重なりは C++ コアによって近似的（外接円の近接性）に検出されます。
+- **描画・可視化**: SVG やグラフィカルな出力は生成されません。
+- **後処理パイプライン**: フィルタリングや解析の自動化されたワークフローはありません。
+- **バッチ処理**: 各多面体は個別に実行する必要があります。
+
+---
+
+## Architecture / アーキテクチャ
+
+Phase 1 uses a two-layer architecture:
+
+Phase 1 は2層アーキテクチャを使用します：
+
+```
+┌─────────────────────────────────────────┐
+│  Python CLI (rotational_unfolding)      │
+│  - Argument parsing                     │
+│  - Path resolution                      │
+│  - Experiment directory management      │
+│  - run.json generation                  │
+└─────────────┬───────────────────────────┘
+              │ subprocess
+              ↓
+┌─────────────────────────────────────────┐
+│  C++ Core (rotunfold)                   │
+│  - Rotational unfolding algorithm       │
+│  - Overlap detection (approximate)      │
+│  - JSONL output (raw.jsonl)             │
+└─────────────────────────────────────────┘
+```
+
+### Responsibility Separation / 責務分離
+
+| Component | Responsibility |
+|-----------|----------------|
+| **Python CLI** | Orchestration, metadata, reproducibility |
+| **C++ Core** | Algorithm execution, numeric computation |
+
+| コンポーネント | 責務 |
+|-----------|----------------|
+| **Python CLI** | オーケストレーション、メタデータ、再現性 |
+| **C++ コア** | アルゴリズム実行、数値計算 |
+
+The C++ core is treated as a **compute engine** that reads JSON input and writes JSONL output. It does not know about experiment IDs, directory structure, or metadata.
+
+C++ コアは JSON 入力を読み込み JSONL 出力を書き込む**計算エンジン**として扱われます。実験 ID、ディレクトリ構造、メタデータについては関知しません。
+
+---
+
+## Input Format / 入力形式
+
+Phase 1 uses JSON-based input stored in `reorg/data/polyhedra/`:
+
+Phase 1 は `reorg/data/polyhedra/` に保存された JSON ベースの入力を使用します：
+
+```
+reorg/data/polyhedra/
+└── <class>/
+    └── <name>/
+        ├── polyhedron.json
+        └── root_pairs.json
+```
+
+### polyhedron.json
+
+Defines the combinatorial structure of a polyhedron:
+
+- `schema_version`: Format version (currently 1)
+- `polyhedron.class` / `polyhedron.name`: Identifier
+- `faces[]`: Array of faces with adjacency information
+
+多面体の組合せ構造を定義：
+
+- `schema_version`: フォーマットバージョン（現在 1）
+- `polyhedron.class` / `polyhedron.name`: 識別子
+- `faces[]`: 隣接情報を含む面の配列
+
+### root_pairs.json
+
+Specifies the starting configurations for unfolding search:
+
+- `schema_version`: Format version (currently 1)
+- `root_pairs[]`: Array of `{base_face, base_edge}` pairs
+
+展開探索の開始構成を指定：
+
+- `schema_version`: フォーマットバージョン（現在 1）
+- `root_pairs[]`: `{base_face, base_edge}` ペアの配列
+
+---
+
+## Output Format / 出力形式
+
+Each experiment produces two files in `outputs/<experiment-id>/`:
+
+各実験は `outputs/<experiment-id>/` に2つのファイルを生成します：
+
+### raw.jsonl
+
+**Generated by**: C++ core  
+**Format**: JSON Lines (one record per line)  
+**Purpose**: Raw partial unfoldings found by the algorithm
+
+**生成元**: C++ コア  
+**形式**: JSON Lines（1行1レコード）  
+**目的**: アルゴリズムが見つけた生の部分展開図
+
+Each record represents a candidate partial unfolding:
+
+```json
+{
+  "schema_version": 1,
+  "record_type": "partial_unfolding",
+  "base_pair": {"base_face": 0, "base_edge": 0},
+  "symmetric_used": true,
+  "faces": [
+    {"face_id": 0, "gon": 8, "edge_id": 0, "x": 0.0, "y": 0.0, "angle_deg": 0.0},
+    ...
+  ]
+}
+```
+
+**Key properties in Phase 1:**
+
+- All coordinates are rounded to 6 decimal places
+- Angles are normalized to [-180, 180] degrees
+- Isomorphic duplicates are NOT removed
+- Exact overlap status is NOT verified
+
+**Phase 1 における主要な特性：**
+
+- すべての座標は小数点以下6桁に丸められる
+- 角度は [-180, 180] 度に正規化される
+- 同型な重複は除去されない
+- 厳密な重なりの状態は検証されない
+
+### run.json
+
+**Generated by**: Python CLI  
+**Format**: JSON (pretty-printed)  
+**Purpose**: Experiment metadata for reproducibility
+
+**生成元**: Python CLI  
+**形式**: JSON（整形済み）  
+**目的**: 再現性のための実験メタデータ
+
+Contains all information needed to reproduce the experiment:
+
+- Run identification (`run_id`, timestamps, exit code)
+- Command invocation (`executable_path`, `argv`, `cwd`)
+- Input file paths and metadata
+- Options (`symmetric` mode and resolution)
+- Output summary (`num_records_written`)
+
+実験を再現するために必要なすべての情報を含む：
+
+- 実行の識別（`run_id`、タイムスタンプ、終了コード）
+- コマンド呼び出し（`executable_path`, `argv`, `cwd`）
+- 入力ファイルのパスとメタデータ
+- オプション（`symmetric` モードと解決）
+- 出力サマリー（`num_records_written`）
+
+---
+
+## Usage / 使用方法
+
+### Basic Execution
+
+```bash
+python -m rotational_unfolding run --poly archimedean/s05 --out outputs/
+```
+
+### Arguments
+
+- `--poly CLASS/NAME`: Polyhedron identifier (e.g., `platonic/r01`, `archimedean/s05`)
+- `--out OUTPUT_DIR`: Output directory for experiment results
+- `--symmetric auto|on|off`: Symmetry pruning mode (default: `auto`)
+
+### Output Directory Structure
+
+```
+outputs/
+└── 2026-02-06T112707Z_s05/
+    ├── raw.jsonl
+    └── run.json
+```
+
+Experiment ID format: `YYYY-MM-DDTHHMMSSZ_<poly_name>`
+
+実験 ID 形式: `YYYY-MM-DDTHHMMSSZ_<多面体名>`
+
+---
+
+## Design Decisions / 設計判断
+
+### Why JSONL for raw output?
+
+- Streaming-friendly: Records can be processed one at a time
+- Append-safe: New records can be added without rewriting the file
+- Language-agnostic: Easy to parse in any language
+
+### なぜ raw 出力に JSONL を使うのか？
+
+- ストリーミング対応: レコードを1つずつ処理可能
+- 追記安全: ファイルを書き直さずに新しいレコードを追加可能
+- 言語非依存: あらゆる言語で解析が容易
+
+### Why separate run.json?
+
+- Metadata should not pollute the data stream
+- Reproducibility information is independent of results
+- Phase 2+ can read `run.json` to understand provenance
+
+### なぜ run.json を分離するのか？
+
+- メタデータはデータストリームを汚染すべきでない
+- 再現性情報は結果から独立している
+- Phase 2 以降は `run.json` を読んで出所を理解できる
+
+### Why Python CLI instead of pure C++?
+
+- Path resolution and directory management are easier in Python
+- Experiment metadata generation requires file inspection
+- Future post-processing will be in Python (noniso, draw, exact)
+
+### なぜ純粋な C++ ではなく Python CLI なのか？
+
+- パス解決とディレクトリ管理は Python で簡単
+- 実験メタデータ生成にはファイル検査が必要
+- 将来の後処理は Python で行われる予定（noniso, draw, exact）
+
+---
+
+## Limitations and Known Issues / 制限と既知の問題
+
+### Phase 1 Limitations
+
+1. **No deduplication**: Isomorphic unfoldings appear multiple times in `raw.jsonl`.
+2. **Approximate overlap**: The C++ core uses circumradius proximity, not exact polygon intersection.
+3. **Single polyhedron per run**: Batch processing requires scripting.
+4. **No validation of results**: `raw.jsonl` is trusted to be correct if the C++ core exits successfully.
+
+### Phase 1 の制限
+
+1. **重複除去なし**: 同型な展開図が `raw.jsonl` に複数回出現します。
+2. **近似的な重なり**: C++ コアは外接円の近接性を使用し、厳密な多角形交差は行いません。
+3. **実行ごとに単一の多面体**: バッチ処理にはスクリプトが必要です。
+4. **結果の検証なし**: C++ コアが正常終了すれば `raw.jsonl` は正しいと信頼されます。
+
+### Not Bugs, But Intentional
+
+- Multiple runs for the same polyhedron create separate directories (no overwrite).
+- Experiment IDs include timestamps, so results are time-dependent identifiers.
+- `run.json` includes absolute paths, which may break portability (but ensures reproducibility on the same machine).
+
+### バグではなく意図的な仕様
+
+- 同じ多面体に対する複数の実行は別々のディレクトリを作成します（上書きなし）。
+- 実験 ID にはタイムスタンプが含まれるため、結果は時間依存の識別子です。
+- `run.json` には絶対パスが含まれており、移植性を損なう可能性があります（ただし同じマシン上での再現性は保証されます）。
+
+---
+
+## Transition to Phase 2 / Phase 2 への移行
+
+Phase 1 output (`raw.jsonl` + `run.json`) will serve as **input** for Phase 2 processing:
+
+- **Nonisomorphic filtering** (Phase 2): Read `raw.jsonl`, apply canonical form normalization, output `noniso.jsonl`
+- **Exact overlap detection** (Phase 2): Read `noniso.jsonl`, perform precise geometric checks, output `exact.jsonl`
+- **Drawing** (Phase 2): Read `exact.jsonl` or `noniso.jsonl`, generate SVG files
+
+Phase 1 の出力（`raw.jsonl` + `run.json`）は Phase 2 処理の**入力**として機能します：
+
+- **同型除去**（Phase 2）: `raw.jsonl` を読み込み、正規形正規化を適用、`noniso.jsonl` を出力
+- **厳密重なり判定**（Phase 2）: `noniso.jsonl` を読み込み、精密な幾何チェックを実行、`exact.jsonl` を出力
+- **描画**（Phase 2）: `exact.jsonl` または `noniso.jsonl` を読み込み、SVG ファイルを生成
+
+Phase 1 does not prescribe the design of Phase 2. The only contract is the format of `raw.jsonl` and `run.json`.
+
+Phase 1 は Phase 2 の設計を規定しません。唯一の契約は `raw.jsonl` と `run.json` の形式です。
+
+---
+
+## References / 参考資料
+
+- Input format specification: See `reorg/tools/convert_legacy_input.py` for the schema
+- C++ core implementation: `reorg/cpp/src/main.cpp`
+- Python CLI implementation: `reorg/python/rotational_unfolding/`
+- Example runs: `outputs/` directory (not committed to repository)
+
+- 入力形式仕様: スキーマについては `reorg/tools/convert_legacy_input.py` を参照
+- C++ コア実装: `reorg/cpp/src/main.cpp`
+- Python CLI 実装: `reorg/python/rotational_unfolding/`
+- 実行例: `outputs/` ディレクトリ（リポジトリにはコミットされない）
+
+---
+
+**Document Status**: This document describes the **current implementation** of Phase 1 as of 2026-02-06. It is not a forward-looking design document. Future phases may extend or modify these conventions.
+
+**文書ステータス**: この文書は 2026-02-06 時点での Phase 1 の**現在の実装**を記述します。これは将来を見据えた設計文書ではありません。将来のフェーズはこれらの規約を拡張または変更する可能性があります。
