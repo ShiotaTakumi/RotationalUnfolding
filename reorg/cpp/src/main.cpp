@@ -4,35 +4,37 @@
 //
 // What this file does:
 //   CLI entry point for the rotational unfolding algorithm.
-//   Parses command-line arguments, loads input data, runs the search,
-//   and outputs results in JSONL format.
+//   Parses command-line arguments, loads input data from JSON files,
+//   runs the search, and outputs results in JSONL format.
 //
 // このファイルの役割:
 //   回転展開アルゴリズムのCLI入口点。
-//   コマンドライン引数を解析し、入力データを読み込み、探索を実行し、
-//   結果をJSONL形式で出力する。
+//   コマンドライン引数を解析し、JSONファイルから入力データを読み込み、
+//   探索を実行し、結果をJSONL形式で出力する。
 //
 // Responsibility in the project:
-//   - Parses CLI arguments (--adj, --base, --symmetric, --out)
-//   - Loads polyhedron data using IOUtil
-//   - Invokes RotationalUnfolding for each base pair
+//   - Parses CLI arguments (--polyhedron, --roots, --symmetric, --out)
+//   - Loads polyhedron data from JSON using IOUtil
+//   - Invokes RotationalUnfolding for each root pair
 //   - Manages output streams (stdout or file)
 //   - Reports progress to stderr
 //   - Does NOT contain algorithm logic
 //
 // プロジェクト内での責務:
-//   - CLI引数を解析（--adj, --base, --symmetric, --out）
-//   - IOUtil を使用して多面体データを読み込み
-//   - 各 base pair について RotationalUnfolding を呼び出し
+//   - CLI引数を解析（--polyhedron, --roots, --symmetric, --out）
+//   - IOUtil を使用してJSONから多面体データを読み込み
+//   - 各 root pair について RotationalUnfolding を呼び出し
 //   - 出力ストリームを管理（stdout またはファイル）
 //   - 進捗を stderr に報告
 //   - アルゴリズムロジックは含まない
 //
 // Phase 1 における位置づけ:
-//   User-facing CLI for Phase 1. This is the executable that external
-//   researchers will invoke to generate raw.jsonl output.
-//   Phase 1のユーザー向けCLI。外部研究者が raw.jsonl 出力を生成するために
-//   呼び出す実行ファイルである。
+//   User-facing CLI for Phase 1 with the new JSON input format.
+//   This is the executable that external researchers will invoke to generate
+//   raw.jsonl output from polyhedron.json and root_pairs.json.
+//   Phase 1の新しいJSON入力形式を持つユーザー向けCLI。
+//   外部研究者が polyhedron.json と root_pairs.json から raw.jsonl 出力を
+//   生成するために呼び出す実行ファイルである。
 //
 // ============================================================================
 
@@ -57,12 +59,12 @@
 //
 // ----------------------------------------------------------------------------
 struct CliArgs {
-    std::string adj_path;       // Path to the .adj file
-    std::string base_path;      // Path to the .base file
-    std::string symmetric_mode; // Symmetry mode: "auto", "on", or "off"
-    std::string out_path;       // Output file path (empty = stdout)
+    std::string polyhedron_path; // Path to polyhedron.json
+    std::string roots_path;      // Path to root_pairs.json
+    std::string symmetric_mode;  // Symmetry mode: "auto", "on", or "off"
+    std::string out_path;        // Output file path (empty = stdout)
 
-    bool valid = false;         // Whether parsing succeeded
+    bool valid = false;          // Whether parsing succeeded
 };
 
 // ----------------------------------------------------------------------------
@@ -74,12 +76,12 @@ struct CliArgs {
 //
 // ----------------------------------------------------------------------------
 void printUsage(const char* program_name) {
-    std::cerr << "Usage: " << program_name << " --adj PATH --base PATH --symmetric auto|on|off [--out PATH]\n";
+    std::cerr << "Usage: " << program_name << " --polyhedron PATH --roots PATH --symmetric auto|on|off [--out PATH]\n";
     std::cerr << "\n";
     std::cerr << "Options:\n";
-    std::cerr << "  --adj PATH          Path to the .adj file (polyhedron adjacency data)\n";
-    std::cerr << "  --base PATH         Path to the .base file (base face-edge pairs)\n";
-    std::cerr << "  --symmetric MODE    Symmetry mode: auto (from filename), on, or off\n";
+    std::cerr << "  --polyhedron PATH   Path to the polyhedron.json file\n";
+    std::cerr << "  --roots PATH        Path to the root_pairs.json file\n";
+    std::cerr << "  --symmetric MODE    Symmetry mode: auto (from polyhedron name), on, or off\n";
     std::cerr << "  --out PATH          Output file path (optional; stdout if not specified)\n";
     std::cerr << "\n";
     std::cerr << "Output format: JSONL (JSON Lines) - one partial unfolding per line\n";
@@ -106,13 +108,13 @@ void printUsage(const char* program_name) {
 //   解析が失敗した場合、CliArgs.valid は false。
 //
 // Guarantee:
-//   - Validates required arguments (--adj, --base, --symmetric)
+//   - Validates required arguments (--polyhedron, --roots, --symmetric)
 //   - Validates symmetric_mode is one of: auto, on, off
 //   - Writes error messages to stderr on failure
 //   - No side effects beyond stderr output
 //
 // 保証:
-//   - 必須引数（--adj, --base, --symmetric）を検証
+//   - 必須引数（--polyhedron, --roots, --symmetric）を検証
 //   - symmetric_mode が auto, on, off のいずれかであることを検証
 //   - 失敗時に stderr にエラーメッセージを書き込み
 //   - stderr 出力以外の副作用はない
@@ -122,18 +124,18 @@ CliArgs parseArgs(int argc, char* argv[]) {
     CliArgs args;
     args.symmetric_mode = "auto";  // Default value
 
-    if (argc < 7) {  // Minimum: program --adj PATH --base PATH --symmetric MODE
+    if (argc < 7) {  // Minimum: program --polyhedron PATH --roots PATH --symmetric MODE
         return args;
     }
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
 
-        if (arg == "--adj" && i + 1 < argc) {
-            args.adj_path = argv[++i];
+        if (arg == "--polyhedron" && i + 1 < argc) {
+            args.polyhedron_path = argv[++i];
         }
-        else if (arg == "--base" && i + 1 < argc) {
-            args.base_path = argv[++i];
+        else if (arg == "--roots" && i + 1 < argc) {
+            args.roots_path = argv[++i];
         }
         else if (arg == "--symmetric" && i + 1 < argc) {
             args.symmetric_mode = argv[++i];
@@ -155,8 +157,8 @@ CliArgs parseArgs(int argc, char* argv[]) {
 
     // Check that required arguments are present
     // 必須引数が存在することを確認
-    if (args.adj_path.empty() || args.base_path.empty()) {
-        std::cerr << "Error: --adj and --base are required\n";
+    if (args.polyhedron_path.empty() || args.roots_path.empty()) {
+        std::cerr << "Error: --polyhedron and --roots are required\n";
         return args;
     }
 
@@ -192,17 +194,17 @@ CliArgs parseArgs(int argc, char* argv[]) {
 //
 // Guarantee:
 //   - Parses CLI arguments
-//   - Loads polyhedron data from .adj and .base files
-//   - Executes rotational unfolding for all base pairs
+//   - Loads polyhedron data from polyhedron.json and root_pairs.json
+//   - Executes rotational unfolding for all root pairs
 //   - Outputs JSONL records for all candidate partial unfoldings
-//   - Flushes output after each base pair for safety
+//   - Flushes output after each root pair for safety
 //
 // 保証:
 //   - CLI引数を解析
-//   - .adj および .base ファイルから多面体データを読み込み
-//   - すべての base pair について回転展開を実行
+//   - polyhedron.json および root_pairs.json から多面体データを読み込み
+//   - すべての root pair について回転展開を実行
 //   - すべての候補部分展開図についてJSONLレコードを出力
-//   - 安全のために各 base pair 後に出力をフラッシュ
+//   - 安全のために各 root pair 後に出力をフラッシュ
 //
 // ----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
@@ -217,20 +219,20 @@ int main(int argc, char* argv[]) {
     }
 
     // ------------------------------------------------------------------------
-    // Load polyhedron data
-    // 多面体データを読み込み
+    // Load polyhedron data from JSON
+    // JSON から多面体データを読み込み
     // ------------------------------------------------------------------------
     Polyhedron poly;
-    if (!IOUtil::loadPolyhedronFromFile(args.adj_path, poly)) {
+    if (!IOUtil::loadPolyhedronFromJson(args.polyhedron_path, poly)) {
         return 1;
     }
 
     // ------------------------------------------------------------------------
-    // Load base pairs
-    // base pairs を読み込み
+    // Load root pairs from JSON
+    // JSON から root pairs を読み込み
     // ------------------------------------------------------------------------
-    std::vector<std::pair<int, int>> base_pairs;
-    if (!IOUtil::loadBasePairsFromFile(args.base_path, base_pairs)) {
+    std::vector<std::pair<int, int>> root_pairs;
+    if (!IOUtil::loadRootPairsFromJson(args.roots_path, root_pairs)) {
         return 1;
     }
 
@@ -240,8 +242,17 @@ int main(int argc, char* argv[]) {
     // ------------------------------------------------------------------------
     bool symmetric = false;
     if (args.symmetric_mode == "auto") {
-        symmetric = IOUtil::isSymmetricFromFilename(args.adj_path);
-        std::cerr << "Info: Symmetric mode (auto): " << (symmetric ? "on" : "off") << "\n";
+        // Extract polyhedron name from JSON and determine symmetry
+        // JSON から多面体名を抽出して対称性を判定
+        std::string poly_name = IOUtil::extractPolyNameFromJson(args.polyhedron_path);
+        if (!poly_name.empty()) {
+            symmetric = IOUtil::isSymmetricFromPolyName(poly_name);
+            std::cerr << "Info: Polyhedron name: " << poly_name << "\n";
+            std::cerr << "Info: Symmetric mode (auto): " << (symmetric ? "on" : "off") << "\n";
+        } else {
+            std::cerr << "Warning: Could not extract polyhedron name; defaulting to symmetric=off\n";
+            symmetric = false;
+        }
     }
     else if (args.symmetric_mode == "on") {
         symmetric = true;
@@ -273,14 +284,14 @@ int main(int argc, char* argv[]) {
     }
 
     // ------------------------------------------------------------------------
-    // Execute rotational unfolding for all base pairs
-    // すべての base pairs について回転展開を実行
+    // Execute rotational unfolding for all root pairs
+    // すべての root pairs について回転展開を実行
     // ------------------------------------------------------------------------
-    const int total = base_pairs.size();
-    std::cerr << "Info: Processing " << total << " base pairs...\n";
+    const int total = root_pairs.size();
+    std::cerr << "Info: Processing " << total << " root pairs...\n";
 
     for (int current = 0; current < total; ++current) {
-        const auto& [face, edge] = base_pairs[current];
+        const auto& [face, edge] = root_pairs[current];
 
         // Report progress every 10 pairs, and always report first and last
         // 10ペアごとに進捗を報告し、最初と最後は必ず報告
@@ -291,12 +302,12 @@ int main(int argc, char* argv[]) {
         RotationalUnfolding rot_ufd(poly, face, edge, symmetric, symmetric);
         rot_ufd.runRotationalUnfolding(*output);
 
-        // Flush output after each base pair for safety
-        // 安全のために各 base pair 後に出力をフラッシュ
+        // Flush output after each root pair for safety
+        // 安全のために各 root pair 後に出力をフラッシュ
         output->flush();
     }
 
-    std::cerr << "Info: Done. Processed " << total << " base pairs.\n";
+    std::cerr << "Info: Done. Processed " << total << " root pairs.\n";
 
     return 0;
 }
