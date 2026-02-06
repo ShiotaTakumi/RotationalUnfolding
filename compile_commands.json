@@ -1,7 +1,0 @@
-[
-    {
-      "directory": "/Users/tshiota/Github/RotationalUnfolding/apps",
-      "command": "g++ -O3 -std=c++17 -I../include/ main.cpp",
-      "file": "main.cpp"
-    }
-]
