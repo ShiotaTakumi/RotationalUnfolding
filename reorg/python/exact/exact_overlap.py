@@ -1,0 +1,703 @@
+"""
+Exact overlap detection logic for rotational unfolding.
+
+Detects overlapping unfoldings using exact arithmetic (SymPy).
+SymPy による厳密演算で重なりのある展開図を検出します。
+
+Based on:
+    - scripts/generate_exact_expressions.py (exact position reconstruction)
+    - scripts/exact_overlap_checker.py (overlap detection logic)
+
+Key differences from legacy:
+    - No intermediate file: exact SymPy expressions are built in memory
+    - Reads from JSONL format instead of .ufd
+    - Vertex-face incidence is computed from polyhedron.json edge adjacency
+      (legacy reads V lines from .adj files)
+"""
+
+import json
+from pathlib import Path
+
+from sympy import S, pi, sin, cos, tan, sympify, Abs
+from sympy.geometry import Point, Segment
+
+
+# ---------------------------------------------------------------------------
+# Polyhedron structure loading
+# 多面体構造の読み込み
+# ---------------------------------------------------------------------------
+
+def load_polyhedron_structure(polyhedron_json_path):
+    """
+    Loads polyhedron structure from polyhedron.json and computes vertex incidence.
+
+    polyhedron.json から多面体構造を読み込み、頂点共有関係を計算します。
+
+    Args:
+        polyhedron_json_path (Path): Path to polyhedron.json
+
+    Returns:
+        dict: Polyhedron structure with:
+            - num_faces (int): Number of faces
+            - gon_list (list): Number of edges for each face
+            - adj_edges (list): Adjacency edges for each face
+            - adj_faces (list): Adjacency faces for each face
+            - vertices (list): Vertex IDs for each face (computed from edge adjacency)
+    """
+    with open(polyhedron_json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    faces = data["faces"]
+    num_faces = len(faces)
+
+    gon_list = [face["gon"] for face in faces]
+
+    adj_edges = []
+    adj_faces = []
+    for face in faces:
+        face_adj_edges = []
+        face_adj_faces = []
+        for neighbor in face["neighbors"]:
+            face_adj_edges.append(neighbor["edge_id"])
+            face_adj_faces.append(neighbor["face_id"])
+        adj_edges.append(face_adj_edges)
+        adj_faces.append(face_adj_faces)
+
+    # Compute vertex-face incidence from edge adjacency
+    # 辺隣接関係から頂点-面の帰属関係を計算
+    vertices = _compute_vertex_incidence(adj_edges, adj_faces, gon_list, num_faces)
+
+    return {
+        "num_faces": num_faces,
+        "gon_list": gon_list,
+        "adj_edges": adj_edges,
+        "adj_faces": adj_faces,
+        "vertices": vertices,
+    }
+
+
+def _compute_vertex_incidence(adj_edges, adj_faces, gon_list, num_faces):
+    """
+    Compute vertex-face incidence from edge adjacency using union-find.
+
+    Each face has N corners (one per edge). A "corner" (f, k) is the vertex
+    between edge[k] and edge[(k+1) % gon] of face f.
+
+    Two corners from adjacent faces that share an edge endpoint are unioned
+    to identify the same polyhedron vertex.
+
+    辺隣接関係から union-find で頂点-面の帰属関係を計算します。
+
+    Returns:
+        list of lists: vertices[face_id] = [vertex_id, ...]
+    """
+    # Union-find data structure
+    parent = {}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(x, y):
+        rx, ry = find(x), find(y)
+        if rx != ry:
+            parent[rx] = ry
+
+    # Initialize: each corner is its own root
+    for f in range(num_faces):
+        for k in range(gon_list[f]):
+            parent[(f, k)] = (f, k)
+
+    # Union corners across shared edges
+    # Edge e shared between face f (at position i) and face g (at position j):
+    #   corner (f, i)           ↔ corner (g, (j-1) % gon_g)
+    #   corner (f, (i-1) % gon_f) ↔ corner (g, j)
+    processed_edges = set()
+    for f in range(num_faces):
+        for i in range(len(adj_edges[f])):
+            edge_id = adj_edges[f][i]
+            if edge_id in processed_edges:
+                continue
+            processed_edges.add(edge_id)
+
+            g = adj_faces[f][i]
+            j = adj_edges[g].index(edge_id)
+
+            gon_f = gon_list[f]
+            gon_g = gon_list[g]
+
+            union((f, i), (g, (j - 1) % gon_g))
+            union((f, (i - 1) % gon_f), (g, j))
+
+    # Assign vertex IDs from equivalence classes
+    vertex_map = {}
+    next_vid = 0
+    vertices = [[] for _ in range(num_faces)]
+
+    for f in range(num_faces):
+        for k in range(gon_list[f]):
+            root = find((f, k))
+            if root not in vertex_map:
+                vertex_map[root] = next_vid
+                next_vid += 1
+            vertices[f].append(vertex_map[root])
+
+    return vertices
+
+
+# ---------------------------------------------------------------------------
+# Exact position reconstruction (from generate_exact_expressions.py)
+# 厳密座標の再構築
+# ---------------------------------------------------------------------------
+
+def _inradius(n):
+    """
+    Inradius of a regular n-gon with edge length 1.
+    正 n 角形（辺長 1）の内接円半径。
+    """
+    return 1 / (2 * tan(pi / n))
+
+
+def _circumradius(n):
+    """
+    Circumradius of a regular n-gon with edge length 1.
+    正 n 角形（辺長 1）の外接円半径。
+    """
+    return 1 / (2 * sin(pi / n))
+
+
+def _step_count_counterclockwise(poly, face_id, pre_edge, next_edge):
+    """
+    Count counterclockwise steps from pre_edge to next_edge on the given face.
+
+    面 face_id 上で pre_edge から next_edge まで反時計回りにステップ数を数える。
+
+    Args:
+        poly: Polyhedron structure
+        face_id: Face ID on the original polyhedron
+        pre_edge: Edge ID of the entry edge
+        next_edge: Edge ID of the exit edge
+
+    Returns:
+        int: Number of counterclockwise steps (1-based), or -1 if not found
+    """
+    edges = poly["adj_edges"][face_id]
+    gon = len(edges)
+
+    try:
+        pos = edges.index(pre_edge)
+    except ValueError:
+        pos = -1
+
+    cnt = 1
+    for step in range(1, gon + 1):
+        idx = (pos + step) % gon
+        if edges[idx] == next_edge:
+            return cnt
+        cnt += 1
+
+    return -1
+
+
+def build_exact_positions(poly, faces):
+    """
+    Reconstruct exact SymPy positions from a JSONL face sequence.
+
+    JSONL の面列から厳密な SymPy 座標を再構築します。
+    中間ファイルは生成せず、メモリ上で直接計算します。
+
+    This replaces the intermediate file generated by
+    scripts/generate_exact_expressions.py.
+
+    Args:
+        poly: Polyhedron structure
+        faces: List of face dicts from JSONL record
+               (each has face_id, gon, edge_id, x, y, angle_deg)
+
+    Returns:
+        list of tuples: [(gon, face_id, cx_exact, cy_exact, ang_exact), ...]
+                        where cx, cy, ang are exact SymPy expressions
+    """
+    results = []
+
+    # Base face (first face): origin, angle = 0
+    # 基準面（最初の面）: 原点、角度 = 0
+    f0 = faces[0]
+    cx0, cy0, ang0 = S.Zero, S.Zero, S.Zero
+    results.append((f0["gon"], f0["face_id"], cx0, cy0, ang0))
+
+    if len(faces) < 2:
+        return results
+
+    # Second face: placed adjacent to base face along x-axis
+    # 2番目の面: 基準面の隣に x 軸方向に配置
+    f1 = faces[1]
+    ir0 = _inradius(f0["gon"])
+    ir1 = _inradius(f1["gon"])
+    cx1 = ir0 + ir1
+    cy1 = S.Zero
+    ang1 = -pi
+    results.append((f1["gon"], f1["face_id"], cx1, cy1, ang1))
+
+    prev_gon = f1["gon"]
+    prev_face_id = f1["face_id"]
+    prev_edge_id = f1["edge_id"]
+    prev_cx, prev_cy, prev_ang = cx1, cy1, ang1
+
+    # Third and subsequent faces: computed incrementally
+    # 3番目以降の面: 逐次的に計算
+    for idx in range(2, len(faces)):
+        fi = faces[idx]
+        gon_i = fi["gon"]
+        edge_i = fi["edge_id"]
+        face_i = fi["face_id"]
+
+        # Count counterclockwise steps from entry edge to exit edge
+        # 入口辺から出口辺までの反時計回りステップ数
+        cnt = _step_count_counterclockwise(poly, prev_face_id, prev_edge_id, edge_i)
+
+        # Angle toward the center of the next face
+        # 次の面の中心方向への角度
+        theta_center = prev_ang - cnt * (2 * pi / prev_gon)
+
+        # Center coordinates of the next face
+        # 次の面の中心座標
+        ir_prev = _inradius(prev_gon)
+        ir_curr = _inradius(gon_i)
+        delta = ir_prev + ir_curr
+        cx_i = prev_cx + delta * cos(theta_center)
+        cy_i = prev_cy + delta * sin(theta_center)
+
+        # Orientation angle of the next face
+        # 次の面の向きの角度
+        ang_i = theta_center - pi
+
+        results.append((gon_i, face_i, cx_i, cy_i, ang_i))
+
+        prev_gon = gon_i
+        prev_face_id = face_i
+        prev_edge_id = edge_i
+        prev_cx, prev_cy, prev_ang = cx_i, cy_i, ang_i
+
+    return results
+
+
+def _get_vertices_of_face(gon, cx, cy, ang):
+    """
+    Compute exact vertices of a regular n-gon given center and orientation angle.
+
+    中心座標と向きの角度から正 n 角形の厳密な頂点座標を計算します。
+
+    Ported from scripts/exact_overlap_checker.py: get_vertices_of_face()
+
+    Args:
+        gon: Number of sides
+        cx, cy: Center coordinates (exact SymPy expressions)
+        ang: Orientation angle in radians (exact SymPy expression)
+
+    Returns:
+        list of tuples: [(x0, y0), (x1, y1), ...] with exact SymPy expressions
+    """
+    r = _circumradius(gon)
+    offset = pi / gon
+    vertices = []
+    for k in range(gon):
+        theta = ang + offset + 2 * pi * k / gon
+        xk = cx + r * cos(theta)
+        yk = cy + r * sin(theta)
+        vertices.append((xk, yk))
+    return vertices
+
+
+# ---------------------------------------------------------------------------
+# Vertex chain checking
+# 頂点連鎖チェック
+# ---------------------------------------------------------------------------
+
+def _shares_vertex_chain_all(poly, face_ids, i, j):
+    """
+    Check if ALL faces from index i to j (in the unfolding sequence)
+    share at least one common vertex on the original polyhedron.
+
+    展開列のインデックス i から j までの全ての面が、
+    元の多面体上で少なくとも1つの共通頂点を持つかを判定します。
+
+    If True, these faces are topologically adjacent and overlap between
+    them is expected (should be skipped during overlap checking).
+
+    Ported from scripts/exact_overlap_checker.py: shares_vertex_chain_all()
+
+    Args:
+        poly: Polyhedron structure (must include "vertices")
+        face_ids: List of face IDs in unfolding order
+        i, j: Start and end indices (inclusive)
+
+    Returns:
+        bool: True if all faces from i to j share a common vertex
+    """
+    V = poly["vertices"]
+    common = set(V[face_ids[i]])
+    for t in range(i + 1, j + 1):
+        common &= set(V[face_ids[t]])
+        if not common:
+            return False
+    return len(common) > 0
+
+
+# ---------------------------------------------------------------------------
+# Polygon overlap detection (hybrid numeric + exact)
+# 多角形の重なり検出（ハイブリッド数値＋厳密）
+# ---------------------------------------------------------------------------
+
+def _polygons_overlap(poly1_verts, poly2_verts):
+    """
+    Check if two polygons overlap using hybrid numeric + exact approach.
+
+    ハイブリッド（高精度数値 + SymPy 厳密）アプローチで
+    2つの多角形の重なりを判定します。
+
+    Ported faithfully from scripts/exact_overlap_checker.py: polygons_overlap()
+
+    Detection criteria (strict):
+        1. Edge-edge crossing (positive area intersection)
+        2. Edge collinear overlap (positive length)
+        3. Any touch (point-point, point-edge, endpoint-endpoint)
+        → Any non-empty intersection returns True
+
+    判定基準（strict）：
+        1. 辺-辺の交差（正面積の交差）
+        2. 辺の同一直線上の重なり（正の長さ）
+        3. 接触（点-点、点-辺、辺端-辺端を含む）
+        → 交差が空でなければ True を返す
+
+    TODO: Future extension — classify overlap type:
+        - face-face (area > 0 intersection)
+        - edge-edge (positive length collinear overlap)
+        - vertex-touch (point-point, point-on-edge contact)
+    TODO: Future extension — option to exclude touch from overlap definition
+
+    Args:
+        poly1_verts: List of (x, y) tuples for polygon 1 (exact SymPy)
+        poly2_verts: List of (x, y) tuples for polygon 2 (exact SymPy)
+
+    Returns:
+        bool: True if any non-empty intersection exists
+    """
+    # --- Numeric phase settings ---
+    prec_fast = 80
+    eps = sympify('1e-30')
+
+    def _num(x):
+        return sympify(x).evalf(prec_fast)
+
+    def edges_of(poly):
+        m = len(poly)
+        return [(poly[i], poly[(i + 1) % m]) for i in range(m)]
+
+    # AABB fast rejection (numeric)
+    def aabb_overlap(a1, a2, b1, b2):
+        ax1, ay1 = _num(a1[0]), _num(a1[1])
+        ax2, ay2 = _num(a2[0]), _num(a2[1])
+        bx1, by1 = _num(b1[0]), _num(b1[1])
+        bx2, by2 = _num(b2[0]), _num(b2[1])
+        minAx, maxAx = min(ax1, ax2), max(ax1, ax2)
+        minAy, maxAy = min(ay1, ay2), max(ay1, ay2)
+        minBx, maxBx = min(bx1, bx2), max(bx1, bx2)
+        minBy, maxBy = min(by1, by2), max(by1, by2)
+        return not (
+            (maxAx < minBx - eps) or
+            (maxBx < minAx - eps) or
+            (maxAy < minBy - eps) or
+            (maxBy < minAy - eps)
+        )
+
+    # Cross product (signed area * 2)
+    def orient(a, b, c):
+        ax, ay = _num(a[0]), _num(a[1])
+        bx, by = _num(b[0]), _num(b[1])
+        cx, cy = _num(c[0]), _num(c[1])
+        return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+
+    # Point-on-segment test (numeric): collinear & projection within range
+    def on_segment_num(p, a, b):
+        ax, ay = _num(a[0]), _num(a[1])
+        bx, by = _num(b[0]), _num(b[1])
+        px, py = _num(p[0]), _num(p[1])
+
+        cross = (px - ax) * (by - ay) - (py - ay) * (bx - ax)
+        if Abs(cross) > eps:
+            return False
+
+        dot = (px - ax) * (bx - ax) + (py - ay) * (by - ay)
+        seg2 = (bx - ax) * (bx - ax) + (by - ay) * (by - ay)
+        if dot < -eps or dot > seg2 + eps:
+            return False
+        return True
+
+    # --- Edge pair scan (numeric → exact fallback for ambiguous cases) ---
+    edges1 = edges_of(poly1_verts)
+    edges2 = edges_of(poly2_verts)
+
+    for (a1, a2) in edges1:
+        for (b1, b2) in edges2:
+            if not aabb_overlap(a1, a2, b1, b2):
+                continue
+
+            d1 = orient(a1, a2, b1)
+            d2 = orient(a1, a2, b2)
+            d3 = orient(b1, b2, a1)
+            d4 = orient(b1, b2, a2)
+
+            # Clear crossing: both endpoints of each segment are on opposite sides
+            if (d1 * d2 < -eps) and (d3 * d4 < -eps):
+                return True
+
+            # Clear touch: endpoint lies on segment with all orientations non-zero
+            clear_touch = (
+                on_segment_num(b1, a1, a2) or
+                on_segment_num(b2, a1, a2) or
+                on_segment_num(a1, b1, b2) or
+                on_segment_num(a2, b1, b2)
+            )
+            if clear_touch and all(Abs(x) > eps for x in (d1, d2, d3, d4)):
+                return True
+
+            # Ambiguous case: fall back to exact SymPy geometry
+            ambiguous = (
+                (Abs(d1) <= eps) or (Abs(d2) <= eps) or
+                (Abs(d3) <= eps) or (Abs(d4) <= eps) or
+                clear_touch
+            )
+            if ambiguous:
+                seg1 = Segment(
+                    Point(sympify(a1[0]), sympify(a1[1])),
+                    Point(sympify(a2[0]), sympify(a2[1]))
+                )
+                seg2 = Segment(
+                    Point(sympify(b1[0]), sympify(b1[1])),
+                    Point(sympify(b2[0]), sympify(b2[1]))
+                )
+                if seg1.intersection(seg2):
+                    return True
+
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Record-level overlap check
+# レコード単位の重なり判定
+# ---------------------------------------------------------------------------
+
+def check_record_overlap(poly, faces):
+    """
+    Check a single JSONL record for exact overlap.
+
+    1つの JSONL レコードの厳密重なりを判定します。
+
+    A record is KEPT (returns True) if:
+        1. The first and last faces overlap (expected endpoint overlap)
+        2. No other non-adjacent face pair has any overlap
+
+    A record is REMOVED (returns False) if:
+        1. The first and last faces do NOT overlap (false positive from
+           approximate detection)
+        2. OR some non-adjacent pair (other than the endpoints) overlaps
+           (spurious overlap that invalidates the unfolding)
+
+    Ported from scripts/exact_overlap_checker.py main loop.
+
+    Args:
+        poly: Polyhedron structure (with vertices)
+        faces: List of face dicts from JSONL record
+
+    Returns:
+        bool: True if the record should be kept in exact.jsonl
+    """
+    # Reconstruct exact positions
+    exact_positions = build_exact_positions(poly, faces)
+    n = len(exact_positions)
+
+    if n < 2:
+        return False
+
+    # Build polygon vertices and face ID list
+    polygons = []
+    face_ids = []
+    for (gon, face_id, cx, cy, ang) in exact_positions:
+        verts = _get_vertices_of_face(gon, cx, cy, ang)
+        polygons.append(verts)
+        face_ids.append(face_id)
+
+    # Check if endpoint pair (first and last) is a valid candidate
+    # (they must NOT all share a common vertex through the chain)
+    endpoint_candidate = not _shares_vertex_chain_all(poly, face_ids, 0, n - 1)
+
+    if not endpoint_candidate:
+        return False
+
+    # Check endpoint overlap (first and last faces must overlap)
+    end_overlap = _polygons_overlap(polygons[0], polygons[-1])
+
+    if not end_overlap:
+        return False
+
+    # Check that no other non-adjacent pair overlaps
+    for i in range(n):
+        for j in range(i + 1, n):
+            if i == 0 and j == n - 1:
+                continue  # skip endpoint pair (already verified)
+            if _shares_vertex_chain_all(poly, face_ids, i, j):
+                continue  # skip topologically adjacent pairs
+            if _polygons_overlap(polygons[i], polygons[j]):
+                return False  # spurious overlap found → remove record
+        # Early exit if spurious overlap was found in inner loop
+        # (Python doesn't have labeled break, so we check after inner loop)
+        # Actually, the inner break only exits the inner loop.
+        # We need a flag to break the outer loop too.
+
+    # If we get here, the record is valid: endpoint overlap with no spurious overlaps
+    return True
+
+
+def check_record_overlap_safe(poly, faces):
+    """
+    Wrapper around check_record_overlap with proper double-loop break.
+
+    check_record_overlap のラッパー（二重ループの break を正しく処理）。
+
+    Args:
+        poly: Polyhedron structure (with vertices)
+        faces: List of face dicts from JSONL record
+
+    Returns:
+        bool: True if the record should be kept in exact.jsonl
+    """
+    # Reconstruct exact positions
+    exact_positions = build_exact_positions(poly, faces)
+    n = len(exact_positions)
+
+    if n < 2:
+        return False
+
+    # Build polygon vertices and face ID list
+    polygons = []
+    face_ids = []
+    for (gon, face_id, cx, cy, ang) in exact_positions:
+        verts = _get_vertices_of_face(gon, cx, cy, ang)
+        polygons.append(verts)
+        face_ids.append(face_id)
+
+    # Check if endpoint pair is a valid candidate
+    endpoint_candidate = not _shares_vertex_chain_all(poly, face_ids, 0, n - 1)
+
+    if not endpoint_candidate:
+        return False
+
+    # Check endpoint overlap
+    end_overlap = _polygons_overlap(polygons[0], polygons[-1])
+
+    if not end_overlap:
+        return False
+
+    # Check no other non-adjacent pair overlaps
+    ok = True
+    for i in range(n):
+        for j in range(i + 1, n):
+            if i == 0 and j == n - 1:
+                continue
+            if _shares_vertex_chain_all(poly, face_ids, i, j):
+                continue
+            if _polygons_overlap(polygons[i], polygons[j]):
+                ok = False
+                break
+        if not ok:
+            break
+
+    return ok
+
+
+# ---------------------------------------------------------------------------
+# Main filter function
+# メインフィルター関数
+# ---------------------------------------------------------------------------
+
+def filter_exact_overlaps(noniso_jsonl_path, polyhedron_json_path, exact_jsonl_path):
+    """
+    Filter noniso.jsonl to exact.jsonl by checking for exact overlaps.
+
+    noniso.jsonl を読み込み、厳密重なり判定を行い、exact.jsonl を生成します。
+
+    Keeps only records where:
+        1. The first and last faces overlap (expected endpoint overlap)
+        2. No other non-adjacent face pair overlaps
+
+    保持するレコード:
+        1. 最初と最後の面が重なる（期待される端点重なり）
+        2. 他の非隣接面ペアに重なりがない
+
+    Args:
+        noniso_jsonl_path (Path): Path to noniso.jsonl (Phase 2 output, read-only)
+        polyhedron_json_path (Path): Path to polyhedron.json
+        exact_jsonl_path (Path): Path to exact.jsonl (Phase 3 output)
+
+    Returns:
+        tuple: (num_input_records, num_output_records)
+
+    Important:
+        - Record contents are NOT modified (filtering only)
+        - Order is preserved
+        - noniso.jsonl is read-only (never modified)
+
+    重要:
+        - レコード内容は変更しない（フィルタリングのみ）
+        - 順序は保持される
+        - noniso.jsonl は読み取り専用（変更しない）
+    """
+    # Load polyhedron structure (including vertex incidence)
+    # 多面体構造を読み込む（頂点共有関係を含む）
+    poly = load_polyhedron_structure(polyhedron_json_path)
+
+    # Count total records for progress reporting
+    # 進捗表示のための総レコード数のカウント
+    with open(noniso_jsonl_path, "r", encoding="utf-8") as f:
+        total = sum(1 for line in f if line.strip())
+
+    num_input = 0
+    num_output = 0
+
+    with open(noniso_jsonl_path, "r", encoding="utf-8") as fin, \
+         open(exact_jsonl_path, "w", encoding="utf-8") as fout:
+
+        for line_num, line in enumerate(fin, start=1):
+            line = line.strip()
+            if not line:
+                continue
+
+            num_input += 1
+
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"JSON parse error at line {line_num}: {e}")
+
+            faces = record.get("faces", [])
+            if not faces:
+                continue
+
+            print(f"  Record {num_input}/{total}...", end="", flush=True)
+
+            # Check exact overlap using the safe double-loop version
+            keep = check_record_overlap_safe(poly, faces)
+
+            if keep:
+                # Write original record as-is (no modification)
+                # 元のレコードをそのまま書き出す（変更しない）
+                fout.write(line + "\n")
+                num_output += 1
+                print(" KEEP")
+            else:
+                print(" REMOVE")
+
+    return num_input, num_output
