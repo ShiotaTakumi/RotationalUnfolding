@@ -95,6 +95,9 @@ drawing/raw/**/*.svg
 drawing/nonisomorphic/**/*.svg
 drawing/exact/**/*.svg
 
+# Ignore drawing utility output (verification SVGs, regenerable from raw.jsonl)
+reorg/output/**/draw/raw/
+
 # Build directory (if present)
 build/
 dist/
