@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="-1.039230494162883 -1.1500000000000004 3.8105119883257665 3.3000000000000003" style="enable-background:new -1.039230494162883 -1.1500000000000004 3.8105119883257665 3.3000000000000003;">
+<style type="text/css">
+  .face_stroke {fill:none; stroke:#000000; stroke-width:0.02; stroke-miterlimit:10;}
+  .face_text {fill:#000000; font-family:monospace;}
+  .edge_text {fill:#ff0000; font-family:monospace;}
+  .edge_bg {fill:#f3f3f3; stroke:#606060; stroke-width:0.01;}
+</style>
+<polygon class="face_stroke" points="0.8660254037844389,-0.5 6.123233995736767e-17,-1.0000000000000002 -0.8660254037844389,-0.5 -0.8660254037844388,0.5000000000000002 -1.8369701987210302e-16,1.0000000000000002 0.8660254037844386,0.5000000000000006"/>
+<polygon class="face_stroke" points="0.8660258654051868,0.4999999999999999 1.732051269189626,1.414100318299876e-16 0.8660258654051876,-0.5000000000000003"/>
+<polygon class="face_stroke" points="0.8660255962155611,0.5 0.8660255962155612,1.5000000000000002 1.7320509999999998,2.0 2.5980764037844386,1.5000000000000004 2.5980764037844395,0.5000000000000007 1.7320510000000002,-2.220446049250313e-16"/>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.006600000000000001 0 0 0.006600000000000001 0.0 0.0)">2</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.006600000000000001 0 0 0.006600000000000001 1.154701 0.0)">0</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.006600000000000001 0 0 0.006600000000000001 1.732051 1.0)">3</text>
+<rect class="edge_bg" x="0.800025865405187" y="-0.06600000000000004" width="0.132" height="0.132"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.006600000000000001 0 0 0.006600000000000001 0.866025865405187 -3.535250795749691e-17)">0</text>
+<rect class="edge_bg" x="1.2330382981077808" y="0.18399999999999977" width="0.132" height="0.132"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.006600000000000001 0 0 0.006600000000000001 1.2990382981077808 0.24999999999999978)">4</text>
+</svg>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="-0.6000000000000002 -0.5500000000000002 2.200000000000001 1.1000000000000003" style="enable-background:new -0.6000000000000002 -0.5500000000000002 2.200000000000001 1.1000000000000003;">
+<style type="text/css">
+  .face_stroke {fill:none; stroke:#000000; stroke-width:0.02; stroke-miterlimit:10;}
+  .face_text {fill:#000000; font-family:monospace;}
+  .edge_text {fill:#ff0000; font-family:monospace;}
+  .edge_bg {fill:#f3f3f3; stroke:#606060; stroke-width:0.01;}
+</style>
+<polygon class="face_stroke" points="0.5000000000000001,-0.5 -0.5,-0.5000000000000001 -0.5000000000000001,0.5 0.4999999999999999,0.5000000000000001"/>
+<polygon class="face_stroke" points="0.4999999999999999,0.5 1.5,0.5000000000000001 1.5000000000000007,-0.49999999999999944 0.49999999999999967,-0.4999999999999998"/>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.0022000000000000006 0 0 0.0022000000000000006 0.0 0.0)">0</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.0022000000000000006 0 0 0.0022000000000000006 1.0 0.0)">4</text>
+<rect class="edge_bg" x="0.47799999999999987" y="-0.022000000000000068" width="0.04400000000000001" height="0.04400000000000001"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.0022000000000000006 0 0 0.0022000000000000006 0.4999999999999999 -6.123233995736767e-17)">5</text>
+</svg>
