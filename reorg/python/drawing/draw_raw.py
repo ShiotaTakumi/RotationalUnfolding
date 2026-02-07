@@ -89,7 +89,7 @@ def compute_viewbox(all_vertices, margin_factor=0.05):
     return x_min, y_min, width, height
 
 
-def write_svg(output_path, record):
+def write_svg(output_path, record, show_labels=True):
     """
     Writes a single partial unfolding record as an SVG file.
     
@@ -98,6 +98,9 @@ def write_svg(output_path, record):
     Args:
         output_path (Path): Output SVG file path
         record (dict): Partial unfolding record from raw.jsonl
+        show_labels (bool): If True, draw face_id and edge_id labels.
+                            If False, draw polygons only (no text).
+                            Default: True.
     
     SVG specification (fixed for consistency):
     - Coordinate system: raw.jsonl x, y coordinates as-is
@@ -105,8 +108,8 @@ def write_svg(output_path, record):
     - Scale: Regular polygon edge length = 1, circumradius-based
     - Visual elements:
       - Faces: Black stroke, no fill
-      - Face IDs: Black text at face center
-      - Edge IDs: Red text on shared edge (not on base face)
+      - Face IDs: Black text at face center (when show_labels=True)
+      - Edge IDs: Red text on shared edge (when show_labels=True)
     
     SVG 仕様（一貫性のため固定）:
     - 座標系: raw.jsonl の x, y 座標をそのまま使用
@@ -114,8 +117,8 @@ def write_svg(output_path, record):
     - スケール: 正多角形の辺長=1、circumradius ベース
     - 視覚要素:
       - 面: 黒枠、塗りなし
-      - 面番号: 中心に黒字
-      - 辺番号: 共有辺上に赤字（ベース面は除く）
+      - 面番号: 中心に黒字（show_labels=True の場合）
+      - 辺番号: 共有辺上に赤字（show_labels=True の場合）
     """
     faces = record["faces"]
     
@@ -155,53 +158,56 @@ def write_svg(output_path, record):
             pts = " ".join(f"{vx},{vy}" for (vx, vy) in verts)
             out.write(f'<polygon class="face_stroke" points="{pts}"/>\n')
         
-        # Draw face IDs at face centers
-        # 面番号を中心に描画
-        for face in faces:
-            x_center = face["x"]
-            y_center = face["y"]
-            face_id = face["face_id"]
-            out.write(
-                f'<text class="face_text" text-anchor="middle" dominant-baseline="middle" '
-                f'transform="matrix({font_scale} 0 0 {font_scale} {x_center} {y_center})">'
-                f'{face_id}</text>\n'
-            )
-        
-        # Draw edge IDs on shared edges (skip first face, which has no shared edge)
-        # 共有辺上に辺番号を描画（最初の面はスキップ、共有辺なし）
-        for i in range(1, len(faces)):
-            face = faces[i]
-            gon = face["gon"]
-            x_center = face["x"]
-            y_center = face["y"]
-            angle_deg = face["angle_deg"]
-            edge_id = face["edge_id"]
+        # Draw face IDs and edge IDs (skipped when show_labels=False)
+        # 面番号と辺番号を描画（show_labels=False の場合はスキップ）
+        if show_labels:
+            # Draw face IDs at face centers
+            # 面番号を中心に描画
+            for face in faces:
+                x_center = face["x"]
+                y_center = face["y"]
+                face_id = face["face_id"]
+                out.write(
+                    f'<text class="face_text" text-anchor="middle" dominant-baseline="middle" '
+                    f'transform="matrix({font_scale} 0 0 {font_scale} {x_center} {y_center})">'
+                    f'{face_id}</text>\n'
+                )
             
-            # Place label along the edge-normal direction at inradius distance
-            # 辺法線方向に内接円半径だけオフセットした位置に描画
-            inradius = 1.0 / (2.0 * math.tan(math.pi / float(gon)))
-            theta_rad = math.pi * angle_deg / 180.0
-            ex = x_center + inradius * math.cos(theta_rad)
-            ey = y_center + inradius * math.sin(theta_rad)
-            
-            # Draw background rectangle for edge ID
-            # 辺番号の背景矩形を描画
-            out.write(
-                f'<rect class="edge_bg" '
-                f'x="{ex - edge_bg_pad}" y="{ey - edge_bg_pad}" '
-                f'width="{2 * edge_bg_pad}" height="{2 * edge_bg_pad}"/>\n'
-            )
-            out.write(
-                f'<text class="edge_text" text-anchor="middle" dominant-baseline="middle" '
-                f'transform="matrix({font_scale} 0 0 {font_scale} {ex} {ey})">'
-                f'{edge_id}</text>\n'
-            )
+            # Draw edge IDs on shared edges (skip first face, which has no shared edge)
+            # 共有辺上に辺番号を描画（最初の面はスキップ、共有辺なし）
+            for i in range(1, len(faces)):
+                face = faces[i]
+                gon = face["gon"]
+                x_center = face["x"]
+                y_center = face["y"]
+                angle_deg = face["angle_deg"]
+                edge_id = face["edge_id"]
+                
+                # Place label along the edge-normal direction at inradius distance
+                # 辺法線方向に内接円半径だけオフセットした位置に描画
+                inradius = 1.0 / (2.0 * math.tan(math.pi / float(gon)))
+                theta_rad = math.pi * angle_deg / 180.0
+                ex = x_center + inradius * math.cos(theta_rad)
+                ey = y_center + inradius * math.sin(theta_rad)
+                
+                # Draw background rectangle for edge ID
+                # 辺番号の背景矩形を描画
+                out.write(
+                    f'<rect class="edge_bg" '
+                    f'x="{ex - edge_bg_pad}" y="{ey - edge_bg_pad}" '
+                    f'width="{2 * edge_bg_pad}" height="{2 * edge_bg_pad}"/>\n'
+                )
+                out.write(
+                    f'<text class="edge_text" text-anchor="middle" dominant-baseline="middle" '
+                    f'transform="matrix({font_scale} 0 0 {font_scale} {ex} {ey})">'
+                    f'{edge_id}</text>\n'
+                )
         
         # Footer
         out.write('</svg>\n')
 
 
-def draw_raw_jsonl(raw_jsonl_path, output_dir):
+def draw_raw_jsonl(raw_jsonl_path, output_dir, show_labels=True):
     """
     Draws all records in a raw.jsonl file as individual SVG files.
     
@@ -210,6 +216,8 @@ def draw_raw_jsonl(raw_jsonl_path, output_dir):
     Args:
         raw_jsonl_path (Path): Path to raw.jsonl
         output_dir (Path): Output directory for SVG files
+        show_labels (bool): If True, draw face_id and edge_id labels.
+                            If False, draw polygons only. Default: True.
     
     Returns:
         int: Number of SVG files generated
@@ -250,6 +258,6 @@ def draw_raw_jsonl(raw_jsonl_path, output_dir):
     for idx, record in enumerate(records):
         svg_filename = f"{str(idx).zfill(width)}.svg"
         svg_path = output_dir / svg_filename
-        write_svg(svg_path, record)
+        write_svg(svg_path, record, show_labels=show_labels)
     
     return len(records)

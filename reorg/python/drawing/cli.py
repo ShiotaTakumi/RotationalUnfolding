@@ -175,10 +175,8 @@ def main():
                 num_generated = draw_raw_jsonl(input_jsonl, output_dir)
                 print(f"Done. Generated {num_generated} SVG files.")
             elif args.type == "exact":
-                raise NotImplementedError(
-                    "Drawing for 'exact' type is not yet implemented. "
-                    "This will be added in Phase 3."
-                )
+                num_generated = draw_raw_jsonl(input_jsonl, output_dir, show_labels=False)
+                print(f"Done. Generated {num_generated} SVG files.")
             
             sys.exit(0)
         
