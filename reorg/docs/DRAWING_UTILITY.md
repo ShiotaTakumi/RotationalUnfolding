@@ -1,7 +1,7 @@
 # Drawing Utility — Visualization for JSONL Outputs
 
-**Status**: Verification utility (not a Phase component)  
-**Version**: 0.1.0  
+**Status**: Verification utility (not a Phase component)
+**Version**: 0.1.0
 **Last Updated**: 2026-02-07
 
 ---
@@ -62,7 +62,7 @@ The drawing utility reads JSONL files produced by rotational unfolding phases:
 
 - **raw.jsonl** (Phase 1): Raw partial unfoldings
 - **noniso.jsonl** (Phase 2): Nonisomorphic unfoldings
-- **exact.jsonl** (Phase 3): Exact overlap-checked unfoldings (future)
+- **exact.jsonl** (Phase 3): Exact overlap-checked unfoldings
 
 The JSONL file is the **authoritative source**. The drawing utility does not interpret, filter, or validate the data—it visualizes records as they appear in the JSONL file.
 
@@ -70,7 +70,7 @@ The JSONL file is the **authoritative source**. The drawing utility does not int
 
 - **raw.jsonl**（Phase 1）: 生の部分展開図
 - **noniso.jsonl**（Phase 2）: 非同型展開図
-- **exact.jsonl**（Phase 3）: 厳密重なり判定済み展開図（将来実装）
+- **exact.jsonl**（Phase 3）: 厳密重なり判定済み展開図
 
 JSONL ファイルが**権威的なソース**です。描画ユーティリティはデータを解釈、フィルタリング、検証せず、JSONL ファイルに現れるレコードをそのまま可視化します。
 
@@ -112,7 +112,7 @@ Including Phase 2 output:
 reorg/output/polyhedra/<class>/<name>/
 ├── raw.jsonl          # Phase 1 output
 ├── noniso.jsonl       # Phase 2 output
-├── exact.jsonl        # Phase 3 output (future)
+├── exact.jsonl        # Phase 3 output
 └── draw/
     ├── raw/           # Visualization of raw.jsonl
     │   ├── 0.svg
@@ -120,7 +120,7 @@ reorg/output/polyhedra/<class>/<name>/
     ├── noniso/        # Visualization of noniso.jsonl
     │   ├── 0.svg
     │   └── ...
-    └── exact/         # Visualization of exact.jsonl (future)
+    └── exact/         # Visualization of exact.jsonl
         ├── 0.svg
         └── ...
 ```
@@ -188,7 +188,7 @@ PYTHONPATH=reorg/python python -m drawing run --type <type> --poly <class>/<name
 - `--type`: Output type to visualize
   - `raw`: Phase 1 output (raw.jsonl)
   - `noniso`: Phase 2 output (noniso.jsonl)
-  - `exact`: Phase 3 output (exact.jsonl) - Not yet implemented
+  - `exact`: Phase 3 output (exact.jsonl)
 - `--poly`: Polyhedron identifier in `CLASS/NAME` format (e.g., `archimedean/s07`)
 
 ### Examples
@@ -208,6 +208,12 @@ PYTHONPATH=reorg/python python -m drawing run --type noniso --poly johnson/n20
 
 # Visualize raw output for platonic/r01
 PYTHONPATH=reorg/python python -m drawing run --type raw --poly platonic/r01
+
+# Visualize exact output for archimedean/s07
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly archimedean/s07
+
+# Visualize exact output for johnson/n66
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly johnson/n66
 ```
 
 ### Execution Model
@@ -239,6 +245,16 @@ Each SVG file visualizes a single partial unfolding record with:
 - **Edge IDs**: Red text on shared edges (not on base face)
 - **ViewBox**: Automatically computed to fit all vertices with 5% margin
 
+**Label visibility by type:**
+
+| Type | Polygons | Face IDs | Edge IDs |
+|------|----------|----------|----------|
+| `raw` | Displayed | Displayed | Displayed |
+| `noniso` | Displayed | Displayed | Displayed |
+| `exact` | Displayed | **Hidden** | **Hidden** |
+
+For `exact`, face and edge labels are intentionally suppressed. The `exact` output represents the final verified result; labels reduce visual clarity and are not needed for shape verification. The JSONL record remains the authoritative source for all label information.
+
 ### 視覚要素
 
 各 SVG ファイルは1つの部分展開図レコードを以下で可視化します：
@@ -247,6 +263,16 @@ Each SVG file visualizes a single partial unfolding record with:
 - **面番号**: 中心に黒字
 - **辺番号**: 共有辺上に赤字（ベース面は除く）
 - **ViewBox**: 全頂点を包含するよう 5% マージン付きで自動計算
+
+**type ごとのラベル表示：**
+
+| Type | 多角形 | 面番号 | 辺番号 |
+|------|--------|--------|--------|
+| `raw` | 表示 | 表示 | 表示 |
+| `noniso` | 表示 | 表示 | 表示 |
+| `exact` | 表示 | **非表示** | **非表示** |
+
+`exact` では面番号と辺番号を意図的に非表示にします。`exact` 出力は最終的な検証済み結果であり、ラベルは視認性を低下させ、形状確認には不要です。すべてのラベル情報は JSONL レコードが権威的ソースとして保持します。
 
 ### Fixed Properties (for Consistency)
 
@@ -321,6 +347,28 @@ The drawing utility does NOT guarantee:
 3. **視覚的検査**: ブラウザやビューアで SVG ファイルを開き、問題をチェック
 4. **相互参照**: 問題が見つかった場合、ファイル名で対応する JSONL レコードを特定
 5. **必要に応じて再生成**: JSONL 変更後、描画ユーティリティを再実行して SVG を更新
+
+### Example: Full Pipeline with Drawing at Each Stage
+
+```bash
+# Phase 1: Generate raw unfoldings
+PYTHONPATH=reorg/python python -m rotational_unfolding run --poly johnson/n20
+
+# Draw raw output (with labels)
+PYTHONPATH=reorg/python python -m drawing run --type raw --poly johnson/n20
+
+# Phase 2: Remove isomorphic duplicates
+PYTHONPATH=reorg/python python -m nonisomorphic run --poly johnson/n20
+
+# Draw noniso output (with labels)
+PYTHONPATH=reorg/python python -m drawing run --type noniso --poly johnson/n20
+
+# Phase 3: Exact overlap verification
+PYTHONPATH=reorg/python python -m exact run --poly johnson/n20
+
+# Draw exact output (shape only, no labels)
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly johnson/n20
+```
 
 ### Example: Debugging a Specific Record
 
