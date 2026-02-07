@@ -172,10 +172,8 @@ def main():
                 num_generated = draw_raw_jsonl(input_jsonl, output_dir)
                 print(f"Done. Generated {num_generated} SVG files.")
             elif args.type == "noniso":
-                raise NotImplementedError(
-                    "Drawing for 'noniso' type is not yet implemented. "
-                    "This will be added in Phase 2."
-                )
+                num_generated = draw_raw_jsonl(input_jsonl, output_dir)
+                print(f"Done. Generated {num_generated} SVG files.")
             elif args.type == "exact":
                 raise NotImplementedError(
                     "Drawing for 'exact' type is not yet implemented. "
