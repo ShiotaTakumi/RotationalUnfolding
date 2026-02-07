@@ -61,7 +61,7 @@ The drawing utility intentionally **does not**:
 The drawing utility reads JSONL files produced by rotational unfolding phases:
 
 - **raw.jsonl** (Phase 1): Raw partial unfoldings
-- **noniso.jsonl** (Phase 2): Nonisomorphic unfoldings (future)
+- **noniso.jsonl** (Phase 2): Nonisomorphic unfoldings
 - **exact.jsonl** (Phase 3): Exact overlap-checked unfoldings (future)
 
 The JSONL file is the **authoritative source**. The drawing utility does not interpret, filter, or validate the data—it visualizes records as they appear in the JSONL file.
@@ -69,7 +69,7 @@ The JSONL file is the **authoritative source**. The drawing utility does not int
 描画ユーティリティは、回転展開フェーズが生成する JSONL ファイルを読み込みます：
 
 - **raw.jsonl**（Phase 1）: 生の部分展開図
-- **noniso.jsonl**（Phase 2）: 非同型展開図（将来実装）
+- **noniso.jsonl**（Phase 2）: 非同型展開図
 - **exact.jsonl**（Phase 3）: 厳密重なり判定済み展開図（将来実装）
 
 JSONL ファイルが**権威的なソース**です。描画ユーティリティはデータを解釈、フィルタリング、検証せず、JSONL ファイルに現れるレコードをそのまま可視化します。
@@ -106,18 +106,18 @@ reorg/output/polyhedra/<class>/<name>/
         └── ...
 ```
 
-For Phase 2 and Phase 3 outputs (future):
+Including Phase 2 output:
 
 ```
 reorg/output/polyhedra/<class>/<name>/
 ├── raw.jsonl          # Phase 1 output
-├── noniso.jsonl       # Phase 2 output (future)
+├── noniso.jsonl       # Phase 2 output
 ├── exact.jsonl        # Phase 3 output (future)
 └── draw/
     ├── raw/           # Visualization of raw.jsonl
     │   ├── 0.svg
     │   └── ...
-    ├── noniso/        # Visualization of noniso.jsonl (future)
+    ├── noniso/        # Visualization of noniso.jsonl
     │   ├── 0.svg
     │   └── ...
     └── exact/         # Visualization of exact.jsonl (future)
@@ -187,7 +187,7 @@ PYTHONPATH=reorg/python python -m drawing run --type <type> --poly <class>/<name
 
 - `--type`: Output type to visualize
   - `raw`: Phase 1 output (raw.jsonl)
-  - `noniso`: Phase 2 output (noniso.jsonl) - Not yet implemented
+  - `noniso`: Phase 2 output (noniso.jsonl)
   - `exact`: Phase 3 output (exact.jsonl) - Not yet implemented
 - `--poly`: Polyhedron identifier in `CLASS/NAME` format (e.g., `archimedean/s07`)
 
@@ -197,8 +197,14 @@ PYTHONPATH=reorg/python python -m drawing run --type <type> --poly <class>/<name
 # Visualize raw output for archimedean/s07
 PYTHONPATH=reorg/python python -m drawing run --type raw --poly archimedean/s07
 
+# Visualize nonisomorphic output for archimedean/s07
+PYTHONPATH=reorg/python python -m drawing run --type noniso --poly archimedean/s07
+
 # Visualize raw output for johnson/n20
 PYTHONPATH=reorg/python python -m drawing run --type raw --poly johnson/n20
+
+# Visualize nonisomorphic output for johnson/n20
+PYTHONPATH=reorg/python python -m drawing run --type noniso --poly johnson/n20
 
 # Visualize raw output for platonic/r01
 PYTHONPATH=reorg/python python -m drawing run --type raw --poly platonic/r01
