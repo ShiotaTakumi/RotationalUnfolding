@@ -312,6 +312,79 @@ def _get_vertices_of_face(gon, cx, cy, ang):
 
 
 # ---------------------------------------------------------------------------
+# Intersection classification
+# 交差種別の分類
+# ---------------------------------------------------------------------------
+
+def _classify_intersection(intersection_result, seg1, seg2):
+    """
+    Classify the type of intersection between two segments.
+
+    SymPy の Segment.intersection() の結果から交差種別を分類します。
+
+    Classification rules:
+        - Segment in result with positive length → "edge-edge"
+        - Segment in result with zero length (degenerate) → classified as point contact
+        - Point in result (or degenerate Segment point):
+            - Endpoint of both segments → "vertex-vertex" (vertex contact)
+            - Endpoint of one segment only → "edge-vertex" (vertex on edge interior)
+            - Interior of both segments → "face-face" (proper crossing)
+
+    分類規則:
+        - 結果に Segment（正の長さ）→ "edge-edge"（辺の同一直線上重なり）
+        - 結果に Segment（長さ 0、退化）→ 点接触として分類
+        - 結果が Point（または退化 Segment の点）:
+            - 両セグメントの端点 → "vertex-vertex"（頂点接触）
+            - 片方のみの端点 → "edge-vertex"（辺内部への点接触）
+            - どちらの端点でもない → "face-face"（辺が内部で交差）
+
+    Args:
+        intersection_result: List of SymPy geometric objects from Segment.intersection()
+        seg1: First Segment
+        seg2: Second Segment
+
+    Returns:
+        str: One of "face-face", "edge-edge", "vertex-vertex", "edge-vertex"
+    """
+    # Helper: classify a single contact point by endpoint membership
+    # ヘルパー: 端点帰属で1つの接触点を分類する
+    def _classify_point(pt):
+        is_ep1 = pt.equals(seg1.p1) or pt.equals(seg1.p2)
+        is_ep2 = pt.equals(seg2.p1) or pt.equals(seg2.p2)
+        if is_ep1 and is_ep2:
+            return "vertex-vertex"
+        elif is_ep1 or is_ep2:
+            return "edge-vertex"
+        else:
+            return "face-face"  # interior crossing
+
+    # Check for Segment (collinear overlap) first — highest structural priority
+    # まず Segment（同一直線上の重なり）をチェック — 構造的に最優先
+    # A degenerate Segment (length 0) is treated as a Point contact instead.
+    # 退化 Segment（長さ 0）は Point 接触として分類する。
+    for obj in intersection_result:
+        if isinstance(obj, Segment):
+            dx = obj.p1.x - obj.p2.x
+            dy = obj.p1.y - obj.p2.y
+            length_sq = sympify(dx**2 + dy**2)
+            if length_sq != 0:
+                return "edge-edge"
+            # Degenerate Segment (length 0) — classify as point contact
+            # 退化 Segment（長さ 0）— 点接触として分類
+            return _classify_point(obj.p1)
+
+    # All remaining elements should be Points — classify by endpoint membership
+    # 残りはすべて Point のはず — 端点帰属で分類
+    for obj in intersection_result:
+        if isinstance(obj, Point):
+            return _classify_point(obj)
+
+    # Conservative fallback (should not normally be reached)
+    # 保守的なフォールバック（通常到達しない）
+    return "face-face"
+
+
+# ---------------------------------------------------------------------------
 # Vertex chain checking
 # 頂点連鎖チェック
 # ---------------------------------------------------------------------------
@@ -361,30 +434,52 @@ def _polygons_overlap(poly1_verts, poly2_verts):
     Ported faithfully from scripts/exact_overlap_checker.py: polygons_overlap()
 
     Detection criteria (strict):
-        1. Edge-edge crossing (positive area intersection)
-        2. Edge collinear overlap (positive length)
-        3. Any touch (point-point, point-edge, endpoint-endpoint)
-        → Any non-empty intersection returns True
+        1. Edge-edge crossing (positive area intersection) → "face-face"
+        2. Edge collinear overlap (positive length) → "edge-edge"
+        3. Vertex-vertex contact → "vertex-vertex"
+        4. Vertex on edge interior → "edge-vertex"
+        → Any non-empty intersection is detected and classified
 
     判定基準（strict）：
-        1. 辺-辺の交差（正面積の交差）
-        2. 辺の同一直線上の重なり（正の長さ）
-        3. 接触（点-点、点-辺、辺端-辺端を含む）
-        → 交差が空でなければ True を返す
+        1. 辺-辺の交差（正面積の交差）→ "face-face"
+        2. 辺の同一直線上の重なり（正の長さ）→ "edge-edge"
+        3. 頂点-頂点の接触 → "vertex-vertex"
+        4. 辺内部への頂点接触 → "edge-vertex"
+        → 交差が空でなければ検出し、種別を分類する
 
-    TODO: Future extension — classify overlap type:
-        - face-face (area > 0 intersection)
-        - edge-edge (positive length collinear overlap)
-        - vertex-touch (point-point, point-on-edge contact)
-    TODO: Future extension — option to exclude touch from overlap definition
+    Classification priority (strongest wins):
+        face-face (3) > edge-edge (2) > edge-vertex / vertex-vertex (1)
+    All edge pairs are scanned; the strongest kind found is returned.
+    Only face-face may short-circuit (it is the maximum priority).
+
+    分類優先度（最も強いものが返される）：
+        face-face (3) > edge-edge (2) > edge-vertex / vertex-vertex (1)
+    全辺ペアを走査し、最も強い種別を返す。
+    face-face のみ即座に return してよい（最大優先度のため）。
+
+    TODO: Future extension — option to exclude touch (vertex-vertex / edge-vertex)
+          from overlap definition. Currently all contact types are treated as overlap.
+    TODO: Future extension — write classification results to exact.jsonl records.
 
     Args:
         poly1_verts: List of (x, y) tuples for polygon 1 (exact SymPy)
         poly2_verts: List of (x, y) tuples for polygon 2 (exact SymPy)
 
     Returns:
-        bool: True if any non-empty intersection exists
+        tuple: (overlap: bool, kind: str or None)
+            overlap: True if any non-empty intersection exists
+            kind: One of "face-face", "edge-edge", "vertex-vertex", "edge-vertex",
+                  or None if no overlap
     """
+    # --- Overlap kind priority (higher = stronger) ---
+    # 重なり種別の優先度（大きいほど強い）
+    _KIND_PRIORITY = {
+        "vertex-vertex": 1,
+        "edge-vertex": 1,
+        "edge-edge": 2,
+        "face-face": 3,
+    }
+
     # --- Numeric phase settings ---
     prec_fast = 80
     eps = sympify('1e-30')
@@ -436,9 +531,13 @@ def _polygons_overlap(poly1_verts, poly2_verts):
             return False
         return True
 
-    # --- Edge pair scan (numeric → exact fallback for ambiguous cases) ---
+    # --- Edge pair scan: collect strongest overlap kind ---
+    # 全辺ペアを走査し、最も強い種別を収集する
     edges1 = edges_of(poly1_verts)
     edges2 = edges_of(poly2_verts)
+
+    best_kind = None       # strongest kind found so far
+    best_priority = 0      # priority of best_kind
 
     for (a1, a2) in edges1:
         for (b1, b2) in edges2:
@@ -451,38 +550,48 @@ def _polygons_overlap(poly1_verts, poly2_verts):
             d4 = orient(b1, b2, a2)
 
             # Clear crossing: both endpoints of each segment are on opposite sides
+            # → polygon interiors overlap (face-face) — maximum priority, return immediately
             if (d1 * d2 < -eps) and (d3 * d4 < -eps):
-                return True
+                return (True, "face-face")
 
-            # Clear touch: endpoint lies on segment with all orientations non-zero
+            # Determine if this edge pair needs exact classification
             clear_touch = (
                 on_segment_num(b1, a1, a2) or
                 on_segment_num(b2, a1, a2) or
                 on_segment_num(a1, b1, b2) or
                 on_segment_num(a2, b1, b2)
             )
-            if clear_touch and all(Abs(x) > eps for x in (d1, d2, d3, d4)):
-                return True
 
-            # Ambiguous case: fall back to exact SymPy geometry
+            # Ambiguous case: fall back to exact SymPy geometry for classification
             ambiguous = (
                 (Abs(d1) <= eps) or (Abs(d2) <= eps) or
                 (Abs(d3) <= eps) or (Abs(d4) <= eps) or
                 clear_touch
             )
             if ambiguous:
-                seg1 = Segment(
+                sympy_seg1 = Segment(
                     Point(sympify(a1[0]), sympify(a1[1])),
                     Point(sympify(a2[0]), sympify(a2[1]))
                 )
-                seg2 = Segment(
+                sympy_seg2 = Segment(
                     Point(sympify(b1[0]), sympify(b1[1])),
                     Point(sympify(b2[0]), sympify(b2[1]))
                 )
-                if seg1.intersection(seg2):
-                    return True
+                result = sympy_seg1.intersection(sympy_seg2)
+                if result:
+                    kind = _classify_intersection(result, sympy_seg1, sympy_seg2)
+                    p = _KIND_PRIORITY.get(kind, 0)
+                    if p >= 3:
+                        # face-face from exact phase — maximum priority, return immediately
+                        return (True, kind)
+                    if p > best_priority:
+                        best_kind = kind
+                        best_priority = p
 
-    return False
+    if best_kind is not None:
+        return (True, best_kind)
+
+    return (False, None)
 
 
 # ---------------------------------------------------------------------------
@@ -538,7 +647,7 @@ def check_record_overlap(poly, faces):
         return False
 
     # Check endpoint overlap (first and last faces must overlap)
-    end_overlap = _polygons_overlap(polygons[0], polygons[-1])
+    end_overlap, _end_kind = _polygons_overlap(polygons[0], polygons[-1])
 
     if not end_overlap:
         return False
@@ -550,7 +659,8 @@ def check_record_overlap(poly, faces):
                 continue  # skip endpoint pair (already verified)
             if _shares_vertex_chain_all(poly, face_ids, i, j):
                 continue  # skip topologically adjacent pairs
-            if _polygons_overlap(polygons[i], polygons[j]):
+            spurious, _sp_kind = _polygons_overlap(polygons[i], polygons[j])
+            if spurious:
                 return False  # spurious overlap found → remove record
         # Early exit if spurious overlap was found in inner loop
         # (Python doesn't have labeled break, so we check after inner loop)
@@ -563,23 +673,33 @@ def check_record_overlap(poly, faces):
 
 def check_record_overlap_safe(poly, faces):
     """
-    Wrapper around check_record_overlap with proper double-loop break.
+    Check a single JSONL record for exact overlap with classification info.
 
-    check_record_overlap のラッパー（二重ループの break を正しく処理）。
+    1つの JSONL レコードの厳密重なり判定を行い、分類情報を返します。
+    二重ループの break を正しく処理するバージョン。
 
     Args:
         poly: Polyhedron structure (with vertices)
         faces: List of face dicts from JSONL record
 
     Returns:
-        bool: True if the record should be kept in exact.jsonl
+        tuple: (keep: bool, info: dict)
+            keep: True if the record should be kept in exact.jsonl
+            info: Classification details with keys:
+                - "reason" (str): Why the record was kept or removed
+                - "endpoint_kind" (str or None): Overlap kind of endpoint pair
+                - "spurious" (tuple or None): (i, j, kind) of first spurious overlap
     """
     # Reconstruct exact positions
     exact_positions = build_exact_positions(poly, faces)
     n = len(exact_positions)
 
     if n < 2:
-        return False
+        return (False, {
+            "reason": "too few faces",
+            "endpoint_kind": None,
+            "spurious": None,
+        })
 
     # Build polygon vertices and face ID list
     polygons = []
@@ -593,29 +713,51 @@ def check_record_overlap_safe(poly, faces):
     endpoint_candidate = not _shares_vertex_chain_all(poly, face_ids, 0, n - 1)
 
     if not endpoint_candidate:
-        return False
+        return (False, {
+            "reason": "endpoint vertex chain",
+            "endpoint_kind": None,
+            "spurious": None,
+        })
 
-    # Check endpoint overlap
-    end_overlap = _polygons_overlap(polygons[0], polygons[-1])
+    # Check endpoint overlap with classification
+    end_overlap, end_kind = _polygons_overlap(polygons[0], polygons[-1])
 
     if not end_overlap:
-        return False
+        return (False, {
+            "reason": "no endpoint overlap",
+            "endpoint_kind": None,
+            "spurious": None,
+        })
 
     # Check no other non-adjacent pair overlaps
     ok = True
+    spurious_info = None
     for i in range(n):
         for j in range(i + 1, n):
             if i == 0 and j == n - 1:
                 continue
             if _shares_vertex_chain_all(poly, face_ids, i, j):
                 continue
-            if _polygons_overlap(polygons[i], polygons[j]):
+            overlap, kind = _polygons_overlap(polygons[i], polygons[j])
+            if overlap:
                 ok = False
+                spurious_info = (i, j, kind)
                 break
         if not ok:
             break
 
-    return ok
+    if ok:
+        return (True, {
+            "reason": "valid",
+            "endpoint_kind": end_kind,
+            "spurious": None,
+        })
+    else:
+        return (False, {
+            "reason": "spurious overlap",
+            "endpoint_kind": end_kind,
+            "spurious": spurious_info,
+        })
 
 
 # ---------------------------------------------------------------------------
@@ -645,15 +787,32 @@ def filter_exact_overlaps(noniso_jsonl_path, polyhedron_json_path, exact_jsonl_p
     Returns:
         tuple: (num_input_records, num_output_records)
 
+    Output record format:
+        Each surviving record is augmented with an "exact_overlap" field:
+            {"exact_overlap": {"kind": "face-face"}}
+        The kind is one of: "face-face", "edge-edge", "vertex-vertex", "edge-vertex".
+        This field represents the overlap type of the endpoint pair (first and last faces).
+        All other fields from noniso.jsonl are preserved as-is.
+
+    出力レコード形式:
+        保持されるレコードには "exact_overlap" フィールドが付与される：
+            {"exact_overlap": {"kind": "face-face"}}
+        kind は "face-face" / "edge-edge" / "vertex-vertex" / "edge-vertex" のいずれか。
+        このフィールドは端点ペア（最初と最後の面）の重なり種別を表す。
+        noniso.jsonl のその他のフィールドはそのまま保持される。
+
     Important:
-        - Record contents are NOT modified (filtering only)
         - Order is preserved
         - noniso.jsonl is read-only (never modified)
+        - Output record count is determined solely by overlap detection (unchanged)
 
     重要:
-        - レコード内容は変更しない（フィルタリングのみ）
         - 順序は保持される
         - noniso.jsonl は読み取り専用（変更しない）
+        - 出力レコード件数は重なり判定のみで決定される（変更なし）
+
+    TODO: Future extension — option to exclude touch (vertex-vertex / edge-vertex)
+          from overlap definition, controlled by a CLI flag or config parameter.
     """
     # Load polyhedron structure (including vertex incidence)
     # 多面体構造を読み込む（頂点共有関係を含む）
@@ -689,15 +848,31 @@ def filter_exact_overlaps(noniso_jsonl_path, polyhedron_json_path, exact_jsonl_p
             print(f"  Record {num_input}/{total}...", end="", flush=True)
 
             # Check exact overlap using the safe double-loop version
-            keep = check_record_overlap_safe(poly, faces)
+            # (returns classification info for logging)
+            keep, info = check_record_overlap_safe(poly, faces)
 
             if keep:
-                # Write original record as-is (no modification)
-                # 元のレコードをそのまま書き出す（変更しない）
-                fout.write(line + "\n")
+                # Augment record with overlap classification
+                # レコードに重なり種別を付与して書き出す
+                endpoint_kind = info.get("endpoint_kind", "unknown")
+                record["exact_overlap"] = {"kind": endpoint_kind}
+                fout.write(json.dumps(record, ensure_ascii=False) + "\n")
                 num_output += 1
-                print(" KEEP")
+                # Log with endpoint overlap classification
+                # 端点重なりの分類情報付きでログ出力
+                print(f" KEEP (endpoint: {endpoint_kind})")
             else:
-                print(" REMOVE")
+                # Log with removal reason and classification
+                # 除去理由と分類情報付きでログ出力
+                reason = info.get("reason", "unknown")
+                if reason == "spurious overlap":
+                    sp = info.get("spurious")
+                    if sp:
+                        sp_i, sp_j, sp_kind = sp
+                        print(f" REMOVE (spurious {sp_kind} at [{sp_i}, {sp_j}])")
+                    else:
+                        print(f" REMOVE ({reason})")
+                else:
+                    print(f" REMOVE ({reason})")
 
     return num_input, num_output
