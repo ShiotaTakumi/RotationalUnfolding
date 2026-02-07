@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "record_type": "run_metadata",
+  "run": {
+    "run_id": "2026-02-07T082408Z",
+    "started_at_utc": "2026-02-07T08:24:07.272748+00:00",
+    "finished_at_utc": "2026-02-07T08:24:08.192213+00:00",
+    "exit_code": 0
+  },
+  "command": {
+    "executable_path": "/Users/tshiota/Github/RotationalUnfolding/reorg/cpp/rotunfold",
+    "argv": [
+      "/Users/tshiota/Github/RotationalUnfolding/reorg/cpp/rotunfold",
+      "--polyhedron",
+      "/Users/tshiota/Github/RotationalUnfolding/reorg/data/polyhedra/johnson/n61/polyhedron.json",
+      "--roots",
+      "/Users/tshiota/Github/RotationalUnfolding/reorg/data/polyhedra/johnson/n61/root_pairs.json",
+      "--symmetric",
+      "auto",
+      "--out",
+      "/Users/tshiota/Github/RotationalUnfolding/reorg/output/polyhedra/johnson/n61/raw.jsonl"
+    ],
+    "cwd": "/Users/tshiota/Github/RotationalUnfolding"
+  },
+  "inputs": {
+    "polyhedron": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/reorg/data/polyhedra/johnson/n61/polyhedron.json",
+      "schema_version": 1,
+      "poly_class": "johnson",
+      "poly_name": "n61",
+      "num_faces": 24
+    },
+    "root_pairs": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/reorg/data/polyhedra/johnson/n61/root_pairs.json",
+      "schema_version": 1,
+      "num_root_pairs": 90
+    }
+  },
+  "options": {
+    "symmetric": {
+      "mode_requested": "auto",
+      "symmetric_used": false,
+      "auto_basis": {
+        "poly_name": "n61"
+      }
+    }
+  },
+  "outputs": {
+    "raw_jsonl": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/reorg/output/polyhedra/johnson/n61/raw.jsonl",
+      "schema_version": 1,
+      "record_type": "partial_unfolding",
+      "num_records_written": 660
+    }
+  }
+}
