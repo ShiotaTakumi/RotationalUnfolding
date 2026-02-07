@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "record_type": "run_metadata",
+  "run": {
+    "run_id": "2026-02-07T034339Z",
+    "started_at_utc": "2026-02-07T03:42:49.069213+00:00",
+    "finished_at_utc": "2026-02-07T03:43:39.849220+00:00",
+    "exit_code": 0
+  },
+  "command": {
+    "executable_path": "/Users/tshiota/Github/RotationalUnfolding/reorg/cpp/rotunfold",
+    "argv": [
+      "/Users/tshiota/Github/RotationalUnfolding/reorg/cpp/rotunfold",
+      "--polyhedron",
+      "/Users/tshiota/Github/RotationalUnfolding/reorg/data/polyhedra/archimedean/s07/polyhedron.json",
+      "--roots",
+      "/Users/tshiota/Github/RotationalUnfolding/reorg/data/polyhedra/archimedean/s07/root_pairs.json",
+      "--symmetric",
+      "auto",
+      "--out",
+      "/Users/tshiota/Github/RotationalUnfolding/reorg/output/polyhedra/archimedean/s07/raw.jsonl"
+    ],
+    "cwd": "/Users/tshiota/Github/RotationalUnfolding"
+  },
+  "inputs": {
+    "polyhedron": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/reorg/data/polyhedra/archimedean/s07/polyhedron.json",
+      "schema_version": 1,
+      "poly_class": "archimedean",
+      "poly_name": "s07",
+      "num_faces": 32
+    },
+    "root_pairs": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/reorg/data/polyhedra/archimedean/s07/root_pairs.json",
+      "schema_version": 1,
+      "num_root_pairs": 3
+    }
+  },
+  "options": {
+    "symmetric": {
+      "mode_requested": "auto",
+      "symmetric_used": true,
+      "auto_basis": {
+        "poly_name": "s07"
+      }
+    }
+  },
+  "outputs": {
+    "raw_jsonl": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/reorg/output/polyhedra/archimedean/s07/raw.jsonl",
+      "schema_version": 1,
+      "record_type": "partial_unfolding",
+      "num_records_written": 12
+    }
+  }
+}
