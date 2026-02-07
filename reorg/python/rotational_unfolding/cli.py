@@ -43,12 +43,6 @@ def create_parser():
     )
     
     run_parser.add_argument(
-        "--out",
-        required=True,
-        help="Output directory (e.g., outputs/)"
-    )
-    
-    run_parser.add_argument(
         "--symmetric",
         choices=["auto", "on", "off"],
         default="auto",
@@ -65,8 +59,16 @@ def main():
     CLI のメイン入口。
     
     Example usage:
-        python -m rotational_unfolding run --poly archimedean/s05 --out outputs/
-        python -m rotational_unfolding run --poly archimedean/s01 --out outputs/ --symmetric on
+        python -m rotational_unfolding run --poly archimedean/s05
+        python -m rotational_unfolding run --poly archimedean/s01 --symmetric on
+    
+    Output location:
+        All output is written to reorg/output/<experiment-id>/
+        This is cwd-independent and always relative to the repository root.
+    
+    出力場所:
+        すべての出力は reorg/output/<experiment-id>/ に書き込まれる。
+        これは cwd 非依存で常にリポジトリルートを基準とする。
     """
     parser = create_parser()
     args = parser.parse_args()
@@ -79,7 +81,6 @@ def main():
         try:
             success = run_rotational_unfolding(
                 poly_id=args.poly,
-                output_dir=args.out,
                 symmetric_mode=args.symmetric
             )
             sys.exit(0 if success else 1)

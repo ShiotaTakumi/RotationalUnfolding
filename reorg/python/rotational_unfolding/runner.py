@@ -4,12 +4,14 @@ Runner module for executing rotational unfolding.
 Handles:
 - Path resolution for polyhedron data
 - C++ binary invocation via subprocess
-- run.json generation with metadata
+- raw.jsonl generation (canonical output per polyhedron)
+- run.json generation (experiment metadata)
 
 実行ロジックを提供：
 - 多面体データのパス解決
 - C++ バイナリのサブプロセス呼び出し
-- メタデータを含む run.json の生成
+- raw.jsonl 生成（多面体ごとの正規出力）
+- run.json 生成（実験メタデータ）
 """
 
 import json
@@ -110,20 +112,39 @@ def find_cpp_binary(repo_root):
     return cpp_binary
 
 
-def generate_experiment_id(poly_name):
+def get_canonical_output_dir(repo_root, poly_class, poly_name):
     """
-    Generates a unique experiment ID based on timestamp and polyhedron name.
+    Returns the canonical output directory for a specific polyhedron.
     
-    タイムスタンプと多面体名に基づいて実験IDを生成する。
+    Output is always written to reorg/output/polyhedra/<class>/<name>/ 
+    regardless of cwd. This ensures deterministic, polyhedron-specific paths.
+    
+    特定の多面体の正規出力ディレクトリを返す。
+    
+    出力は cwd に関わらず常に reorg/output/polyhedra/<class>/<name>/ に書き込まれる。
+    これにより、決定的で多面体固有のパスが保証される。
     
     Args:
-        poly_name (str): Polyhedron name.
+        repo_root (Path): Repository root path.
+        poly_class (str): Polyhedron class (e.g., "archimedean").
+        poly_name (str): Polyhedron name (e.g., "s05").
     
     Returns:
-        str: Experiment ID in the format YYYY-MM-DDTHHMMSSZ_<poly_name>
+        Path: Absolute path to reorg/output/polyhedra/<class>/<name>/
     """
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
-    return f"{timestamp}_{poly_name}"
+    return repo_root / "reorg" / "output" / "polyhedra" / poly_class / poly_name
+
+
+def generate_run_id():
+    """
+    Generates a run ID based on timestamp (for run.json metadata only).
+    
+    タイムスタンプに基づいて実行IDを生成（run.json メタデータ用のみ）。
+    
+    Returns:
+        str: Run ID in the format YYYY-MM-DDTHHMMSSZ
+    """
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
 
 
 def load_json_metadata(json_path):
@@ -279,7 +300,7 @@ def create_run_metadata(
     }
 
 
-def run_rotational_unfolding(poly_id, output_dir, symmetric_mode):
+def run_rotational_unfolding(poly_id, symmetric_mode):
     """
     Runs rotational unfolding for a specified polyhedron.
     
@@ -287,25 +308,36 @@ def run_rotational_unfolding(poly_id, output_dir, symmetric_mode):
     
     Args:
         poly_id (str): Polyhedron identifier in CLASS/NAME format.
-        output_dir (str): Output directory path.
         symmetric_mode (str): Symmetry mode (auto, on, or off).
     
     Returns:
         bool: True if successful, False otherwise.
     
     Workflow:
-        1. Resolve paths (polyhedron data, C++ binary, output directory)
-        2. Create experiment directory
-        3. Invoke C++ binary via subprocess
+        1. Resolve paths (polyhedron data, C++ binary)
+        2. Create canonical output directory: reorg/output/polyhedra/<class>/<name>/
+        3. Invoke C++ binary to generate raw.jsonl
         4. Generate run.json metadata
         5. Report results
     
     手順:
-        1. パス解決（多面体データ、C++ バイナリ、出力ディレクトリ）
-        2. 実験ディレクトリの作成
-        3. C++ バイナリのサブプロセス呼び出し
-        4. run.json メタデータの生成
+        1. パス解決（多面体データ、C++ バイナリ）
+        2. 正規出力ディレクトリを作成: reorg/output/polyhedra/<class>/<name>/
+        3. C++ バイナリを呼び出して raw.jsonl を生成
+        4. run.json メタデータを生成
         5. 結果の報告
+    
+    Output Convention:
+        - Output goes to: reorg/output/polyhedra/<class>/<name>/
+        - This path is deterministic and polyhedron-specific
+        - Overwriting is allowed (latest run wins)
+        - No timestamp-based directories
+    
+    出力規約:
+        - 出力先: reorg/output/polyhedra/<class>/<name>/
+        - このパスは決定的で多面体固有
+        - 上書き可能（最新の実行が優先）
+        - タイムスタンプベースのディレクトリは使用しない
     """
     print(f"Starting rotational unfolding for: {poly_id}")
     print(f"Symmetry mode: {symmetric_mode}")
@@ -327,16 +359,17 @@ def run_rotational_unfolding(poly_id, output_dir, symmetric_mode):
     print(f"C++ binary: {cpp_binary}")
     print("")
     
-    # Generate experiment ID and create output directory
-    experiment_id = generate_experiment_id(poly_name)
-    output_base = Path(output_dir).resolve()
-    experiment_dir = output_base / experiment_id
+    # Get canonical output directory for this polyhedron
+    output_dir = get_canonical_output_dir(repo_root, poly_class, poly_name)
+    output_dir.mkdir(parents=True, exist_ok=True)
     
-    experiment_dir.mkdir(parents=True, exist_ok=False)
-    print(f"Experiment directory: {experiment_dir}")
+    raw_jsonl_path = output_dir / "raw.jsonl"
+    run_json_path = output_dir / "run.json"
     
-    raw_jsonl_path = experiment_dir / "raw.jsonl"
-    run_json_path = experiment_dir / "run.json"
+    print(f"Output directory: {output_dir}")
+    print(f"raw.jsonl: {raw_jsonl_path}")
+    print(f"run.json: {run_json_path}")
+    print("")
     
     # Prepare C++ command
     argv = [
@@ -378,15 +411,17 @@ def run_rotational_unfolding(poly_id, output_dir, symmetric_mode):
     
     # Count records in raw.jsonl
     num_records = count_jsonl_records(raw_jsonl_path)
-    print(f"Records written: {num_records}")
+    print(f"Records written to raw.jsonl: {num_records}")
     
     # Generate run.json
     print("Generating run.json...")
     
+    # Generate run_id (timestamp only, for metadata)
+    run_id = generate_run_id()
     cwd = str(Path.cwd().resolve())
     
     run_metadata = create_run_metadata(
-        run_id=experiment_id,
+        run_id=run_id,
         started_at=started_at,
         finished_at=finished_at,
         exit_code=exit_code,
