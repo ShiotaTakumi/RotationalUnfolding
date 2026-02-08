@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "record_type": "run_metadata",
+  "run": {
+    "run_id": "2026-02-08T110204Z",
+    "started_at_utc": "2026-02-08T11:01:21.222528+00:00",
+    "finished_at_utc": "2026-02-08T11:02:04.642895+00:00",
+    "exit_code": 0
+  },
+  "command": {
+    "executable_path": "/Users/tshiota/Github/RotationalUnfolding/cpp/rotunfold",
+    "argv": [
+      "/Users/tshiota/Github/RotationalUnfolding/cpp/rotunfold",
+      "--polyhedron",
+      "/Users/tshiota/Github/RotationalUnfolding/data/polyhedra/johnson/n25/polyhedron.json",
+      "--roots",
+      "/Users/tshiota/Github/RotationalUnfolding/data/polyhedra/johnson/n25/root_pairs.json",
+      "--symmetric",
+      "auto",
+      "--out",
+      "/Users/tshiota/Github/RotationalUnfolding/output/polyhedra/johnson/n25/raw.jsonl"
+    ],
+    "cwd": "/Users/tshiota/Github/RotationalUnfolding"
+  },
+  "inputs": {
+    "polyhedron": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/data/polyhedra/johnson/n25/polyhedron.json",
+      "schema_version": 1,
+      "poly_class": "johnson",
+      "poly_name": "n25",
+      "num_faces": 37
+    },
+    "root_pairs": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/data/polyhedra/johnson/n25/root_pairs.json",
+      "schema_version": 1,
+      "num_root_pairs": 130
+    }
+  },
+  "options": {
+    "symmetric": {
+      "mode_requested": "auto",
+      "symmetric_used": false,
+      "auto_basis": {
+        "poly_name": "n25"
+      }
+    }
+  },
+  "outputs": {
+    "raw_jsonl": {
+      "path": "/Users/tshiota/Github/RotationalUnfolding/output/polyhedra/johnson/n25/raw.jsonl",
+      "schema_version": 1,
+      "record_type": "partial_unfolding",
+      "num_records_written": 2930
+    }
+  }
+}
