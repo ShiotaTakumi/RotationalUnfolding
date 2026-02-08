@@ -21,7 +21,7 @@ def resolve_drawing_paths(repo_root, poly_id, output_type):
 
     Args:
         repo_root (Path): Repository root path.
-        poly_id (str): Polyhedron identifier (path or logical name).
+        poly_id (str): Path to polyhedron data directory.
         output_type (str): Output type ("raw", "noniso", "exact").
 
     Returns:
@@ -106,9 +106,9 @@ def main():
     描画 CLI のメイン入口。
     
     Example usage:
-        PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/archimedean/s07
-        PYTHONPATH=python python -m drawing run --type noniso --poly polyhedra/platonic/r01
-        PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/johnson/n20
+        PYTHONPATH=python python -m drawing run --type raw --poly data/polyhedra/archimedean/s07
+        PYTHONPATH=python python -m drawing run --type noniso --poly data/polyhedra/platonic/r01
+        PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/johnson/n20
     
     Execution model:
         すべての実行は cwd 非依存で、リポジトリルートを基準にパスを解決する。

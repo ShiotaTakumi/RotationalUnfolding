@@ -51,8 +51,8 @@ def main():
     非同型フィルタリング CLI のメイン入口。
     
     Example usage:
-        PYTHONPATH=python python -m nonisomorphic run --poly polyhedra/archimedean/s04
-        PYTHONPATH=python python -m nonisomorphic run --poly polyhedra/platonic/r01
+        PYTHONPATH=python python -m nonisomorphic run --poly data/polyhedra/archimedean/s04
+        PYTHONPATH=python python -m nonisomorphic run --poly data/polyhedra/platonic/r01
     
     Process:
         1. Resolve paths (raw.jsonl, polyhedron.json, noniso.jsonl)

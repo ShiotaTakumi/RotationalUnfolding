@@ -223,7 +223,7 @@ def run_rotational_unfolding(poly_id, symmetric_mode):
     指定された多面体について回転展開を実行する。
     
     Args:
-        poly_id (str): Polyhedron path (e.g., "polyhedra/archimedean/s05").
+        poly_id (str): Path to polyhedron data directory (e.g., "data/polyhedra/archimedean/s05").
         symmetric_mode (str): Symmetry mode (auto, on, or off).
     
     Returns:

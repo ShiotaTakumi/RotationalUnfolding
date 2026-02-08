@@ -1,8 +1,8 @@
 """
-Drawing module for raw.jsonl visualization.
+Drawing module for JSONL visualization.
 
-Converts raw partial unfolding records to SVG files for visual inspection.
-raw 部分展開図レコードを視覚検査用の SVG ファイルに変換します。
+Converts partial unfolding records (raw/noniso/exact) to SVG files for visual inspection.
+部分展開図レコード（raw/noniso/exact）を視覚検査用の SVG ファイルに変換します。
 
 Based on scripts/draw_partial_unfolding.py (legacy implementation).
 """

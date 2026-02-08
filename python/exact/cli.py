@@ -51,8 +51,8 @@ def main():
     厳密重なり判定 CLI のメイン入口。
 
     Example usage:
-        PYTHONPATH=python python -m exact run --poly polyhedra/archimedean/s07
-        PYTHONPATH=python python -m exact run --poly polyhedra/johnson/n20
+        PYTHONPATH=python python -m exact run --poly data/polyhedra/archimedean/s07
+        PYTHONPATH=python python -m exact run --poly data/polyhedra/johnson/n20
 
     Process:
         1. Resolve paths (noniso.jsonl, polyhedron.json, exact.jsonl)

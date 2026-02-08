@@ -10,12 +10,12 @@
 //   多面体の組合せ構造（面・辺・隣接関係）を表すデータ構造を定義する。
 //
 // Responsibility in the project:
-//   - Stores polyhedron topology loaded from .adj files
+//   - Stores polyhedron topology loaded from JSON files
 //   - Provides adjacency queries for face-edge relationships
 //   - Does NOT handle geometry calculations or unfolding logic
 //
 // プロジェクト内での責務:
-//   - .adj ファイルから読み込まれた多面体のトポロジーを保持
+//   - JSON ファイルから読み込まれた多面体のトポロジーを保持
 //   - 面と辺の隣接関係のクエリを提供
 //   - 幾何計算や展開ロジックは担当しない
 //

@@ -5,12 +5,12 @@ Executes the full rotational unfolding pipeline:
     Phase 1 (raw.jsonl) → Phase 2 (noniso.jsonl) → Phase 3 (exact.jsonl) → Drawing (exact SVG)
 
 Usage:
-    PYTHONPATH=python python -m run_all --poly polyhedra/<class>/<name>
-    PYTHONPATH=python python -m run_all --poly polyhedra/<class>/<name> --no-labels
+    PYTHONPATH=python python -m run_all --poly data/polyhedra/<class>/<name>
+    PYTHONPATH=python python -m run_all --poly data/polyhedra/<class>/<name> --no-labels
 
 Example:
-    PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07
-    PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07 --no-labels
+    PYTHONPATH=python python -m run_all --poly data/polyhedra/archimedean/s07
+    PYTHONPATH=python python -m run_all --poly data/polyhedra/archimedean/s07 --no-labels
 """
 
 import argparse

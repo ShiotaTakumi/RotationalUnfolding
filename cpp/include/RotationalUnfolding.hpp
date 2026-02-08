@@ -70,12 +70,12 @@
 //   - 候補展開図をJSONL形式で出力
 //
 // Does NOT handle:
-//   - Exact overlap verification (deferred to Phase 2)
+//   - Exact overlap verification (deferred to Phase 3)
 //   - Isomorphism detection (deferred to Phase 2)
 //   - File I/O management
 //
 // 責務外:
-//   - 厳密な重なり検証（Phase 2に委譲）
+//   - 厳密な重なり検証（Phase 3に委譲）
 //   - 同型性判定（Phase 2に委譲）
 //   - ファイルI/O管理
 //

@@ -59,8 +59,8 @@ def main():
     CLI のメイン入口。
     
     Example usage:
-        python -m rotational_unfolding run --poly polyhedra/archimedean/s05
-        python -m rotational_unfolding run --poly polyhedra/archimedean/s01 --symmetric on
+        python -m rotational_unfolding run --poly data/polyhedra/archimedean/s05
+        python -m rotational_unfolding run --poly data/polyhedra/archimedean/s01 --symmetric on
     
     Output location:
         All output is written to output/<poly_path>/
