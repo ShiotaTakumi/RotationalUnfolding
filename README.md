@@ -38,6 +38,12 @@ The processing pipeline consists of the following four phases:
 | Phase 3 | `exact` | Exact overlap detection using SymPy / SymPy による厳密重なり判定 |
 | Drawing | `drawing` | SVG visualization of results / 結果の SVG 可視化 |
 
+## Prerequisites / 前提条件
+
+- Python 3.8+
+- GCC 14+ (C++17)
+- SymPy (`pip install sympy`) — Phase 3 で使用 / used by Phase 3
+
 ## Quick Start / クイックスタート
 
 ```bash
