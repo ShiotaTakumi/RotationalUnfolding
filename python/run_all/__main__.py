@@ -6,9 +6,11 @@ Executes the full rotational unfolding pipeline:
 
 Usage:
     PYTHONPATH=python python -m run_all --poly polyhedra/<class>/<name>
+    PYTHONPATH=python python -m run_all --poly polyhedra/<class>/<name> --no-labels
 
 Example:
     PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07
+    PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07 --no-labels
 """
 
 import argparse
@@ -25,6 +27,12 @@ def create_parser():
         "--poly",
         required=True,
         help="Polyhedron path (e.g., polyhedra/archimedean/s07)",
+    )
+    parser.add_argument(
+        "--no-labels",
+        action="store_true",
+        default=False,
+        help="Hide face and edge labels in exact drawing (passed to drawing phase only)",
     )
     return parser
 
@@ -45,9 +53,12 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
     poly = args.poly
+    no_labels = args.no_labels
 
     print(f"[run_all] Pipeline start: {poly}")
     print(f"[run_all] Python: {sys.executable}")
+    if no_labels:
+        print(f"[run_all] Drawing option: --no-labels")
     print("")
 
     run_step(
@@ -68,9 +79,13 @@ def main():
     )
     print("")
 
+    drawing_args = ["-m", "drawing", "run", "--type", "exact", "--poly", poly]
+    if no_labels:
+        drawing_args.append("--no-labels")
+
     run_step(
         "Drawing: exact",
-        ["-m", "drawing", "run", "--type", "exact", "--poly", poly],
+        drawing_args,
     )
     print("")
 
