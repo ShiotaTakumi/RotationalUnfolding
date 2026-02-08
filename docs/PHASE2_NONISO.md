@@ -2,7 +2,7 @@
 
 **Status**: Implemented (Specification Frozen)
 **Version**: 1.0.0
-**Last Updated**: 2026-02-07
+**Last Updated**: 2026-02-08
 
 ---
 
@@ -189,9 +189,9 @@ output/polyhedra/<class>/<name>/
 
 ## Canonical Form Algorithm / 正規形アルゴリズム
 
-Phase 2 uses a **sequence-based canonical form** to detect isomorphic unfoldings. This algorithm is ported from the legacy `scripts/isomorphic_remover.py` and adapted to the JSONL schema.
+Phase 2 uses a **sequence-based canonical form** to detect isomorphic unfoldings. This algorithm is based on the legacy canonical form logic and adapted to the JSONL schema.
 
-Phase 2 は同型な展開図を検出するために**列ベースの正規形**を使用します。このアルゴリズムは legacy の `scripts/isomorphic_remover.py` から移植され、JSONL スキーマに適合されています。
+Phase 2 は同型な展開図を検出するために**列ベースの正規形**を使用します。このアルゴリズムは legacy の正規形ロジックに基づき、JSONL スキーマに適合されています。
 
 ### Overview / 概要
 
@@ -431,21 +431,21 @@ The following behaviors are intentional:
 
 **Phase 2 出力契約**: `noniso.jsonl` は厳密重なり判定（Phase 3）のためのクリーンな入力として機能します。
 
-Phase 3 (if implemented) will:
+Phase 3 reads `noniso.jsonl` and performs:
 
-- Read `noniso.jsonl` (or optionally `raw.jsonl`)
-- Perform precise geometric overlap checks
-- Output `exact.jsonl` with verified non-overlapping unfoldings
+- Exact geometric overlap verification using SymPy symbolic computation
+- Overlap classification (`face-face`, `edge-edge`, `edge-vertex`, `vertex-vertex`)
+- Output of `exact.jsonl` containing verified overlapping unfoldings with classification
 
-Phase 3（実装される場合）は：
+Phase 3 は `noniso.jsonl` を読み込み、以下を実行します：
 
-- `noniso.jsonl`（またはオプションで `raw.jsonl`）を読み込む
-- 精密な幾何的重なりチェックを実行
-- 検証済みの重ならない展開図を含む `exact.jsonl` を出力
+- SymPy シンボリック計算を用いた厳密な幾何的重なり検証
+- 重なり分類（`face-face`、`edge-edge`、`edge-vertex`、`vertex-vertex`）
+- 分類付きの検証済み重なり展開図を含む `exact.jsonl` の出力
 
-**Phase boundary contract**: Phase 2 does not prescribe the implementation of Phase 3. The only guaranteed contract is that `noniso.jsonl` adheres to the same schema as `raw.jsonl` (schema_version: 1, record_type: "partial_unfolding").
+**Phase boundary contract**: `noniso.jsonl` adheres to the same schema as `raw.jsonl` (schema_version: 1, record_type: "partial_unfolding"). Phase 3 reads this file as-is without modification.
 
-**Phase 境界契約**: Phase 2 は Phase 3 の実装を規定しません。保証される唯一の契約は、`noniso.jsonl` が `raw.jsonl` と同じスキーマに従うこと（schema_version: 1, record_type: "partial_unfolding"）です。
+**Phase 境界契約**: `noniso.jsonl` は `raw.jsonl` と同じスキーマに従います（schema_version: 1, record_type: "partial_unfolding"）。Phase 3 はこのファイルを変更なしにそのまま読み込みます。
 
 ---
 
@@ -455,18 +455,18 @@ Phase 3（実装される場合）は：
 
 - **Phase 1 specification**: `docs/PHASE1_RUN.md` (input contract)
 - **Phase 2 implementation**: `python/nonisomorphic/`
-- **Legacy algorithm**: `scripts/isomorphic_remover.py` (original canonical form logic)
+- **Path resolution**: `python/poly_resolve.py` (shared across all CLI modules)
 - **Canonical output location**: `output/polyhedra/<class>/<name>/`
 
 ### 仕様と実装
 
 - **Phase 1 仕様**: `docs/PHASE1_RUN.md`（入力契約）
 - **Phase 2 実装**: `python/nonisomorphic/`
-- **Legacy アルゴリズム**: `scripts/isomorphic_remover.py`（元の正規形ロジック）
+- **パス解決**: `python/poly_resolve.py`（全 CLI モジュール共通）
 - **正規出力場所**: `output/polyhedra/<class>/<name>/`
 
 ---
 
-**Document Status**: This document describes the **frozen specification** of Phase 2 as of 2026-02-07. The input/output contract defined here is stable. Phase 3 and beyond may extend functionality but must respect the Phase 2 data contract.
+**Document Status**: This document describes the **frozen specification** of Phase 2 as of 2026-02-08. The input/output contract defined here is stable. Phase 3 and Drawing read `noniso.jsonl` in compliance with this contract.
 
-**文書ステータス**: この文書は 2026-02-07 時点での Phase 2 の**凍結された仕様**を記述します。ここで定義される入出力契約は安定しています。Phase 3 以降は機能を拡張する可能性がありますが、Phase 2 のデータ契約を尊重する必要があります。
+**文書ステータス**: この文書は 2026-02-08 時点での Phase 2 の**凍結された仕様**を記述します。ここで定義される入出力契約は安定しています。Phase 3 および Drawing はこの契約に従い `noniso.jsonl` を読み込みます。

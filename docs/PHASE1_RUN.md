@@ -2,7 +2,7 @@
 
 **Status**: Implemented (Specification Frozen)
 **Version**: 1.0.0
-**Last Updated**: 2026-02-07
+**Last Updated**: 2026-02-08
 
 ---
 
@@ -319,13 +319,13 @@ This path is deterministic, cwd-independent, and overwritten on re-execution.
 
 - Path resolution and directory management are easier in Python
 - Experiment metadata generation requires file inspection
-- Future post-processing will be in Python (noniso, draw, exact)
+- All downstream processing (noniso, exact, drawing) is implemented in Python
 
 ### なぜ純粋な C++ ではなく Python CLI なのか？
 
 - パス解決とディレクトリ管理は Python で簡単
 - 実験メタデータ生成にはファイル検査が必要
-- 将来の後処理は Python で行われる予定（noniso, draw, exact）
+- すべての下流処理（noniso, exact, drawing）は Python で実装されている
 
 ---
 
@@ -383,39 +383,39 @@ The following behaviors are intentional and part of the Phase 1 specification:
 
 ---
 
-## Transition to Phase 2 / Phase 2 への移行
+## Downstream Processing / 下流処理
 
 **Phase 1 Output Contract**: `raw.jsonl` + `run.json` serve as the stable interface for all downstream processing.
 
 **Phase 1 出力契約**: `raw.jsonl` + `run.json` はすべての下流処理のための安定したインターフェースとして機能します。
 
-Phase 1 output will serve as **input** for Phase 2 processing:
+Phase 1 output serves as **input** for the following downstream phases:
 
-- **Nonisomorphic filtering** (Phase 2): Read `raw.jsonl`, apply canonical form normalization, output `noniso.jsonl`
-- **Exact overlap detection** (Phase 2): Read `noniso.jsonl` or `raw.jsonl`, perform precise geometric checks, output `exact.jsonl`
-- **Drawing** (Phase 2): Read `exact.jsonl` or `noniso.jsonl`, generate SVG files
+- **Nonisomorphic filtering** (Phase 2): Reads `raw.jsonl`, applies canonical form normalization, outputs `noniso.jsonl`
+- **Exact overlap detection** (Phase 3): Reads `noniso.jsonl`, performs precise geometric checks using SymPy, outputs `exact.jsonl`
+- **Drawing** (independent utility): Reads `raw.jsonl`, `noniso.jsonl`, or `exact.jsonl`, generates SVG files
 
-Phase 1 の出力は Phase 2 処理の**入力**として機能します：
+Phase 1 の出力は以下の下流フェーズの**入力**として機能します：
 
 - **同型除去**（Phase 2）: `raw.jsonl` を読み込み、正規形正規化を適用、`noniso.jsonl` を出力
-- **厳密重なり判定**（Phase 2）: `noniso.jsonl` または `raw.jsonl` を読み込み、精密な幾何チェックを実行、`exact.jsonl` を出力
-- **描画**（Phase 2）: `exact.jsonl` または `noniso.jsonl` を読み込み、SVG ファイルを生成
+- **厳密重なり判定**（Phase 3）: `noniso.jsonl` を読み込み、SymPy を用いた精密な幾何チェックを実行、`exact.jsonl` を出力
+- **描画**（独立ユーティリティ）: `raw.jsonl`、`noniso.jsonl`、`exact.jsonl` のいずれかを読み込み、SVG ファイルを生成
 
-**Phase boundary contract**: Phase 1 does not prescribe the implementation of Phase 2. The only guaranteed contract is:
+**Phase boundary contract**: The guaranteed contract is:
 
 1. `raw.jsonl` adheres to the schema defined in this document (schema_version: 1, record_type: "partial_unfolding")
 2. `run.json` provides sufficient provenance information to identify input conditions
 3. Output paths follow the `output/polyhedra/<class>/<name>/` convention
 
-Phase 2 implementations may read these files from the canonical output location or consume them via other mechanisms, as long as the data contract is respected.
+Downstream phases read these files from the canonical output location. Each phase respects the data contract and writes its own output to the same directory.
 
-**Phase 境界契約**: Phase 1 は Phase 2 の実装を規定しません。保証される唯一の契約は：
+**Phase 境界契約**: 保証される契約は：
 
 1. `raw.jsonl` は本文書で定義されたスキーマに従う（schema_version: 1, record_type: "partial_unfolding"）
 2. `run.json` は入力条件を識別するのに十分な出所情報を提供する
 3. 出力パスは `output/polyhedra/<class>/<name>/` 規約に従う
 
-Phase 2 の実装は、データ契約が尊重される限り、正規出力場所からこれらのファイルを読み込むか、他のメカニズムを介してそれらを消費することができます。
+下流フェーズは正規出力場所からこれらのファイルを読み込みます。各フェーズはデータ契約を尊重し、同じディレクトリに独自の出力を書き込みます。
 
 ---
 
@@ -423,20 +423,20 @@ Phase 2 の実装は、データ契約が尊重される限り、正規出力場
 
 ### Specification and Implementation
 
-- **Input format specification**: `tools/convert_legacy_input.py` (schema implementation)
 - **C++ core implementation**: `cpp/src/main.cpp` and `cpp/include/`
 - **Python CLI implementation**: `python/rotational_unfolding/`
+- **Path resolution**: `python/poly_resolve.py` (shared across all CLI modules)
 - **Canonical output location**: `output/polyhedra/<class>/<name>/`
 
 ### 仕様と実装
 
-- **入力形式仕様**: `tools/convert_legacy_input.py`（スキーマ実装）
 - **C++ コア実装**: `cpp/src/main.cpp` および `cpp/include/`
 - **Python CLI 実装**: `python/rotational_unfolding/`
+- **パス解決**: `python/poly_resolve.py`（全 CLI モジュール共通）
 - **正規出力場所**: `output/polyhedra/<class>/<name>/`
 
 ---
 
-**Document Status**: This document describes the **frozen specification** of Phase 1 as of 2026-02-07. The input/output contract defined here is stable and serves as the foundation for all subsequent phases. Phase 2 and beyond may extend functionality but must respect the Phase 1 data contract.
+**Document Status**: This document describes the **frozen specification** of Phase 1 as of 2026-02-08. The input/output contract defined here is stable and serves as the foundation for all subsequent phases (Phase 2, Phase 3, Drawing).
 
-**文書ステータス**: この文書は 2026-02-07 時点での Phase 1 の**凍結された仕様**を記述します。ここで定義される入出力契約は安定しており、すべての後続フェーズの基盤として機能します。Phase 2 以降は機能を拡張する可能性がありますが、Phase 1 のデータ契約を尊重する必要があります。
+**文書ステータス**: この文書は 2026-02-08 時点での Phase 1 の**凍結された仕様**を記述します。ここで定義される入出力契約は安定しており、すべての後続フェーズ（Phase 2、Phase 3、Drawing）の基盤として機能します。

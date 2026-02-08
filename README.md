@@ -4,10 +4,16 @@
 <img src="https://img.shields.io/badge/purpose-research-8A2BE2.svg?logo=&style=plastic">
 <img src="https://img.shields.io/github/v/release/ShiotaTakumi/RotationalUnfolding?include_prereleases&style=plastic">
 <img src="https://img.shields.io/github/last-commit/ShiotaTakumi/RotationalUnfolding?style=plastic">
-<img src="https://img.shields.io/badge/MacOS-15.5-000000.svg?logo=macOS&style=plastic">
+<img src="https://img.shields.io/badge/MacOS-26.2-000000.svg?logo=macOS&style=plastic">
 <img src="https://img.shields.io/badge/Shell-bash-FFD500.svg?logo=shell&style=plastic">
-<img src="https://img.shields.io/badge/C++-GCC%2014.2.0-00599C.svg?logo=cplusplus&style=plastic">
+<img src="https://img.shields.io/badge/C++-GCC%2015.2.0-00599C.svg?logo=cplusplus&style=plastic">
 <img src="https://img.shields.io/badge/Python-3.12.0-3776AB.svg?logo=python&style=plastic">
+
+## AI Tool Disclosure / AI ツール使用に関する開示
+
+The codebase reorganization, refactoring, and documentation of this project were conducted using the [Cursor](https://www.cursor.com/) editor with the **Claude Opus 4.6 Thinking** model. The AI was used as an assistive tool; all design decisions and research responsibility remain with the author.
+
+本プロジェクトのコード整理・リファクタリング・ドキュメント整備において、[Cursor](https://www.cursor.com/) エディタおよび **Claude Opus 4.6 Thinking** モデルを補助ツールとして使用しました。設計判断および研究上の責任はすべて著者に帰属します。
 
 ## Overview / 概要
 
@@ -27,9 +33,9 @@ Takumi Shiota and Toshiki Saitoh, "Overlapping edge unfoldings for convex regula
 
 ## Pipeline / パイプライン
 
-The processing pipeline consists of the following four phases:
+The processing pipeline consists of three phases and a visualization utility:
 
-処理パイプラインは以下の 4 フェーズで構成されています：
+処理パイプラインは 3 つのフェーズと可視化ユーティリティで構成されています：
 
 | Phase | Module | Description / 説明 |
 |-------|--------|-------------------|
@@ -38,11 +44,15 @@ The processing pipeline consists of the following four phases:
 | Phase 3 | `exact` | Exact overlap detection using SymPy / SymPy による厳密重なり判定 |
 | Drawing | `drawing` | SVG visualization of results / 結果の SVG 可視化 |
 
+`run_all` executes Phase 1 through Drawing in sequence with a single command.
+
+`run_all` は Phase 1 から Drawing までを 1 コマンドで順に実行します。
+
 ## Prerequisites / 前提条件
 
-- Python 3.8+
-- GCC 14+ (C++17)
-- SymPy (`pip install sympy`) — Phase 3 で使用 / used by Phase 3
+- Python 12.0
+- GCC 15.2.0
+- SymPy (`pip install sympy`) — used by Phase 3 / Phase 3 で使用
 
 ## Quick Start / クイックスタート
 
@@ -79,11 +89,24 @@ PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/archi
 PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/archimedean/s12L --no-labels
 ```
 
+### Arguments / 引数
+
+| Argument | Required | Description / 説明 |
+|----------|----------|-------------------|
+| `--poly` | Yes | Path to polyhedron data directory (e.g., `data/polyhedra/archimedean/s12L`). Supports shell Tab completion. / 多面体データディレクトリへのパス。Tab 補完対応。 |
+| `--no-labels` | No | Hide face and edge labels in SVG output. Available for `run_all` and `drawing`. / SVG 出力で面番号・辺番号のラベルを非表示にする。`run_all` および `drawing` で使用可能。 |
+| `--type` | `drawing` only | Output type to visualize: `raw`, `noniso`, or `exact`. / 可視化する出力の種類。 |
+| `--symmetric` | `rotational_unfolding` only | Symmetry pruning mode: `auto` (default), `on`, or `off`. / 対称性枝刈りモード。 |
+
 ## Directory Structure / ディレクトリ構成
 
 ```
 RotationalUnfolding/
 ├── cpp/                  # C++ core (rotunfold binary) / C++ コア
+│   ├── include/          # Header files / ヘッダファイル
+│   ├── src/              # Source files / ソースファイル
+│   ├── Makefile
+│   └── CMakeLists.txt
 ├── data/                 # Polyhedron input data (JSON) / 多面体入力データ
 │   └── polyhedra/
 │       ├── antiprism/    # Antiprisms / 反角柱
@@ -95,19 +118,19 @@ RotationalUnfolding/
 ├── output/               # Pipeline outputs (JSONL, SVG) / パイプライン出力
 │   └── polyhedra/
 │       └── <class>/<name>/
-│           ├── raw.jsonl
-│           ├── noniso.jsonl
-│           ├── exact.jsonl
-│           ├── run.json
+│           ├── raw.jsonl       # Phase 1 output
+│           ├── noniso.jsonl    # Phase 2 output
+│           ├── exact.jsonl     # Phase 3 output
+│           ├── run.json        # Phase 1 metadata
 │           └── draw/
-│               └── exact/
+│               └── exact/      # Drawing output (SVG)
 ├── python/               # Python CLI modules / Python CLI モジュール
 │   ├── rotational_unfolding/   # Phase 1
 │   ├── nonisomorphic/          # Phase 2
 │   ├── exact/                  # Phase 3
-│   ├── drawing/                # Drawing utility
-│   └── run_all/                # Pipeline orchestrator / 一括実行
-├── tools/                # Data conversion utilities / データ変換ツール
+│   ├── drawing/                # Drawing utility / 描画ユーティリティ
+│   ├── run_all/                # Pipeline orchestrator / 一括実行
+│   └── poly_resolve.py         # Shared path resolution / 共通パス解決
 ├── requirements.txt      # Python dependencies / Python 依存パッケージ
 └── LICENSE
 ```

@@ -2,7 +2,7 @@
 
 **Status**: Verification utility (not a Phase component)
 **Version**: 0.1.0
-**Last Updated**: 2026-02-07
+**Last Updated**: 2026-02-08
 
 ---
 
@@ -125,9 +125,9 @@ output/polyhedra/<class>/<name>/
         └── ...
 ```
 
-The `draw/` directory is **Git-ignored** (`.gitignore` rule: `output/**/draw/`). SVG files are regenerable from JSONL files and are not committed to the repository.
+The `draw/raw/` directory is **Git-ignored** (`.gitignore` rule: `output/**/draw/raw/`). Raw SVG files are regenerable from JSONL and are not committed. SVG files in `draw/noniso/` and `draw/exact/` are tracked by Git.
 
-`draw/` ディレクトリは **Git 管理から除外**されています（`.gitignore` ルール: `output/**/draw/`）。SVG ファイルは JSONL ファイルから再生成可能であり、リポジトリにはコミットされません。
+`draw/raw/` ディレクトリは **Git 管理から除外**されています（`.gitignore` ルール: `output/**/draw/raw/`）。Raw SVG ファイルは JSONL から再生成可能であり、コミットされません。`draw/noniso/` および `draw/exact/` の SVG ファイルは Git で追跡されます。
 
 ---
 
@@ -399,14 +399,16 @@ sed -n '6p' output/polyhedra/archimedean/s07/raw.jsonl | jq .
 
 **The SVG files produced by the drawing utility are verification artifacts, not canonical research results.**
 
-- They are **Git-ignored** and not committed to the repository
-- They are **regenerable** from JSONL files at any time
+- `draw/raw/` SVGs are **Git-ignored** and not committed to the repository
+- `draw/noniso/` and `draw/exact/` SVGs are tracked by Git for reference
+- All SVGs are **regenerable** from JSONL files at any time
 - They are **not authoritative** for any scientific claim or publication
 
 **描画ユーティリティが生成する SVG ファイルは検証用生成物であり、正規の研究結果ではありません。**
 
-- **Git 管理から除外**されており、リポジトリにコミットされない
-- JSONL ファイルからいつでも**再生成可能**
+- `draw/raw/` の SVG は **Git 管理から除外**されており、コミットされない
+- `draw/noniso/` および `draw/exact/` の SVG は参照用として Git で追跡される
+- すべての SVG は JSONL ファイルからいつでも**再生成可能**
 - 科学的主張や出版物に対して**権威的ではない**
 
 ### JSONL Is the Authority
@@ -431,6 +433,6 @@ The drawing utility uses only the Python standard library. No additional depende
 
 ---
 
-**Document Status**: This document describes the drawing utility as an independent verification tool. It is not part of Phase 1, 2, or 3 specifications. The utility may be extended or modified independently of Phase implementations.
+**Document Status**: This document describes the drawing utility as of 2026-02-08. It is an independent verification tool and is not part of Phase 1, 2, or 3 specifications.
 
-**文書ステータス**: この文書は独立した検証ツールとしての描画ユーティリティを記述します。これは Phase 1, 2, 3 の仕様の一部ではありません。ユーティリティは Phase 実装から独立して拡張または変更される可能性があります。
+**文書ステータス**: この文書は 2026-02-08 時点での描画ユーティリティを記述します。これは独立した検証ツールであり、Phase 1, 2, 3 の仕様の一部ではありません。

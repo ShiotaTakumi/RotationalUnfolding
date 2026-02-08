@@ -2,7 +2,7 @@
 
 **Status**: Implemented (Specification Frozen)
 **Version**: 1.0.0
-**Last Updated**: 2026-02-07
+**Last Updated**: 2026-02-08
 
 ---
 
@@ -146,9 +146,9 @@ The reconstruction proceeds as follows:
 
 **すべての算術演算はシンボリックに実行されます。** 使用されるプリミティブは有理数、`π`、`sin`、`cos`、`tan` のみであり、すべて未評価の SymPy 式として保持されます。座標構築のいかなる段階でも中間的な丸めや浮動小数点変換は発生しません。
 
-This approach is mathematically equivalent to the legacy implementation (`scripts/generate_exact_expressions.py`). The key difference is that Phase 3 constructs expressions directly in memory without writing intermediate files.
+This approach is mathematically equivalent to the legacy exact expression generation. The key difference is that Phase 3 constructs expressions directly in memory without writing intermediate files.
 
-このアプローチは legacy 実装（`scripts/generate_exact_expressions.py`）と数学的に同等です。主な違いは、Phase 3 が中間ファイルを書き出さずにメモリ上で直接式を構築する点です。
+このアプローチは legacy の厳密式生成と数学的に同等です。主な違いは、Phase 3 が中間ファイルを書き出さずにメモリ上で直接式を構築する点です。
 
 ### 2. Hybrid Detection Strategy / ハイブリッド検出戦略
 
@@ -202,9 +202,9 @@ The exact stage uses `sympy.geometry.Segment.intersection()` to determine whethe
 - **`[Point]`**: 単一点交差（交差、端点接触、同一直線上の端点接触）。
 - **`[Segment]`**: 正の長さを持つ同一直線上の重なり。
 
-SymPy's geometric intersection is performed entirely in the symbolic domain. It does not call `evalf()` internally and does not rely on floating-point tolerances. This is the same computational foundation used by the legacy implementation (`scripts/exact_overlap_checker.py`).
+SymPy's geometric intersection is performed entirely in the symbolic domain. It does not call `evalf()` internally and does not rely on floating-point tolerances. This is the same computational foundation used by the legacy exact overlap detection.
 
-SymPy の幾何交差はシンボリック領域で完全に実行されます。内部で `evalf()` を呼び出さず、浮動小数点許容誤差に依存しません。これは legacy 実装（`scripts/exact_overlap_checker.py`）が使用するのと同じ計算基盤です。
+SymPy の幾何交差はシンボリック領域で完全に実行されます。内部で `evalf()` を呼び出さず、浮動小数点許容誤差に依存しません。これは legacy の厳密重なり判定が使用するのと同じ計算基盤です。
 
 ---
 
@@ -459,12 +459,12 @@ The following points are stated for completeness and intellectual honesty:
 以下の点は完全性と知的誠実さのために記述します：
 
 1. **Edge-based detection only**: Phase 3 detects overlap through edge-pair intersection. It does not perform point-in-polygon containment tests. As argued in the Structural Safety section, this is sufficient for rotational unfoldings, but it is a structural assumption rather than a general geometric theorem.
-2. **SymPy dependency**: The exactness of the symbolic geometry depends on the correctness of SymPy's `Segment.intersection()` implementation. This is the same dependency as the legacy implementation and is considered reliable for the algebraic expressions arising from regular polygon geometry.
+2. **SymPy dependency**: The exactness of the symbolic geometry depends on the correctness of SymPy's `Segment.intersection()` implementation. This is considered reliable for the algebraic expressions arising from regular polygon geometry.
 3. **Convexity assumption**: The angle defect argument for vertex chain skipping assumes convex polyhedra. For non-convex polyhedra, additional analysis would be required.
 4. **Execution time**: Exactness is prioritized over speed. Phase 3 may take hours or days for polyhedra with many faces and complex unfoldings. This is by design.
 
 1. **辺ベースの検出のみ**: Phase 3 は辺ペア交差を通じて重なりを検出する。点包含テストは実行しない。構造的安全性のセクションで論じた通り、回転展開にはこれで十分であるが、一般的な幾何定理ではなく構造的な仮定である。
-2. **SymPy 依存**: シンボリック幾何の厳密性は SymPy の `Segment.intersection()` 実装の正しさに依存する。これは legacy 実装と同一の依存であり、正多角形幾何から生じる代数式に対しては信頼できるとみなされる。
+2. **SymPy 依存**: シンボリック幾何の厳密性は SymPy の `Segment.intersection()` 実装の正しさに依存する。正多角形幾何から生じる代数式に対しては信頼できるとみなされる。
 3. **凸性の仮定**: 頂点連鎖スキップの角度欠損論拠は凸多面体を仮定している。非凸多面体に対しては追加的な分析が必要。
 4. **実行時間**: 厳密性が速度より優先される。面が多く展開図が複雑な多面体では、Phase 3 は数時間〜数日かかる場合がある。これは設計上の意図である。
 
@@ -499,8 +499,7 @@ Results are consistent with legacy exact overlap detection outputs.
 - **Phase 1 specification**: `docs/PHASE1_RUN.md` (upstream data contract)
 - **Phase 2 specification**: `docs/PHASE2_NONISO.md` (input contract)
 - **Phase 3 implementation**: `python/exact/`
-- **Legacy exact expressions**: `scripts/generate_exact_expressions.py`
-- **Legacy overlap checker**: `scripts/exact_overlap_checker.py`
+- **Path resolution**: `python/poly_resolve.py` (shared across all CLI modules)
 - **Canonical output location**: `output/polyhedra/<class>/<name>/`
 
 ### 仕様と実装
@@ -508,12 +507,11 @@ Results are consistent with legacy exact overlap detection outputs.
 - **Phase 1 仕様**: `docs/PHASE1_RUN.md`（上流データ契約）
 - **Phase 2 仕様**: `docs/PHASE2_NONISO.md`（入力契約）
 - **Phase 3 実装**: `python/exact/`
-- **Legacy 厳密式生成**: `scripts/generate_exact_expressions.py`
-- **Legacy 重なり判定**: `scripts/exact_overlap_checker.py`
+- **パス解決**: `python/poly_resolve.py`（全 CLI モジュール共通）
 - **正規出力場所**: `output/polyhedra/<class>/<name>/`
 
 ---
 
-**Document Status**: This document describes the **frozen specification** of Phase 3 as of 2026-02-07. The overlap detection logic, classification scheme, and output format defined here are stable. Future extensions (e.g., configurable overlap strictness, batch processing) may be added but must respect the Phase 3 data contract.
+**Document Status**: This document describes the **frozen specification** of Phase 3 as of 2026-02-08. The overlap detection logic, classification scheme, and output format defined here are stable.
 
-**文書ステータス**: この文書は 2026-02-07 時点での Phase 3 の**凍結された仕様**を記述します。ここで定義される重なり検出ロジック、分類スキーム、出力形式は安定しています。将来の拡張（重なり厳格度の設定可能化、バッチ処理など）は追加される可能性がありますが、Phase 3 のデータ契約を尊重する必要があります。
+**文書ステータス**: この文書は 2026-02-08 時点での Phase 3 の**凍結された仕様**を記述します。ここで定義される重なり検出ロジック、分類スキーム、出力形式は安定しています。
