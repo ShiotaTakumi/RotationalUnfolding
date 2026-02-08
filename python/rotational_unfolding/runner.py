@@ -21,70 +21,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-
-def find_repo_root():
-    """
-    Finds the repository root by searching upward for the '.git' directory.
-    
-    .git ディレクトリを上方向に探索してリポジトリルートを見つける。
-    
-    Returns:
-        Path: Absolute path to the repository root.
-    
-    Raises:
-        RuntimeError: If the repository root cannot be found.
-    """
-    current = Path(__file__).resolve().parent
-    while current != current.parent:
-        if (current / ".git").exists():
-            return current
-        current = current.parent
-    
-    raise RuntimeError("Could not find repository root (.git directory)")
-
-
-def resolve_polyhedron_paths(repo_root, poly_id):
-    """
-    Resolves polyhedron data paths from a path-style identifier.
-    
-    パス形式の識別子から多面体データのパスを解決する。
-    
-    Args:
-        repo_root (Path): Repository root path.
-        poly_id (str): Polyhedron path (e.g., "polyhedra/archimedean/s05").
-    
-    Returns:
-        tuple: (polyhedron_json_path, root_pairs_json_path, poly_class, poly_name)
-    
-    Raises:
-        ValueError: If the path does not contain at least a class and name component.
-        FileNotFoundError: If the polyhedron data files do not exist.
-    """
-    poly_path = Path(poly_id)
-    if len(poly_path.parts) < 2:
-        raise ValueError(
-            f"Invalid poly path: {poly_id}. "
-            f"Expected a path with at least class/name (e.g., polyhedra/archimedean/s05)"
-        )
-    
-    poly_name = poly_path.name
-    poly_class = poly_path.parent.name
-    
-    poly_dir = repo_root / "data" / poly_path
-    
-    if not poly_dir.is_dir():
-        raise FileNotFoundError(f"Polyhedron directory not found: {poly_dir}")
-    
-    polyhedron_json = poly_dir / "polyhedron.json"
-    root_pairs_json = poly_dir / "root_pairs.json"
-    
-    if not polyhedron_json.is_file():
-        raise FileNotFoundError(f"polyhedron.json not found: {polyhedron_json}")
-    
-    if not root_pairs_json.is_file():
-        raise FileNotFoundError(f"root_pairs.json not found: {root_pairs_json}")
-    
-    return polyhedron_json, root_pairs_json, poly_class, poly_name
+from poly_resolve import find_repo_root, resolve_poly
 
 
 def find_cpp_binary(repo_root):
@@ -112,27 +49,6 @@ def find_cpp_binary(repo_root):
     
     return cpp_binary
 
-
-def get_canonical_output_dir(repo_root, poly_path):
-    """
-    Returns the canonical output directory for a specific polyhedron.
-    
-    Output is always written to output/<poly_path>/
-    regardless of cwd. This ensures deterministic, polyhedron-specific paths.
-    
-    特定の多面体の正規出力ディレクトリを返す。
-    
-    出力は cwd に関わらず常に output/<poly_path>/ に書き込まれる。
-    これにより、決定的で多面体固有のパスが保証される。
-    
-    Args:
-        repo_root (Path): Repository root path.
-        poly_path (Path): Polyhedron path (e.g., Path("polyhedra/archimedean/s05")).
-    
-    Returns:
-        Path: Absolute path to output/<poly_path>/
-    """
-    return repo_root / "output" / poly_path
 
 
 def generate_run_id():
@@ -348,9 +264,16 @@ def run_rotational_unfolding(poly_id, symmetric_mode):
     print(f"Repository root: {repo_root}")
     
     # Resolve polyhedron paths
-    polyhedron_json, root_pairs_json, poly_class, poly_name = resolve_polyhedron_paths(
-        repo_root, poly_id
-    )
+    data_dir, output_dir, poly_class, poly_name = resolve_poly(repo_root, poly_id)
+    
+    polyhedron_json = data_dir / "polyhedron.json"
+    root_pairs_json = data_dir / "root_pairs.json"
+    
+    if not polyhedron_json.is_file():
+        raise FileNotFoundError(f"polyhedron.json not found: {polyhedron_json}")
+    if not root_pairs_json.is_file():
+        raise FileNotFoundError(f"root_pairs.json not found: {root_pairs_json}")
+    
     print(f"Polyhedron: {polyhedron_json}")
     print(f"Root pairs: {root_pairs_json}")
     
@@ -359,8 +282,7 @@ def run_rotational_unfolding(poly_id, symmetric_mode):
     print(f"C++ binary: {cpp_binary}")
     print("")
     
-    # Get canonical output directory for this polyhedron
-    output_dir = get_canonical_output_dir(repo_root, Path(poly_id))
+    # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
     
     raw_jsonl_path = output_dir / "raw.jsonl"

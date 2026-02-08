@@ -39,7 +39,7 @@ def create_parser():
     run_parser.add_argument(
         "--poly",
         required=True,
-        help="Polyhedron path (e.g., polyhedra/archimedean/s05)"
+        help="Path to polyhedron data directory (e.g., data/polyhedra/archimedean/s05)"
     )
     
     run_parser.add_argument(

@@ -10,82 +10,7 @@ import sys
 from pathlib import Path
 
 from exact.exact_overlap import filter_exact_overlaps
-
-
-def find_repo_root():
-    """
-    Finds the repository root by searching upward for the '.git' directory.
-
-    .git ディレクトリを上方向に探索してリポジトリルートを見つける。
-
-    Returns:
-        Path: Absolute path to the repository root.
-
-    Raises:
-        RuntimeError: If the repository root cannot be found.
-    """
-    current = Path(__file__).resolve().parent
-    while current != current.parent:
-        if (current / ".git").exists():
-            return current
-        current = current.parent
-
-    raise RuntimeError("Could not find repository root (.git directory)")
-
-
-def resolve_paths(repo_root, poly_id):
-    """
-    Resolves paths for Phase 3 processing.
-
-    Phase 3 処理のためのパスを解決します。
-
-    Args:
-        repo_root (Path): Repository root path
-        poly_id (str): Polyhedron path (e.g., "polyhedra/archimedean/s07")
-
-    Returns:
-        tuple: (noniso_jsonl_path, polyhedron_json_path, exact_jsonl_path, poly_class, poly_name)
-
-    Raises:
-        ValueError: If poly_id path does not contain at least class/name
-        FileNotFoundError: If required input files do not exist
-    """
-    poly_path = Path(poly_id)
-    if len(poly_path.parts) < 2:
-        raise ValueError(
-            f"Invalid poly path: {poly_id}. "
-            f"Expected a path with at least class/name (e.g., polyhedra/archimedean/s07)"
-        )
-
-    poly_name = poly_path.name
-    poly_class = poly_path.parent.name
-
-    # Input: noniso.jsonl (Phase 2 output)
-    # 入力: noniso.jsonl（Phase 2 出力）
-    output_dir = repo_root / "output" / poly_path
-    noniso_jsonl_path = output_dir / "noniso.jsonl"
-
-    if not noniso_jsonl_path.is_file():
-        raise FileNotFoundError(
-            f"noniso.jsonl not found: {noniso_jsonl_path}\n"
-            f"Run Phase 2 first: python -m nonisomorphic run --poly {poly_id}"
-        )
-
-    # Input: polyhedron.json (polyhedron structure)
-    # 入力: polyhedron.json（多面体構造）
-    data_dir = repo_root / "data" / poly_path
-    polyhedron_json_path = data_dir / "polyhedron.json"
-
-    if not polyhedron_json_path.is_file():
-        raise FileNotFoundError(
-            f"polyhedron.json not found: {polyhedron_json_path}"
-        )
-
-    # Output: exact.jsonl (Phase 3 output)
-    # 出力: exact.jsonl（Phase 3 出力）
-    exact_jsonl_path = output_dir / "exact.jsonl"
-
-    return noniso_jsonl_path, polyhedron_json_path, exact_jsonl_path, poly_class, poly_name
+from poly_resolve import find_repo_root, resolve_poly
 
 
 def create_parser():
@@ -113,7 +38,7 @@ def create_parser():
     run_parser.add_argument(
         "--poly",
         required=True,
-        help="Polyhedron path (e.g., polyhedra/archimedean/s07)"
+        help="Path to polyhedron data directory (e.g., data/polyhedra/archimedean/s07)"
     )
 
     return parser
@@ -165,9 +90,20 @@ def main():
 
             # Resolve paths
             # パスを解決
-            noniso_jsonl_path, polyhedron_json_path, exact_jsonl_path, poly_class, poly_name = resolve_paths(
-                repo_root, args.poly
-            )
+            data_dir, output_dir, poly_class, poly_name = resolve_poly(repo_root, args.poly)
+
+            noniso_jsonl_path = output_dir / "noniso.jsonl"
+            if not noniso_jsonl_path.is_file():
+                raise FileNotFoundError(
+                    f"noniso.jsonl not found: {noniso_jsonl_path}\n"
+                    f"Run Phase 2 first: python -m nonisomorphic run --poly {args.poly}"
+                )
+
+            polyhedron_json_path = data_dir / "polyhedron.json"
+            if not polyhedron_json_path.is_file():
+                raise FileNotFoundError(f"polyhedron.json not found: {polyhedron_json_path}")
+
+            exact_jsonl_path = output_dir / "exact.jsonl"
 
             print(f"Phase 3: Exact overlap detection for {args.poly}")
             print(f"Input (noniso.jsonl): {noniso_jsonl_path}")

@@ -10,85 +10,48 @@ import sys
 from pathlib import Path
 
 from drawing.draw_raw import draw_raw_jsonl
+from poly_resolve import find_repo_root, resolve_poly
 
 
-def find_repo_root():
+def resolve_drawing_paths(repo_root, poly_id, output_type):
     """
-    Finds the repository root by searching upward for the '.git' directory.
-    
-    .git ディレクトリを上方向に探索してリポジトリルートを見つける。
-    
-    Returns:
-        Path: Absolute path to the repository root.
-    
-    Raises:
-        RuntimeError: If the repository root cannot be found.
-    """
-    current = Path(__file__).resolve().parent
-    while current != current.parent:
-        if (current / ".git").exists():
-            return current
-        current = current.parent
-    
-    raise RuntimeError("Could not find repository root (.git directory)")
+    Resolves paths for input JSONL and output directory based on polyhedron and type.
 
+    polyhedron 指定と type から入力 JSONL と出力ディレクトリのパスを解決する。
 
-def resolve_poly_paths(repo_root, poly_id, output_type):
-    """
-    Resolves paths for input JSONL and output directory based on polyhedron path and type.
-    
-    polyhedron パスと type から入力 JSONL と出力ディレクトリのパスを解決する。
-    
     Args:
         repo_root (Path): Repository root path.
-        poly_id (str): Polyhedron path (e.g., "polyhedra/archimedean/s07").
+        poly_id (str): Polyhedron identifier (path or logical name).
         output_type (str): Output type ("raw", "noniso", "exact").
-    
+
     Returns:
-        tuple: (input_jsonl_path, output_dir_path, poly_class, poly_name)
-    
+        tuple: (input_jsonl_path, svg_output_dir, poly_class, poly_name)
+
     Raises:
-        ValueError: If poly_id path does not contain at least class/name.
         FileNotFoundError: If input JSONL does not exist.
     """
-    poly_path = Path(poly_id)
-    if len(poly_path.parts) < 2:
-        raise ValueError(
-            f"Invalid poly path: {poly_id}. "
-            f"Expected a path with at least class/name (e.g., polyhedra/archimedean/s07)"
-        )
-    
-    poly_name = poly_path.name
-    poly_class = poly_path.parent.name
-    
-    # Base output directory for this polyhedron
-    # この多面体の基本出力ディレクトリ
-    base_dir = repo_root / "output" / poly_path
-    
+    _data_dir, output_dir, poly_class, poly_name = resolve_poly(repo_root, poly_id)
+
     # Determine input JSONL path based on type
     # type に基づいて入力 JSONL のパスを決定
     if output_type == "raw":
-        input_jsonl = base_dir / "raw.jsonl"
+        input_jsonl = output_dir / "raw.jsonl"
     elif output_type == "noniso":
-        input_jsonl = base_dir / "noniso.jsonl"
+        input_jsonl = output_dir / "noniso.jsonl"
     elif output_type == "exact":
-        input_jsonl = base_dir / "exact.jsonl"
+        input_jsonl = output_dir / "exact.jsonl"
     else:
         raise ValueError(f"Unknown output type: {output_type}")
-    
-    # Check if input JSONL exists
-    # 入力 JSONL の存在を確認
+
     if not input_jsonl.is_file():
         raise FileNotFoundError(
             f"Input JSONL not found: {input_jsonl}\n"
             f"Make sure to run the appropriate phase first."
         )
-    
-    # Output directory for SVG files
-    # SVG ファイルの出力ディレクトリ
-    output_dir = base_dir / "draw" / output_type
-    
-    return input_jsonl, output_dir, poly_class, poly_name
+
+    svg_output_dir = output_dir / "draw" / output_type
+
+    return input_jsonl, svg_output_dir, poly_class, poly_name
 
 
 def create_parser():
@@ -123,7 +86,7 @@ def create_parser():
     run_parser.add_argument(
         "--poly",
         required=True,
-        help="Polyhedron path (e.g., polyhedra/archimedean/s07)"
+        help="Path to polyhedron data directory (e.g., data/polyhedra/archimedean/s07)"
     )
     
     run_parser.add_argument(
@@ -165,7 +128,7 @@ def main():
             
             # Resolve paths
             # パスを解決
-            input_jsonl, output_dir, poly_class, poly_name = resolve_poly_paths(
+            input_jsonl, output_dir, poly_class, poly_name = resolve_drawing_paths(
                 repo_root, args.poly, args.type
             )
             
