@@ -39,7 +39,7 @@ Run the entire pipeline for a single polyhedron:
 1 つの多面体に対してパイプライン全体を実行する：
 
 ```bash
-PYTHONPATH=reorg/python python -m run_all --poly archimedean/s07
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/archimedean/s07
 ```
 
 This executes Phase 1 → Phase 2 → Phase 3 → Drawing (exact) in order. If any step fails, execution stops immediately.
@@ -55,44 +55,44 @@ Each phase can also be run independently:
 **Phase 1 — Rotational Unfolding / 回転展開:**
 
 ```bash
-PYTHONPATH=reorg/python python -m rotational_unfolding run --poly <class>/<name>
+PYTHONPATH=reorg/python python -m rotational_unfolding run --poly polyhedra/<class>/<name>
 ```
 
 **Phase 2 — Nonisomorphic Filtering / 非同型フィルタリング:**
 
 ```bash
-PYTHONPATH=reorg/python python -m nonisomorphic run --poly <class>/<name>
+PYTHONPATH=reorg/python python -m nonisomorphic run --poly polyhedra/<class>/<name>
 ```
 
 **Phase 3 — Exact Overlap Detection / 厳密重なり判定:**
 
 ```bash
-PYTHONPATH=reorg/python python -m exact run --poly <class>/<name>
+PYTHONPATH=reorg/python python -m exact run --poly polyhedra/<class>/<name>
 ```
 
 **Drawing — SVG Visualization / SVG 可視化:**
 
 ```bash
-PYTHONPATH=reorg/python python -m drawing run --type raw|noniso|exact --poly <class>/<name>
+PYTHONPATH=reorg/python python -m drawing run --type raw|noniso|exact --poly polyhedra/<class>/<name>
 ```
 
 ### Examples / 実行例
 
 ```bash
 # Full pipeline for Archimedean solid s07
-PYTHONPATH=reorg/python python -m run_all --poly archimedean/s07
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/archimedean/s07
 
 # Full pipeline for Johnson solid n20
-PYTHONPATH=reorg/python python -m run_all --poly johnson/n20
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n20
 
 # Phase 3 only (requires existing noniso.jsonl)
-PYTHONPATH=reorg/python python -m exact run --poly johnson/n66
+PYTHONPATH=reorg/python python -m exact run --poly polyhedra/johnson/n66
 
 # Draw raw unfoldings
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly archimedean/s07
+PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
 
 # Draw exact-verified unfoldings (no labels, shape only)
-PYTHONPATH=reorg/python python -m drawing run --type exact --poly johnson/n20
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n20
 ```
 
 All commands are `cwd`-independent. Run from the repository root.

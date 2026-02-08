@@ -180,7 +180,7 @@ This naming scheme ensures:
 ### Command
 
 ```bash
-PYTHONPATH=reorg/python python -m drawing run --type <type> --poly <class>/<name>
+PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<class>/<name>
 ```
 
 ### Arguments
@@ -189,31 +189,31 @@ PYTHONPATH=reorg/python python -m drawing run --type <type> --poly <class>/<name
   - `raw`: Phase 1 output (raw.jsonl)
   - `noniso`: Phase 2 output (noniso.jsonl)
   - `exact`: Phase 3 output (exact.jsonl)
-- `--poly`: Polyhedron identifier in `CLASS/NAME` format (e.g., `archimedean/s07`)
+- `--poly`: Polyhedron path (e.g., `polyhedra/archimedean/s07`)
 
 ### Examples
 
 ```bash
 # Visualize raw output for archimedean/s07
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly archimedean/s07
+PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
 
 # Visualize nonisomorphic output for archimedean/s07
-PYTHONPATH=reorg/python python -m drawing run --type noniso --poly archimedean/s07
+PYTHONPATH=reorg/python python -m drawing run --type noniso --poly polyhedra/archimedean/s07
 
 # Visualize raw output for johnson/n20
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly johnson/n20
+PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/johnson/n20
 
 # Visualize nonisomorphic output for johnson/n20
-PYTHONPATH=reorg/python python -m drawing run --type noniso --poly johnson/n20
+PYTHONPATH=reorg/python python -m drawing run --type noniso --poly polyhedra/johnson/n20
 
 # Visualize raw output for platonic/r01
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly platonic/r01
+PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/platonic/r01
 
 # Visualize exact output for archimedean/s07
-PYTHONPATH=reorg/python python -m drawing run --type exact --poly archimedean/s07
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/archimedean/s07
 
 # Visualize exact output for johnson/n66
-PYTHONPATH=reorg/python python -m drawing run --type exact --poly johnson/n66
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66
 ```
 
 ### Execution Model
@@ -352,32 +352,32 @@ The drawing utility does NOT guarantee:
 
 ```bash
 # Phase 1: Generate raw unfoldings
-PYTHONPATH=reorg/python python -m rotational_unfolding run --poly johnson/n20
+PYTHONPATH=reorg/python python -m rotational_unfolding run --poly polyhedra/johnson/n20
 
 # Draw raw output (with labels)
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly johnson/n20
+PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/johnson/n20
 
 # Phase 2: Remove isomorphic duplicates
-PYTHONPATH=reorg/python python -m nonisomorphic run --poly johnson/n20
+PYTHONPATH=reorg/python python -m nonisomorphic run --poly polyhedra/johnson/n20
 
 # Draw noniso output (with labels)
-PYTHONPATH=reorg/python python -m drawing run --type noniso --poly johnson/n20
+PYTHONPATH=reorg/python python -m drawing run --type noniso --poly polyhedra/johnson/n20
 
 # Phase 3: Exact overlap verification
-PYTHONPATH=reorg/python python -m exact run --poly johnson/n20
+PYTHONPATH=reorg/python python -m exact run --poly polyhedra/johnson/n20
 
 # Draw exact output (shape only, no labels)
-PYTHONPATH=reorg/python python -m drawing run --type exact --poly johnson/n20
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n20
 ```
 
 ### Example: Debugging a Specific Record
 
 ```bash
 # Step 1: Generate raw.jsonl (Phase 1)
-PYTHONPATH=reorg/python python -m rotational_unfolding run --poly archimedean/s07
+PYTHONPATH=reorg/python python -m rotational_unfolding run --poly polyhedra/archimedean/s07
 
 # Step 2: Generate SVG files (drawing utility)
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly archimedean/s07
+PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
 
 # Step 3: Open SVG file 5 (corresponds to JSONL line 5, 0-based)
 open reorg/output/polyhedra/archimedean/s07/draw/raw/5.svg

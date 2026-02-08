@@ -30,7 +30,7 @@ The rotational unfolding pipeline consists of four independent stages. Running t
 
 `run_all` eliminates these issues. It provides:
 
-- **One command, one argument**: `--poly CLASS/NAME` is the only input.
+- **One command, one argument**: `--poly polyhedra/CLASS/NAME` is the only input.
 - **Reproducibility by invocation**: A single shell command fully reproduces the pipeline.
 - **Fail-fast behavior**: If any phase fails, execution stops immediately.
 
@@ -42,7 +42,7 @@ The rotational unfolding pipeline consists of four independent stages. Running t
 
 `run_all` はこれらの問題を排除します：
 
-- **1 コマンド、1 引数**: `--poly CLASS/NAME` が唯一の入力
+- **1 コマンド、1 引数**: `--poly polyhedra/CLASS/NAME` が唯一の入力
 - **呼び出しによる再現性**: 単一のシェルコマンドでパイプライン全体を再現可能
 - **即時停止**: いずれかのフェーズが失敗した場合、実行は即座に停止
 
@@ -66,27 +66,27 @@ Drawing は `exact` 出力に対してのみ実行されます。`raw` および
 ### Command / コマンド
 
 ```bash
-PYTHONPATH=reorg/python python -m run_all --poly <class>/<name>
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/<class>/<name>
 ```
 
 ### Examples / 実行例
 
 ```bash
 # Archimedean solid s07
-PYTHONPATH=reorg/python python -m run_all --poly archimedean/s07
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/archimedean/s07
 
 # Johnson solid n20
-PYTHONPATH=reorg/python python -m run_all --poly johnson/n20
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n20
 
 # Johnson solid n66
-PYTHONPATH=reorg/python python -m run_all --poly johnson/n66
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n66
 ```
 
 ### Arguments / 引数
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `--poly CLASS/NAME` | Yes | Polyhedron identifier. `CLASS` is the polyhedron family (e.g., `archimedean`, `johnson`). `NAME` is the specific polyhedron (e.g., `s07`, `n20`). |
+| `--poly polyhedra/CLASS/NAME` | Yes | Polyhedron path. `polyhedra` is a fixed prefix. `CLASS` is the polyhedron family (e.g., `archimedean`, `johnson`). `NAME` is the specific polyhedron (e.g., `s07`, `n20`). Shell Tab completion is supported. |
 
 The `--poly` argument is the only input. There are no optional flags.
 
@@ -109,7 +109,7 @@ The `--poly` argument is the only input. There are no optional flags.
 Invokes:
 
 ```bash
-python -m rotational_unfolding run --poly <class>/<name>
+python -m rotational_unfolding run --poly polyhedra/<class>/<name>
 ```
 
 - Calls the C++ binary to enumerate all rotational unfoldings.
@@ -125,7 +125,7 @@ python -m rotational_unfolding run --poly <class>/<name>
 Invokes:
 
 ```bash
-python -m nonisomorphic run --poly <class>/<name>
+python -m nonisomorphic run --poly polyhedra/<class>/<name>
 ```
 
 - Reads `raw.jsonl` (read-only).
@@ -142,7 +142,7 @@ python -m nonisomorphic run --poly <class>/<name>
 Invokes:
 
 ```bash
-python -m exact run --poly <class>/<name>
+python -m exact run --poly polyhedra/<class>/<name>
 ```
 
 - Reads `noniso.jsonl` (read-only).
@@ -159,7 +159,7 @@ python -m exact run --poly <class>/<name>
 Invokes:
 
 ```bash
-python -m drawing run --type exact --poly <class>/<name>
+python -m drawing run --type exact --poly polyhedra/<class>/<name>
 ```
 
 - Reads `exact.jsonl` (read-only).
@@ -259,7 +259,7 @@ A researcher studying a specific polyhedron runs the entire pipeline from scratc
 特定の多面体を研究する際に、パイプライン全体をゼロから実行する：
 
 ```bash
-PYTHONPATH=reorg/python python -m run_all --poly johnson/n66
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n66
 ```
 
 This produces all outputs (`raw.jsonl`, `run.json`, `noniso.jsonl`, `exact.jsonl`, `draw/exact/*.svg`) in a single invocation. The researcher can immediately inspect the SVG files to visually confirm the verified unfoldings.
@@ -274,7 +274,7 @@ For paper artifacts or shared experiments, the full pipeline is reproducible wit
 
 ```bash
 # Reproduce the complete result for archimedean s07
-PYTHONPATH=reorg/python python -m run_all --poly archimedean/s07
+PYTHONPATH=reorg/python python -m run_all --poly polyhedra/archimedean/s07
 ```
 
 The command is self-contained. No prior state, configuration files, or intermediate outputs are required.
