@@ -66,27 +66,27 @@ Drawing は `exact` 出力に対してのみ実行されます。`raw` および
 ### Command / コマンド
 
 ```bash
-PYTHONPATH=python python -m run_all --poly polyhedra/<class>/<name> [--no-labels]
+PYTHONPATH=python python -m run_all --poly data/polyhedra/<class>/<name> [--no-labels]
 ```
 
 ### Examples / 実行例
 
 ```bash
 # Archimedean solid s07
-PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m run_all --poly data/polyhedra/archimedean/s07
 
 # Johnson solid n20 (without labels / ラベルなし)
-PYTHONPATH=python python -m run_all --poly polyhedra/johnson/n20 --no-labels
+PYTHONPATH=python python -m run_all --poly data/polyhedra/johnson/n20 --no-labels
 
 # Johnson solid n66
-PYTHONPATH=python python -m run_all --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m run_all --poly data/polyhedra/johnson/n66
 ```
 
 ### Arguments / 引数
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `--poly polyhedra/CLASS/NAME` | Yes | Polyhedron path. `polyhedra` is a fixed prefix. `CLASS` is the polyhedron family (e.g., `archimedean`, `johnson`). `NAME` is the specific polyhedron (e.g., `s07`, `n20`). Shell Tab completion is supported. |
+| `--poly data/polyhedra/CLASS/NAME` | Yes | Path to polyhedron data directory (e.g., `data/polyhedra/archimedean/s07`). Shell Tab completion is supported. / 多面体データディレクトリへのパス。Tab 補完対応。 |
 | `--no-labels` | No | Hide face and edge labels in exact drawing. Passed to the drawing phase only. Default: labels displayed. / exact 描画で面番号・辺番号のラベルを非表示にする。drawing フェーズにのみ伝播される。デフォルト: ラベル表示。 |
 
 ---
@@ -106,7 +106,7 @@ PYTHONPATH=python python -m run_all --poly polyhedra/johnson/n66
 Invokes:
 
 ```bash
-python -m rotational_unfolding run --poly polyhedra/<class>/<name>
+python -m rotational_unfolding run --poly data/polyhedra/<class>/<name>
 ```
 
 - Calls the C++ binary to enumerate all rotational unfoldings.
@@ -122,7 +122,7 @@ python -m rotational_unfolding run --poly polyhedra/<class>/<name>
 Invokes:
 
 ```bash
-python -m nonisomorphic run --poly polyhedra/<class>/<name>
+python -m nonisomorphic run --poly data/polyhedra/<class>/<name>
 ```
 
 - Reads `raw.jsonl` (read-only).
@@ -139,7 +139,7 @@ python -m nonisomorphic run --poly polyhedra/<class>/<name>
 Invokes:
 
 ```bash
-python -m exact run --poly polyhedra/<class>/<name>
+python -m exact run --poly data/polyhedra/<class>/<name>
 ```
 
 - Reads `noniso.jsonl` (read-only).
@@ -157,10 +157,10 @@ Invokes:
 
 ```bash
 # Default (with labels) / デフォルト（ラベル付き）
-python -m drawing run --type exact --poly polyhedra/<class>/<name>
+python -m drawing run --type exact --poly data/polyhedra/<class>/<name>
 
 # When --no-labels is specified / --no-labels 指定時
-python -m drawing run --type exact --poly polyhedra/<class>/<name> --no-labels
+python -m drawing run --type exact --poly data/polyhedra/<class>/<name> --no-labels
 ```
 
 - Reads `exact.jsonl` (read-only).
@@ -267,7 +267,7 @@ A researcher studying a specific polyhedron runs the entire pipeline from scratc
 特定の多面体を研究する際に、パイプライン全体をゼロから実行する：
 
 ```bash
-PYTHONPATH=python python -m run_all --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m run_all --poly data/polyhedra/johnson/n66
 ```
 
 This produces all outputs (`raw.jsonl`, `run.json`, `noniso.jsonl`, `exact.jsonl`, `draw/exact/*.svg`) in a single invocation. The researcher can immediately inspect the SVG files to visually confirm the verified unfoldings. Add `--no-labels` to generate polygon-only SVGs without face and edge labels.
@@ -282,10 +282,10 @@ For paper artifacts or shared experiments, the full pipeline is reproducible wit
 
 ```bash
 # Reproduce the complete result for archimedean s07
-PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m run_all --poly data/polyhedra/archimedean/s07
 
 # Reproduce with no labels / ラベルなしで再現
-PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07 --no-labels
+PYTHONPATH=python python -m run_all --poly data/polyhedra/archimedean/s07 --no-labels
 ```
 
 The command is self-contained. No prior state, configuration files, or intermediate outputs are required.
@@ -299,7 +299,7 @@ After execution, the `draw/exact/` directory contains one SVG per verified unfol
 実行後、`draw/exact/` ディレクトリに検証済み展開図ごとの SVG が格納されます。デフォルトでは面番号・辺番号のラベルが表示されます。多角形のアウトラインのみを描画するには、`run_all` に `--no-labels` を指定してください：
 
 ```bash
-PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07 --no-labels
+PYTHONPATH=python python -m run_all --poly data/polyhedra/archimedean/s07 --no-labels
 ```
 
 ---
@@ -311,7 +311,7 @@ PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07 --no-labels
 `run_all` は各フェーズの前にステップマーカーを stdout に出力します。すべてのサブプロセス出力（stdout・stderr）は抑制されずにそのまま表示されます。
 
 ```
-[run_all] Pipeline start: polyhedra/archimedean/s07
+[run_all] Pipeline start: data/polyhedra/archimedean/s07
 [run_all] Python: /path/to/python
 [run_all] Drawing option: --no-labels    ← only when --no-labels is specified
 
@@ -327,7 +327,7 @@ PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07 --no-labels
 [run_all] Drawing: exact
 ... (Drawing output) ...
 
-[run_all] All steps completed for: polyhedra/archimedean/s07
+[run_all] All steps completed for: data/polyhedra/archimedean/s07
 ```
 
 On failure, the pipeline terminates with an error message indicating which step failed:

@@ -250,12 +250,12 @@ Contains all information needed to reproduce the experiment:
 ```bash
 # From repository root (PYTHONPATH must be set)
 cd /path/to/RotationalUnfolding
-PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/archimedean/s05
+PYTHONPATH=python python -m rotational_unfolding run --poly data/polyhedra/archimedean/s05
 ```
 
 ### Arguments
 
-- `--poly polyhedra/CLASS/NAME`: Polyhedron path (e.g., `polyhedra/platonic/r01`, `polyhedra/archimedean/s05`) **[required]**
+- `--poly data/polyhedra/CLASS/NAME`: Path to polyhedron data directory (e.g., `data/polyhedra/archimedean/s05`) **[required]**
 - `--symmetric auto|on|off`: Symmetry pruning mode (default: `auto`)
 
 ### Output Directory Structure

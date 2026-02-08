@@ -254,21 +254,21 @@ for record in raw_jsonl:
 ```bash
 # From repository root (PYTHONPATH must be set)
 cd /path/to/RotationalUnfolding
-PYTHONPATH=python python -m nonisomorphic run --poly polyhedra/archimedean/s05
+PYTHONPATH=python python -m nonisomorphic run --poly data/polyhedra/archimedean/s05
 ```
 
 ### Arguments
 
-- `--poly polyhedra/CLASS/NAME`: Polyhedron path (e.g., `polyhedra/platonic/r01`, `polyhedra/archimedean/s05`) **[required]**
+- `--poly data/polyhedra/CLASS/NAME`: Path to polyhedron data directory (e.g., `data/polyhedra/archimedean/s05`) **[required]**
 
 ### Typical Workflow
 
 ```bash
 # Step 1: Generate raw.jsonl (Phase 1)
-PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m rotational_unfolding run --poly data/polyhedra/archimedean/s07
 
 # Step 2: Remove isomorphic duplicates (Phase 2)
-PYTHONPATH=python python -m nonisomorphic run --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m nonisomorphic run --poly data/polyhedra/archimedean/s07
 
 # Result: noniso.jsonl is created alongside raw.jsonl
 ```

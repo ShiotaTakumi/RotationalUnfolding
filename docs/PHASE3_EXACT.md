@@ -377,12 +377,12 @@ output/polyhedra/<class>/<name>/
 ```bash
 # From repository root (PYTHONPATH must be set)
 cd /path/to/RotationalUnfolding
-PYTHONPATH=python python -m exact run --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m exact run --poly data/polyhedra/archimedean/s07
 ```
 
 ### Arguments
 
-- `--poly polyhedra/CLASS/NAME`: Polyhedron path (e.g., `polyhedra/archimedean/s07`, `polyhedra/johnson/n20`) **[required]**
+- `--poly data/polyhedra/CLASS/NAME`: Path to polyhedron data directory (e.g., `data/polyhedra/archimedean/s07`) **[required]**
 
 ### Prerequisites / 前提条件
 
@@ -396,13 +396,13 @@ Phase 3 requires:
 
 ```bash
 # Step 1: Generate raw.jsonl (Phase 1)
-PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m rotational_unfolding run --poly data/polyhedra/johnson/n66
 
 # Step 2: Remove isomorphic duplicates (Phase 2)
-PYTHONPATH=python python -m nonisomorphic run --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m nonisomorphic run --poly data/polyhedra/johnson/n66
 
 # Step 3: Verify exact overlaps (Phase 3)
-PYTHONPATH=python python -m exact run --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m exact run --poly data/polyhedra/johnson/n66
 ```
 
 ### Example Output / 出力例

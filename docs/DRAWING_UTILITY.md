@@ -180,7 +180,7 @@ This naming scheme ensures:
 ### Command
 
 ```bash
-PYTHONPATH=python python -m drawing run --type <type> --poly polyhedra/<class>/<name> [--no-labels]
+PYTHONPATH=python python -m drawing run --type <type> --poly data/polyhedra/<class>/<name> [--no-labels]
 ```
 
 ### Arguments
@@ -189,38 +189,38 @@ PYTHONPATH=python python -m drawing run --type <type> --poly polyhedra/<class>/<
   - `raw`: Phase 1 output (raw.jsonl)
   - `noniso`: Phase 2 output (noniso.jsonl)
   - `exact`: Phase 3 output (exact.jsonl)
-- `--poly`: Polyhedron path (e.g., `polyhedra/archimedean/s07`)
+- `--poly`: Path to polyhedron data directory (e.g., `data/polyhedra/archimedean/s07`)
 - `--no-labels`: Optional. Hide face and edge labels (draw polygons only). Default: labels displayed.
 
 ### Examples
 
 ```bash
 # Visualize raw output for archimedean/s07
-PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m drawing run --type raw --poly data/polyhedra/archimedean/s07
 
 # Visualize nonisomorphic output for archimedean/s07
-PYTHONPATH=python python -m drawing run --type noniso --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m drawing run --type noniso --poly data/polyhedra/archimedean/s07
 
 # Visualize raw output for johnson/n20
-PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type raw --poly data/polyhedra/johnson/n20
 
 # Visualize nonisomorphic output for johnson/n20
-PYTHONPATH=python python -m drawing run --type noniso --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type noniso --poly data/polyhedra/johnson/n20
 
 # Visualize raw output for platonic/r01
-PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/platonic/r01
+PYTHONPATH=python python -m drawing run --type raw --poly data/polyhedra/platonic/r01
 
 # Visualize exact output for archimedean/s07
-PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/archimedean/s07
 
 # Visualize exact output for johnson/n66
-PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/johnson/n66
 
 # Visualize exact output without labels (polygons only)
-PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/johnson/n66 --no-labels
+PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/johnson/n66 --no-labels
 
 # Visualize raw output without labels
-PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/archimedean/s07 --no-labels
+PYTHONPATH=python python -m drawing run --type raw --poly data/polyhedra/archimedean/s07 --no-labels
 ```
 
 ### Execution Model
@@ -357,32 +357,32 @@ The drawing utility does NOT guarantee:
 
 ```bash
 # Phase 1: Generate raw unfoldings
-PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m rotational_unfolding run --poly data/polyhedra/johnson/n20
 
 # Draw raw output (with labels)
-PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type raw --poly data/polyhedra/johnson/n20
 
 # Phase 2: Remove isomorphic duplicates
-PYTHONPATH=python python -m nonisomorphic run --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m nonisomorphic run --poly data/polyhedra/johnson/n20
 
 # Draw noniso output (with labels)
-PYTHONPATH=python python -m drawing run --type noniso --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type noniso --poly data/polyhedra/johnson/n20
 
 # Phase 3: Exact overlap verification
-PYTHONPATH=python python -m exact run --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m exact run --poly data/polyhedra/johnson/n20
 
 # Draw exact output (shape only, no labels)
-PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/johnson/n20
 ```
 
 ### Example: Debugging a Specific Record
 
 ```bash
 # Step 1: Generate raw.jsonl (Phase 1)
-PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m rotational_unfolding run --poly data/polyhedra/archimedean/s07
 
 # Step 2: Generate SVG files (drawing utility)
-PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m drawing run --type raw --poly data/polyhedra/archimedean/s07
 
 # Step 3: Open SVG file 5 (corresponds to JSONL line 5, 0-based)
 open output/polyhedra/archimedean/s07/draw/raw/5.svg

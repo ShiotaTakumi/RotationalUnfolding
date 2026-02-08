@@ -50,27 +50,27 @@ pip install -r requirements.txt
 cd cpp && make && cd ..
 
 # Run the full pipeline / パイプラインの一括実行
-PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s12L
+PYTHONPATH=python python -m run_all --poly data/polyhedra/archimedean/s12L
 
 # Run the full pipeline without labels / ラベルなしで一括実行
-PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s12L --no-labels
+PYTHONPATH=python python -m run_all --poly data/polyhedra/archimedean/s12L --no-labels
 ```
 
 ### Running Individual Phases / 個別フェーズの実行
 
 ```bash
 # Phase 1: Raw enumeration / 全列挙
-PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/archimedean/s12L
+PYTHONPATH=python python -m rotational_unfolding run --poly data/polyhedra/archimedean/s12L
 
 # Phase 2: Nonisomorphic filtering / 同型除去
-PYTHONPATH=python python -m nonisomorphic run --poly polyhedra/archimedean/s12L
+PYTHONPATH=python python -m nonisomorphic run --poly data/polyhedra/archimedean/s12L
 
 # Phase 3: Exact overlap detection / 厳密重なり判定
-PYTHONPATH=python python -m exact run --poly polyhedra/archimedean/s12L
+PYTHONPATH=python python -m exact run --poly data/polyhedra/archimedean/s12L
 
 # Drawing: SVG generation / SVG 描画
-PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/archimedean/s12L
-PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/archimedean/s12L --no-labels
+PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/archimedean/s12L
+PYTHONPATH=python python -m drawing run --type exact --poly data/polyhedra/archimedean/s12L --no-labels
 ```
 
 ## Directory Structure / ディレクトリ構成
