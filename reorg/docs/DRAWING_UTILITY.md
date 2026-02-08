@@ -180,7 +180,7 @@ This naming scheme ensures:
 ### Command
 
 ```bash
-PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<class>/<name>
+PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<class>/<name> [--no-labels]
 ```
 
 ### Arguments
@@ -190,6 +190,7 @@ PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<cl
   - `noniso`: Phase 2 output (noniso.jsonl)
   - `exact`: Phase 3 output (exact.jsonl)
 - `--poly`: Polyhedron path (e.g., `polyhedra/archimedean/s07`)
+- `--no-labels`: Optional. Hide face and edge labels (draw polygons only). Default: labels displayed.
 
 ### Examples
 
@@ -214,6 +215,12 @@ PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/arch
 
 # Visualize exact output for johnson/n66
 PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66
+
+# Visualize exact output without labels (polygons only)
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66 --no-labels
+
+# Visualize raw output without labels
+PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07 --no-labels
 ```
 
 ### Execution Model
@@ -245,15 +252,14 @@ Each SVG file visualizes a single partial unfolding record with:
 - **Edge IDs**: Red text on shared edges (not on base face)
 - **ViewBox**: Automatically computed to fit all vertices with 5% margin
 
-**Label visibility by type:**
+**Label visibility by `--no-labels` option:**
 
-| Type | Polygons | Face IDs | Edge IDs |
-|------|----------|----------|----------|
-| `raw` | Displayed | Displayed | Displayed |
-| `noniso` | Displayed | Displayed | Displayed |
-| `exact` | Displayed | **Hidden** | **Hidden** |
+| Option | Polygons | Face IDs | Edge IDs |
+|--------|----------|----------|----------|
+| (default) | Displayed | Displayed | Displayed |
+| `--no-labels` | Displayed | **Hidden** | **Hidden** |
 
-For `exact`, face and edge labels are intentionally suppressed. The `exact` output represents the final verified result; labels reduce visual clarity and are not needed for shape verification. The JSONL record remains the authoritative source for all label information.
+Label visibility is controlled by the `--no-labels` option and applies uniformly to all types (`raw`, `noniso`, `exact`). By default, all labels are displayed. When `--no-labels` is specified, face and edge labels are suppressed and only polygon outlines are drawn. The JSONL record remains the authoritative source for all label information.
 
 ### 視覚要素
 
@@ -264,15 +270,14 @@ For `exact`, face and edge labels are intentionally suppressed. The `exact` outp
 - **辺番号**: 共有辺上に赤字（ベース面は除く）
 - **ViewBox**: 全頂点を包含するよう 5% マージン付きで自動計算
 
-**type ごとのラベル表示：**
+**`--no-labels` オプションによるラベル表示：**
 
-| Type | 多角形 | 面番号 | 辺番号 |
-|------|--------|--------|--------|
-| `raw` | 表示 | 表示 | 表示 |
-| `noniso` | 表示 | 表示 | 表示 |
-| `exact` | 表示 | **非表示** | **非表示** |
+| オプション | 多角形 | 面番号 | 辺番号 |
+|------------|--------|--------|--------|
+| （デフォルト） | 表示 | 表示 | 表示 |
+| `--no-labels` | 表示 | **非表示** | **非表示** |
 
-`exact` では面番号と辺番号を意図的に非表示にします。`exact` 出力は最終的な検証済み結果であり、ラベルは視認性を低下させ、形状確認には不要です。すべてのラベル情報は JSONL レコードが権威的ソースとして保持します。
+ラベル表示は `--no-labels` オプションで制御され、すべての type（`raw`、`noniso`、`exact`）に対して統一的に適用されます。デフォルトではすべてのラベルが表示されます。`--no-labels` を指定すると面番号と辺番号が非表示となり、多角形のアウトラインのみが描画されます。すべてのラベル情報は JSONL レコードが権威的ソースとして保持します。
 
 ### Fixed Properties (for Consistency)
 

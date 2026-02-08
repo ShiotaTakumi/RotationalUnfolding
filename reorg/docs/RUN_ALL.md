@@ -283,9 +283,9 @@ The command is self-contained. No prior state, configuration files, or intermedi
 
 ### Visual Inspection of Exact Results / Exact 結果の目視確認
 
-After execution, the `draw/exact/` directory contains one SVG per verified unfolding. These SVGs render polygon outlines only (no face or edge labels), providing clean visual confirmation of the final results.
+After execution, the `draw/exact/` directory contains one SVG per verified unfolding. By default, these SVGs include face and edge labels. To draw polygon outlines only, use `--no-labels` when invoking the drawing utility separately.
 
-実行後、`draw/exact/` ディレクトリに検証済み展開図ごとの SVG が格納されます。これらの SVG は多角形のアウトラインのみ（面ラベル・辺ラベルなし）を描画し、最終結果のクリーンな目視確認を提供します。
+実行後、`draw/exact/` ディレクトリに検証済み展開図ごとの SVG が格納されます。デフォルトでは面番号・辺番号のラベルが表示されます。多角形のアウトラインのみを描画するには、drawing ユーティリティを個別に `--no-labels` 付きで呼び出してください。
 
 ---
 

@@ -51,6 +51,9 @@ PYTHONPATH=reorg/python python -m exact run --poly polyhedra/archimedean/s07
 # Drawing (raw / noniso / exact)
 PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
 PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66
+
+# Drawing without labels (polygons only)
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66 --no-labels
 ```
 
 ## Output

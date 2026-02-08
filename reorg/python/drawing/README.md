@@ -7,7 +7,7 @@ This is a **verification utility**, not a Phase output.
 ## Usage
 
 ```bash
-PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<class>/<name>
+PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<class>/<name> [--no-labels]
 ```
 
 ### Arguments
@@ -15,20 +15,24 @@ PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<cl
 - `--type`: Output type to visualize
   - `raw`: Phase 1 output (raw.jsonl)
   - `noniso`: Phase 2 output (noniso.jsonl)
-  - `exact`: Phase 3 output (exact.jsonl) — labels hidden
+  - `exact`: Phase 3 output (exact.jsonl)
 - `--poly`: Polyhedron path (e.g., `polyhedra/archimedean/s07`)
+- `--no-labels`: Hide face and edge labels (draw polygons only). Default: labels displayed.
 
 ## Examples
 
 ```bash
-# Draw SVG files for raw output of archimedean/s07
+# Draw SVG files for raw output (with labels, default)
 PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
 
-# Draw SVG files for noniso output of johnson/n20
+# Draw SVG files for noniso output (with labels, default)
 PYTHONPATH=reorg/python python -m drawing run --type noniso --poly polyhedra/johnson/n20
 
-# Draw SVG files for exact output (no labels)
+# Draw SVG files for exact output (with labels, default)
 PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66
+
+# Draw SVG files without labels (polygons only)
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66 --no-labels
 ```
 
 ## Output

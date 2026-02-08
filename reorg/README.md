@@ -73,7 +73,7 @@ PYTHONPATH=reorg/python python -m exact run --poly polyhedra/<class>/<name>
 **Drawing — SVG Visualization / SVG 可視化:**
 
 ```bash
-PYTHONPATH=reorg/python python -m drawing run --type raw|noniso|exact --poly polyhedra/<class>/<name>
+PYTHONPATH=reorg/python python -m drawing run --type raw|noniso|exact --poly polyhedra/<class>/<name> [--no-labels]
 ```
 
 ### Examples / 実行例
@@ -88,11 +88,14 @@ PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n20
 # Phase 3 only (requires existing noniso.jsonl)
 PYTHONPATH=reorg/python python -m exact run --poly polyhedra/johnson/n66
 
-# Draw raw unfoldings
+# Draw raw unfoldings (with labels, default)
 PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
 
-# Draw exact-verified unfoldings (no labels, shape only)
+# Draw exact-verified unfoldings (with labels, default)
 PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n20
+
+# Draw without labels (polygons only)
+PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n20 --no-labels
 ```
 
 All commands are `cwd`-independent. Run from the repository root.

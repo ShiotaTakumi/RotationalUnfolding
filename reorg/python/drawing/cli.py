@@ -127,6 +127,13 @@ def create_parser():
         help="Polyhedron path (e.g., polyhedra/archimedean/s07)"
     )
     
+    run_parser.add_argument(
+        "--no-labels",
+        action="store_true",
+        default=False,
+        help="Hide face and edge labels (draw polygons only)"
+    )
+    
     return parser
 
 
@@ -163,22 +170,18 @@ def main():
                 repo_root, args.poly, args.type
             )
             
-            print(f"Drawing {args.type} output for: {args.poly}")
+            show_labels = not args.no_labels
+            
+            label_status = "no labels" if args.no_labels else "with labels"
+            print(f"Drawing {args.type} output for: {args.poly} ({label_status})")
             print(f"Input: {input_jsonl}")
             print(f"Output: {output_dir}/")
             print("")
             
-            # Draw based on type
-            # type に基づいて描画
-            if args.type == "raw":
-                num_generated = draw_raw_jsonl(input_jsonl, output_dir)
-                print(f"Done. Generated {num_generated} SVG files.")
-            elif args.type == "noniso":
-                num_generated = draw_raw_jsonl(input_jsonl, output_dir)
-                print(f"Done. Generated {num_generated} SVG files.")
-            elif args.type == "exact":
-                num_generated = draw_raw_jsonl(input_jsonl, output_dir, show_labels=False)
-                print(f"Done. Generated {num_generated} SVG files.")
+            # Draw
+            # 描画
+            num_generated = draw_raw_jsonl(input_jsonl, output_dir, show_labels=show_labels)
+            print(f"Done. Generated {num_generated} SVG files.")
             
             sys.exit(0)
         
