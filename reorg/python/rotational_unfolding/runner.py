@@ -46,30 +46,32 @@ def find_repo_root():
 
 def resolve_polyhedron_paths(repo_root, poly_id):
     """
-    Resolves polyhedron data paths from a CLASS/NAME identifier.
+    Resolves polyhedron data paths from a path-style identifier.
     
-    CLASS/NAME 識別子から多面体データのパスを解決する。
+    パス形式の識別子から多面体データのパスを解決する。
     
     Args:
         repo_root (Path): Repository root path.
-        poly_id (str): Polyhedron identifier in CLASS/NAME format.
+        poly_id (str): Polyhedron path (e.g., "polyhedra/archimedean/s05").
     
     Returns:
         tuple: (polyhedron_json_path, root_pairs_json_path, poly_class, poly_name)
     
     Raises:
-        ValueError: If the identifier format is invalid.
+        ValueError: If the path does not contain at least a class and name component.
         FileNotFoundError: If the polyhedron data files do not exist.
     """
-    parts = poly_id.split("/")
-    if len(parts) != 2:
+    poly_path = Path(poly_id)
+    if len(poly_path.parts) < 2:
         raise ValueError(
-            f"Invalid poly_id format: {poly_id}. Expected CLASS/NAME (e.g., archimedean/s05)"
+            f"Invalid poly path: {poly_id}. "
+            f"Expected a path with at least class/name (e.g., polyhedra/archimedean/s05)"
         )
     
-    poly_class, poly_name = parts
+    poly_name = poly_path.name
+    poly_class = poly_path.parent.name
     
-    poly_dir = repo_root / "reorg" / "data" / "polyhedra" / poly_class / poly_name
+    poly_dir = repo_root / "reorg" / "data" / poly_path
     
     if not poly_dir.is_dir():
         raise FileNotFoundError(f"Polyhedron directory not found: {poly_dir}")
@@ -112,27 +114,26 @@ def find_cpp_binary(repo_root):
     return cpp_binary
 
 
-def get_canonical_output_dir(repo_root, poly_class, poly_name):
+def get_canonical_output_dir(repo_root, poly_path):
     """
     Returns the canonical output directory for a specific polyhedron.
     
-    Output is always written to reorg/output/polyhedra/<class>/<name>/ 
+    Output is always written to reorg/output/<poly_path>/
     regardless of cwd. This ensures deterministic, polyhedron-specific paths.
     
     特定の多面体の正規出力ディレクトリを返す。
     
-    出力は cwd に関わらず常に reorg/output/polyhedra/<class>/<name>/ に書き込まれる。
+    出力は cwd に関わらず常に reorg/output/<poly_path>/ に書き込まれる。
     これにより、決定的で多面体固有のパスが保証される。
     
     Args:
         repo_root (Path): Repository root path.
-        poly_class (str): Polyhedron class (e.g., "archimedean").
-        poly_name (str): Polyhedron name (e.g., "s05").
+        poly_path (Path): Polyhedron path (e.g., Path("polyhedra/archimedean/s05")).
     
     Returns:
-        Path: Absolute path to reorg/output/polyhedra/<class>/<name>/
+        Path: Absolute path to reorg/output/<poly_path>/
     """
-    return repo_root / "reorg" / "output" / "polyhedra" / poly_class / poly_name
+    return repo_root / "reorg" / "output" / poly_path
 
 
 def generate_run_id():
@@ -307,7 +308,7 @@ def run_rotational_unfolding(poly_id, symmetric_mode):
     指定された多面体について回転展開を実行する。
     
     Args:
-        poly_id (str): Polyhedron identifier in CLASS/NAME format.
+        poly_id (str): Polyhedron path (e.g., "polyhedra/archimedean/s05").
         symmetric_mode (str): Symmetry mode (auto, on, or off).
     
     Returns:
@@ -315,26 +316,26 @@ def run_rotational_unfolding(poly_id, symmetric_mode):
     
     Workflow:
         1. Resolve paths (polyhedron data, C++ binary)
-        2. Create canonical output directory: reorg/output/polyhedra/<class>/<name>/
+        2. Create canonical output directory: reorg/output/<poly_path>/
         3. Invoke C++ binary to generate raw.jsonl
         4. Generate run.json metadata
         5. Report results
     
     手順:
         1. パス解決（多面体データ、C++ バイナリ）
-        2. 正規出力ディレクトリを作成: reorg/output/polyhedra/<class>/<name>/
+        2. 正規出力ディレクトリを作成: reorg/output/<poly_path>/
         3. C++ バイナリを呼び出して raw.jsonl を生成
         4. run.json メタデータを生成
         5. 結果の報告
     
     Output Convention:
-        - Output goes to: reorg/output/polyhedra/<class>/<name>/
+        - Output goes to: reorg/output/<poly_path>/
         - This path is deterministic and polyhedron-specific
         - Overwriting is allowed (latest run wins)
         - No timestamp-based directories
     
     出力規約:
-        - 出力先: reorg/output/polyhedra/<class>/<name>/
+        - 出力先: reorg/output/<poly_path>/
         - このパスは決定的で多面体固有
         - 上書き可能（最新の実行が優先）
         - タイムスタンプベースのディレクトリは使用しない
@@ -360,7 +361,7 @@ def run_rotational_unfolding(poly_id, symmetric_mode):
     print("")
     
     # Get canonical output directory for this polyhedron
-    output_dir = get_canonical_output_dir(repo_root, poly_class, poly_name)
+    output_dir = get_canonical_output_dir(repo_root, Path(poly_id))
     output_dir.mkdir(parents=True, exist_ok=True)
     
     raw_jsonl_path = output_dir / "raw.jsonl"

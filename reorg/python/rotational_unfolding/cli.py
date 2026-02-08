@@ -39,7 +39,7 @@ def create_parser():
     run_parser.add_argument(
         "--poly",
         required=True,
-        help="Polyhedron identifier in CLASS/NAME format (e.g., archimedean/s05)"
+        help="Polyhedron path (e.g., polyhedra/archimedean/s05)"
     )
     
     run_parser.add_argument(
@@ -59,8 +59,8 @@ def main():
     CLI のメイン入口。
     
     Example usage:
-        python -m rotational_unfolding run --poly archimedean/s05
-        python -m rotational_unfolding run --poly archimedean/s01 --symmetric on
+        python -m rotational_unfolding run --poly polyhedra/archimedean/s05
+        python -m rotational_unfolding run --poly polyhedra/archimedean/s01 --symmetric on
     
     Output location:
         All output is written to reorg/output/<experiment-id>/

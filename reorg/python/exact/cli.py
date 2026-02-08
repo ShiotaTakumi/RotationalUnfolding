@@ -42,26 +42,28 @@ def resolve_paths(repo_root, poly_id):
 
     Args:
         repo_root (Path): Repository root path
-        poly_id (str): Polyhedron identifier in CLASS/NAME format
+        poly_id (str): Polyhedron path (e.g., "polyhedra/archimedean/s07")
 
     Returns:
         tuple: (noniso_jsonl_path, polyhedron_json_path, exact_jsonl_path, poly_class, poly_name)
 
     Raises:
-        ValueError: If poly_id format is invalid
+        ValueError: If poly_id path does not contain at least class/name
         FileNotFoundError: If required input files do not exist
     """
-    parts = poly_id.split("/")
-    if len(parts) != 2:
+    poly_path = Path(poly_id)
+    if len(poly_path.parts) < 2:
         raise ValueError(
-            f"Invalid poly_id format: {poly_id}. Expected CLASS/NAME (e.g., archimedean/s07)"
+            f"Invalid poly path: {poly_id}. "
+            f"Expected a path with at least class/name (e.g., polyhedra/archimedean/s07)"
         )
 
-    poly_class, poly_name = parts
+    poly_name = poly_path.name
+    poly_class = poly_path.parent.name
 
     # Input: noniso.jsonl (Phase 2 output)
     # 入力: noniso.jsonl（Phase 2 出力）
-    output_dir = repo_root / "reorg" / "output" / "polyhedra" / poly_class / poly_name
+    output_dir = repo_root / "reorg" / "output" / poly_path
     noniso_jsonl_path = output_dir / "noniso.jsonl"
 
     if not noniso_jsonl_path.is_file():
@@ -72,7 +74,7 @@ def resolve_paths(repo_root, poly_id):
 
     # Input: polyhedron.json (polyhedron structure)
     # 入力: polyhedron.json（多面体構造）
-    data_dir = repo_root / "reorg" / "data" / "polyhedra" / poly_class / poly_name
+    data_dir = repo_root / "reorg" / "data" / poly_path
     polyhedron_json_path = data_dir / "polyhedron.json"
 
     if not polyhedron_json_path.is_file():
@@ -112,7 +114,7 @@ def create_parser():
     run_parser.add_argument(
         "--poly",
         required=True,
-        help="Polyhedron identifier in CLASS/NAME format (e.g., archimedean/s07)"
+        help="Polyhedron path (e.g., polyhedra/archimedean/s07)"
     )
 
     return parser
@@ -125,8 +127,8 @@ def main():
     厳密重なり判定 CLI のメイン入口。
 
     Example usage:
-        PYTHONPATH=reorg/python python -m exact run --poly archimedean/s07
-        PYTHONPATH=reorg/python python -m exact run --poly johnson/n20
+        PYTHONPATH=reorg/python python -m exact run --poly polyhedra/archimedean/s07
+        PYTHONPATH=reorg/python python -m exact run --poly polyhedra/johnson/n20
 
     Process:
         1. Resolve paths (noniso.jsonl, polyhedron.json, exact.jsonl)

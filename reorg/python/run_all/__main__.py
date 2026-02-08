@@ -5,10 +5,10 @@ Executes the full rotational unfolding pipeline:
     Phase 1 (raw.jsonl) → Phase 2 (noniso.jsonl) → Phase 3 (exact.jsonl) → Drawing (exact SVG)
 
 Usage:
-    PYTHONPATH=reorg/python python -m run_all --poly <class>/<name>
+    PYTHONPATH=reorg/python python -m run_all --poly polyhedra/<class>/<name>
 
 Example:
-    PYTHONPATH=reorg/python python -m run_all --poly archimedean/s07
+    PYTHONPATH=reorg/python python -m run_all --poly polyhedra/archimedean/s07
 """
 
 import argparse
@@ -24,7 +24,7 @@ def create_parser():
     parser.add_argument(
         "--poly",
         required=True,
-        help="Polyhedron identifier in CLASS/NAME format (e.g., archimedean/s07)",
+        help="Polyhedron path (e.g., polyhedra/archimedean/s07)",
     )
     return parser
 

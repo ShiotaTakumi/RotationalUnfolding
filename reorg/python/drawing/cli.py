@@ -36,33 +36,35 @@ def find_repo_root():
 
 def resolve_poly_paths(repo_root, poly_id, output_type):
     """
-    Resolves paths for input JSONL and output directory based on polyhedron ID and type.
+    Resolves paths for input JSONL and output directory based on polyhedron path and type.
     
-    polyhedron ID と type から入力 JSONL と出力ディレクトリのパスを解決する。
+    polyhedron パスと type から入力 JSONL と出力ディレクトリのパスを解決する。
     
     Args:
         repo_root (Path): Repository root path.
-        poly_id (str): Polyhedron identifier in CLASS/NAME format (e.g., "archimedean/s07").
+        poly_id (str): Polyhedron path (e.g., "polyhedra/archimedean/s07").
         output_type (str): Output type ("raw", "noniso", "exact").
     
     Returns:
         tuple: (input_jsonl_path, output_dir_path, poly_class, poly_name)
     
     Raises:
-        ValueError: If poly_id format is invalid.
+        ValueError: If poly_id path does not contain at least class/name.
         FileNotFoundError: If input JSONL does not exist.
     """
-    parts = poly_id.split("/")
-    if len(parts) != 2:
+    poly_path = Path(poly_id)
+    if len(poly_path.parts) < 2:
         raise ValueError(
-            f"Invalid poly_id format: {poly_id}. Expected CLASS/NAME (e.g., archimedean/s07)"
+            f"Invalid poly path: {poly_id}. "
+            f"Expected a path with at least class/name (e.g., polyhedra/archimedean/s07)"
         )
     
-    poly_class, poly_name = parts
+    poly_name = poly_path.name
+    poly_class = poly_path.parent.name
     
     # Base output directory for this polyhedron
     # この多面体の基本出力ディレクトリ
-    base_dir = repo_root / "reorg" / "output" / "polyhedra" / poly_class / poly_name
+    base_dir = repo_root / "reorg" / "output" / poly_path
     
     # Determine input JSONL path based on type
     # type に基づいて入力 JSONL のパスを決定
@@ -122,7 +124,7 @@ def create_parser():
     run_parser.add_argument(
         "--poly",
         required=True,
-        help="Polyhedron identifier in CLASS/NAME format (e.g., archimedean/s07)"
+        help="Polyhedron path (e.g., polyhedra/archimedean/s07)"
     )
     
     return parser
@@ -135,9 +137,9 @@ def main():
     描画 CLI のメイン入口。
     
     Example usage:
-        PYTHONPATH=reorg/python python -m drawing run --type raw --poly archimedean/s07
-        PYTHONPATH=reorg/python python -m drawing run --type noniso --poly platonic/r01
-        PYTHONPATH=reorg/python python -m drawing run --type exact --poly johnson/n20
+        PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
+        PYTHONPATH=reorg/python python -m drawing run --type noniso --poly polyhedra/platonic/r01
+        PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n20
     
     Execution model:
         すべての実行は cwd 非依存で、リポジトリルートを基準にパスを解決する。
