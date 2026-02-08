@@ -29,7 +29,7 @@ Phase 1 focuses on **reproducible execution** of the rotational unfolding algori
 3. **Output standardization**: Raw partial unfoldings are emitted as JSONL (`raw.jsonl`) with deterministic rounding and normalization.
 4. **Experiment metadata**: Each run generates `run.json` containing all information needed to reproduce the experiment.
 5. **cwd-independence**: The CLI resolves paths relative to the repository root, not the current working directory.
-6. **Deterministic output paths**: Output is written to `reorg/output/polyhedra/<class>/<name>/` regardless of execution context.
+6. **Deterministic output paths**: Output is written to `output/polyhedra/<class>/<name>/` regardless of execution context.
 
 Phase 1 は回転展開アルゴリズムの**再現可能な実行**に焦点を当て、下流処理のための正規のデータ契約を定義します：
 
@@ -38,7 +38,7 @@ Phase 1 は回転展開アルゴリズムの**再現可能な実行**に焦点�
 3. **出力の標準化**: 生の部分展開図は、決定的な丸めと正規化を伴う JSONL（`raw.jsonl`）として出力されます。
 4. **実験メタデータ**: 各実行は、実験を再現するために必要なすべての情報を含む `run.json` を生成します。
 5. **cwd 非依存**: CLI はリポジトリルートを基準にパスを解決し、現在の作業ディレクトリには依存しません。
-6. **決定的な出力パス**: 出力は実行コンテキストに関わらず `reorg/output/polyhedra/<class>/<name>/` に書き込まれます。
+6. **決定的な出力パス**: 出力は実行コンテキストに関わらず `output/polyhedra/<class>/<name>/` に書き込まれます。
 
 ### What Phase 1 Does NOT Do / Phase 1 が行わないこと
 
@@ -104,12 +104,12 @@ C++ コアは JSON 入力を読み込み JSONL 出力を書き込む**計算エ�
 
 ## Input Format / 入力形式
 
-Phase 1 defines JSON-based input as the **normative input format** for the rotational unfolding algorithm. Input files are stored in `reorg/data/polyhedra/`:
+Phase 1 defines JSON-based input as the **normative input format** for the rotational unfolding algorithm. Input files are stored in `data/polyhedra/`:
 
-Phase 1 は JSON ベースの入力を回転展開アルゴリズムの**正規入力形式**として定義します。入力ファイルは `reorg/data/polyhedra/` に保存されます：
+Phase 1 は JSON ベースの入力を回転展開アルゴリズムの**正規入力形式**として定義します。入力ファイルは `data/polyhedra/` に保存されます：
 
 ```
-reorg/data/polyhedra/
+data/polyhedra/
 └── <class>/
     └── <name>/
         ├── polyhedron.json
@@ -161,7 +161,7 @@ These files are written to a deterministic location based on the polyhedron iden
 これらのファイルは多面体識別子に基づく決定的な場所に書き込まれます：
 
 ```
-reorg/output/polyhedra/<class>/<name>/
+output/polyhedra/<class>/<name>/
 ├── raw.jsonl
 └── run.json
 ```
@@ -250,7 +250,7 @@ Contains all information needed to reproduce the experiment:
 ```bash
 # From repository root (PYTHONPATH must be set)
 cd /path/to/RotationalUnfolding
-PYTHONPATH=reorg/python python -m rotational_unfolding run --poly polyhedra/archimedean/s05
+PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/archimedean/s05
 ```
 
 ### Arguments
@@ -261,7 +261,7 @@ PYTHONPATH=reorg/python python -m rotational_unfolding run --poly polyhedra/arch
 ### Output Directory Structure
 
 ```
-reorg/output/polyhedra/
+output/polyhedra/
 ├── archimedean/
 │   ├── s01/
 │   │   ├── raw.jsonl
@@ -277,11 +277,11 @@ reorg/output/polyhedra/
     └── ...
 ```
 
-**Output path convention**: `reorg/output/polyhedra/<class>/<name>/`
+**Output path convention**: `output/polyhedra/<class>/<name>/`
 
 This path is deterministic, cwd-independent, and overwritten on re-execution.
 
-**出力パス規約**: `reorg/output/polyhedra/<class>/<name>/`
+**出力パス規約**: `output/polyhedra/<class>/<name>/`
 
 このパスは決定的で、cwd 非依存であり、再実行時に上書きされます。
 
@@ -405,7 +405,7 @@ Phase 1 の出力は Phase 2 処理の**入力**として機能します：
 
 1. `raw.jsonl` adheres to the schema defined in this document (schema_version: 1, record_type: "partial_unfolding")
 2. `run.json` provides sufficient provenance information to identify input conditions
-3. Output paths follow the `reorg/output/polyhedra/<class>/<name>/` convention
+3. Output paths follow the `output/polyhedra/<class>/<name>/` convention
 
 Phase 2 implementations may read these files from the canonical output location or consume them via other mechanisms, as long as the data contract is respected.
 
@@ -413,7 +413,7 @@ Phase 2 implementations may read these files from the canonical output location 
 
 1. `raw.jsonl` は本文書で定義されたスキーマに従う（schema_version: 1, record_type: "partial_unfolding"）
 2. `run.json` は入力条件を識別するのに十分な出所情報を提供する
-3. 出力パスは `reorg/output/polyhedra/<class>/<name>/` 規約に従う
+3. 出力パスは `output/polyhedra/<class>/<name>/` 規約に従う
 
 Phase 2 の実装は、データ契約が尊重される限り、正規出力場所からこれらのファイルを読み込むか、他のメカニズムを介してそれらを消費することができます。
 
@@ -423,17 +423,17 @@ Phase 2 の実装は、データ契約が尊重される限り、正規出力場
 
 ### Specification and Implementation
 
-- **Input format specification**: `reorg/tools/convert_legacy_input.py` (schema implementation)
-- **C++ core implementation**: `reorg/cpp/src/main.cpp` and `reorg/cpp/include/`
-- **Python CLI implementation**: `reorg/python/rotational_unfolding/`
-- **Canonical output location**: `reorg/output/polyhedra/<class>/<name>/`
+- **Input format specification**: `tools/convert_legacy_input.py` (schema implementation)
+- **C++ core implementation**: `cpp/src/main.cpp` and `cpp/include/`
+- **Python CLI implementation**: `python/rotational_unfolding/`
+- **Canonical output location**: `output/polyhedra/<class>/<name>/`
 
 ### 仕様と実装
 
-- **入力形式仕様**: `reorg/tools/convert_legacy_input.py`（スキーマ実装）
-- **C++ コア実装**: `reorg/cpp/src/main.cpp` および `reorg/cpp/include/`
-- **Python CLI 実装**: `reorg/python/rotational_unfolding/`
-- **正規出力場所**: `reorg/output/polyhedra/<class>/<name>/`
+- **入力形式仕様**: `tools/convert_legacy_input.py`（スキーマ実装）
+- **C++ コア実装**: `cpp/src/main.cpp` および `cpp/include/`
+- **Python CLI 実装**: `python/rotational_unfolding/`
+- **正規出力場所**: `output/polyhedra/<class>/<name>/`
 
 ---
 

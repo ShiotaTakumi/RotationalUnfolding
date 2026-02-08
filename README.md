@@ -51,6 +51,9 @@ cd cpp && make && cd ..
 
 # Run the full pipeline / パイプラインの一括実行
 PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s12L
+
+# Run the full pipeline without labels / ラベルなしで一括実行
+PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s12L --no-labels
 ```
 
 ### Running Individual Phases / 個別フェーズの実行

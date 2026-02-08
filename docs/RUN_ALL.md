@@ -30,7 +30,7 @@ The rotational unfolding pipeline consists of four independent stages. Running t
 
 `run_all` eliminates these issues. It provides:
 
-- **One command, one argument**: `--poly polyhedra/CLASS/NAME` is the only input.
+- **One command, minimal arguments**: `--poly` is the only required input; `--no-labels` is an optional drawing flag.
 - **Reproducibility by invocation**: A single shell command fully reproduces the pipeline.
 - **Fail-fast behavior**: If any phase fails, execution stops immediately.
 
@@ -42,7 +42,7 @@ The rotational unfolding pipeline consists of four independent stages. Running t
 
 `run_all` はこれらの問題を排除します：
 
-- **1 コマンド、1 引数**: `--poly polyhedra/CLASS/NAME` が唯一の入力
+- **1 コマンド、最小限の引数**: `--poly` が必須の唯一の入力、`--no-labels` はオプション
 - **呼び出しによる再現性**: 単一のシェルコマンドでパイプライン全体を再現可能
 - **即時停止**: いずれかのフェーズが失敗した場合、実行は即座に停止
 
@@ -66,20 +66,20 @@ Drawing は `exact` 出力に対してのみ実行されます。`raw` および
 ### Command / コマンド
 
 ```bash
-PYTHONPATH=reorg/python python -m run_all --poly polyhedra/<class>/<name>
+PYTHONPATH=python python -m run_all --poly polyhedra/<class>/<name> [--no-labels]
 ```
 
 ### Examples / 実行例
 
 ```bash
 # Archimedean solid s07
-PYTHONPATH=reorg/python python -m run_all --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07
 
-# Johnson solid n20
-PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n20
+# Johnson solid n20 (without labels / ラベルなし)
+PYTHONPATH=python python -m run_all --poly polyhedra/johnson/n20 --no-labels
 
 # Johnson solid n66
-PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m run_all --poly polyhedra/johnson/n66
 ```
 
 ### Arguments / 引数
@@ -87,10 +87,7 @@ PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n66
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `--poly polyhedra/CLASS/NAME` | Yes | Polyhedron path. `polyhedra` is a fixed prefix. `CLASS` is the polyhedron family (e.g., `archimedean`, `johnson`). `NAME` is the specific polyhedron (e.g., `s07`, `n20`). Shell Tab completion is supported. |
-
-The `--poly` argument is the only input. There are no optional flags.
-
-`--poly` 引数が唯一の入力です。オプションフラグはありません。
+| `--no-labels` | No | Hide face and edge labels in exact drawing. Passed to the drawing phase only. Default: labels displayed. / exact 描画で面番号・辺番号のラベルを非表示にする。drawing フェーズにのみ伝播される。デフォルト: ラベル表示。 |
 
 ---
 
@@ -159,13 +156,24 @@ python -m exact run --poly polyhedra/<class>/<name>
 Invokes:
 
 ```bash
+# Default (with labels) / デフォルト（ラベル付き）
 python -m drawing run --type exact --poly polyhedra/<class>/<name>
+
+# When --no-labels is specified / --no-labels 指定時
+python -m drawing run --type exact --poly polyhedra/<class>/<name> --no-labels
 ```
 
 - Reads `exact.jsonl` (read-only).
 - Generates one SVG file per record.
 - Outputs to `draw/exact/`.
+- If `--no-labels` is passed to `run_all`, it is forwarded to the drawing phase. Otherwise, labels are displayed (default).
 - Overwrites existing files.
+
+- `exact.jsonl` を読み取る（読み取り専用）。
+- レコードごとに 1 つの SVG ファイルを生成する。
+- `draw/exact/` に出力する。
+- `run_all` に `--no-labels` が渡された場合、drawing フェーズに転送される。指定がなければラベルが表示される（デフォルト）。
+- 既存ファイルは上書きされる。
 
 ---
 
@@ -176,7 +184,7 @@ After a complete `run_all` execution, the output directory has the following str
 `run_all` の完全な実行後、出力ディレクトリは以下の構造になります：
 
 ```
-reorg/output/polyhedra/<class>/<name>/
+output/polyhedra/<class>/<name>/
 ├── raw.jsonl           # Phase 1: complete enumeration / 完全列挙
 ├── run.json            # Phase 1: execution metadata / 実行メタデータ
 ├── noniso.jsonl        # Phase 2: deduplicated records / 重複除去済みレコード
@@ -229,11 +237,11 @@ Each downstream output is a strict subset of its input. Record content is never 
 ### Architectural Separation / アーキテクチャ的分離
 
 - **Phase 1, Phase 2, Phase 3, and Drawing are independent modules.** `run_all` does not create coupling between them.
-- **Each phase's code is untouched.** `run_all` exists in `reorg/python/run_all/` and does not modify any file in `rotational_unfolding/`, `nonisomorphic/`, `exact/`, or `drawing/`.
+- **Each phase's code is untouched.** `run_all` exists in `python/run_all/` and does not modify any file in `rotational_unfolding/`, `nonisomorphic/`, `exact/`, or `drawing/`.
 - **Drawing is a verification utility, not a pipeline artifact.** SVG files in `draw/exact/` are for visual confirmation. They are not research outputs and are not referenced by any downstream process.
 
 - **Phase 1・Phase 2・Phase 3・Drawing は独立したモジュールである。** `run_all` はそれらの間の結合を生み出さない。
-- **各フェーズのコードは変更されない。** `run_all` は `reorg/python/run_all/` に存在し、`rotational_unfolding/`・`nonisomorphic/`・`exact/`・`drawing/` 内のいかなるファイルも変更しない。
+- **各フェーズのコードは変更されない。** `run_all` は `python/run_all/` に存在し、`rotational_unfolding/`・`nonisomorphic/`・`exact/`・`drawing/` 内のいかなるファイルも変更しない。
 - **Drawing は検証用ユーティリティであり、パイプライン成果物ではない。** `draw/exact/` 内の SVG ファイルは目視確認用である。研究成果物ではなく、いかなる下流プロセスからも参照されない。
 
 ---
@@ -242,11 +250,11 @@ Each downstream output is a strict subset of its input. Record content is never 
 
 - **Execution time is not bounded.** Phase 3 uses SymPy symbolic computation, which prioritizes exactness over speed. For complex polyhedra, Phase 3 alone may take hours.
 - **Partial outputs from failed runs are not cleaned up.** If Phase 3 fails, Phase 1 and Phase 2 outputs remain in the output directory. This is by design—earlier phases' outputs are valid and reusable.
-- **Overlap definition is strict.** Phase 3 treats all geometric contacts (including point-point, point-edge) as overlaps. This is the "strict" definition. `run_all` does not provide an option to change this.
+- **Overlap definition is strict.** Phase 3 treats all geometric contacts (including point-point, point-edge) as overlaps. This is the "strict" definition. `run_all` does not provide an option to change this. The `--no-labels` option affects drawing only, not the overlap logic.
 
 - **実行時間は保証されない。** Phase 3 は SymPy のシンボリック計算を使用し、速度よりも厳密性を優先する。複雑な多面体では、Phase 3 だけで数時間かかることがある。
 - **失敗した実行の部分出力はクリーンアップされない。** Phase 3 が失敗した場合、Phase 1 と Phase 2 の出力はディレクトリに残る。これは設計上の意図であり、前段フェーズの出力は有効かつ再利用可能である。
-- **重なり定義は strict である。** Phase 3 はすべての幾何的接触（点–点、点–辺を含む）を重なりとみなす。これは "strict" 定義である。`run_all` はこの定義を変更するオプションを提供しない。
+- **重なり定義は strict である。** Phase 3 はすべての幾何的接触（点–点、点–辺を含む）を重なりとみなす。これは "strict" 定義である。`run_all` はこの定義を変更するオプションを提供しない。`--no-labels` オプションは描画のみに影響し、重なり判定ロジックには影響しない。
 
 ---
 
@@ -259,12 +267,12 @@ A researcher studying a specific polyhedron runs the entire pipeline from scratc
 特定の多面体を研究する際に、パイプライン全体をゼロから実行する：
 
 ```bash
-PYTHONPATH=reorg/python python -m run_all --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m run_all --poly polyhedra/johnson/n66
 ```
 
-This produces all outputs (`raw.jsonl`, `run.json`, `noniso.jsonl`, `exact.jsonl`, `draw/exact/*.svg`) in a single invocation. The researcher can immediately inspect the SVG files to visually confirm the verified unfoldings.
+This produces all outputs (`raw.jsonl`, `run.json`, `noniso.jsonl`, `exact.jsonl`, `draw/exact/*.svg`) in a single invocation. The researcher can immediately inspect the SVG files to visually confirm the verified unfoldings. Add `--no-labels` to generate polygon-only SVGs without face and edge labels.
 
-これにより、すべての出力（`raw.jsonl`、`run.json`、`noniso.jsonl`、`exact.jsonl`、`draw/exact/*.svg`）が単一の呼び出しで生成されます。研究者は SVG ファイルを即座に確認し、検証済み展開図を目視で確認できます。
+これにより、すべての出力（`raw.jsonl`、`run.json`、`noniso.jsonl`、`exact.jsonl`、`draw/exact/*.svg`）が単一の呼び出しで生成されます。研究者は SVG ファイルを即座に確認し、検証済み展開図を目視で確認できます。`--no-labels` を追加すると、面番号・辺番号のラベルなしの多角形のみの SVG が生成されます。
 
 ### Reproducibility / 再現性
 
@@ -274,7 +282,10 @@ For paper artifacts or shared experiments, the full pipeline is reproducible wit
 
 ```bash
 # Reproduce the complete result for archimedean s07
-PYTHONPATH=reorg/python python -m run_all --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07
+
+# Reproduce with no labels / ラベルなしで再現
+PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07 --no-labels
 ```
 
 The command is self-contained. No prior state, configuration files, or intermediate outputs are required.
@@ -283,9 +294,13 @@ The command is self-contained. No prior state, configuration files, or intermedi
 
 ### Visual Inspection of Exact Results / Exact 結果の目視確認
 
-After execution, the `draw/exact/` directory contains one SVG per verified unfolding. By default, these SVGs include face and edge labels. To draw polygon outlines only, use `--no-labels` when invoking the drawing utility separately.
+After execution, the `draw/exact/` directory contains one SVG per verified unfolding. By default, these SVGs include face and edge labels. To draw polygon outlines only, pass `--no-labels` to `run_all`:
 
-実行後、`draw/exact/` ディレクトリに検証済み展開図ごとの SVG が格納されます。デフォルトでは面番号・辺番号のラベルが表示されます。多角形のアウトラインのみを描画するには、drawing ユーティリティを個別に `--no-labels` 付きで呼び出してください。
+実行後、`draw/exact/` ディレクトリに検証済み展開図ごとの SVG が格納されます。デフォルトでは面番号・辺番号のラベルが表示されます。多角形のアウトラインのみを描画するには、`run_all` に `--no-labels` を指定してください：
+
+```bash
+PYTHONPATH=python python -m run_all --poly polyhedra/archimedean/s07 --no-labels
+```
 
 ---
 
@@ -296,8 +311,9 @@ After execution, the `draw/exact/` directory contains one SVG per verified unfol
 `run_all` は各フェーズの前にステップマーカーを stdout に出力します。すべてのサブプロセス出力（stdout・stderr）は抑制されずにそのまま表示されます。
 
 ```
-[run_all] Pipeline start: archimedean/s07
+[run_all] Pipeline start: polyhedra/archimedean/s07
 [run_all] Python: /path/to/python
+[run_all] Drawing option: --no-labels    ← only when --no-labels is specified
 
 [run_all] Phase 1: rotational_unfolding
 ... (Phase 1 output) ...
@@ -311,7 +327,7 @@ After execution, the `draw/exact/` directory contains one SVG per verified unfol
 [run_all] Drawing: exact
 ... (Drawing output) ...
 
-[run_all] All steps completed for: archimedean/s07
+[run_all] All steps completed for: polyhedra/archimedean/s07
 ```
 
 On failure, the pipeline terminates with an error message indicating which step failed:
@@ -327,7 +343,7 @@ On failure, the pipeline terminates with an error message indicating which step 
 ## Module Location / モジュール配置
 
 ```
-reorg/python/run_all/
+python/run_all/
 ├── __init__.py
 └── __main__.py
 ```

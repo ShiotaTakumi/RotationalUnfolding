@@ -95,7 +95,7 @@ JSONL ファイルの各レコードに対して、ユーティリティは1つ�
 The drawing utility outputs SVG files to a subdirectory alongside the source JSONL file:
 
 ```
-reorg/output/polyhedra/<class>/<name>/
+output/polyhedra/<class>/<name>/
 ├── raw.jsonl          # Phase 1 canonical output
 ├── run.json           # Phase 1 metadata
 └── draw/              # Drawing utility output (verification artifacts)
@@ -109,7 +109,7 @@ reorg/output/polyhedra/<class>/<name>/
 Including Phase 2 output:
 
 ```
-reorg/output/polyhedra/<class>/<name>/
+output/polyhedra/<class>/<name>/
 ├── raw.jsonl          # Phase 1 output
 ├── noniso.jsonl       # Phase 2 output
 ├── exact.jsonl        # Phase 3 output
@@ -125,9 +125,9 @@ reorg/output/polyhedra/<class>/<name>/
         └── ...
 ```
 
-The `draw/` directory is **Git-ignored** (`.gitignore` rule: `reorg/output/**/draw/`). SVG files are regenerable from JSONL files and are not committed to the repository.
+The `draw/` directory is **Git-ignored** (`.gitignore` rule: `output/**/draw/`). SVG files are regenerable from JSONL files and are not committed to the repository.
 
-`draw/` ディレクトリは **Git 管理から除外**されています（`.gitignore` ルール: `reorg/output/**/draw/`）。SVG ファイルは JSONL ファイルから再生成可能であり、リポジトリにはコミットされません。
+`draw/` ディレクトリは **Git 管理から除外**されています（`.gitignore` ルール: `output/**/draw/`）。SVG ファイルは JSONL ファイルから再生成可能であり、リポジトリにはコミットされません。
 
 ---
 
@@ -180,7 +180,7 @@ This naming scheme ensures:
 ### Command
 
 ```bash
-PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<class>/<name> [--no-labels]
+PYTHONPATH=python python -m drawing run --type <type> --poly polyhedra/<class>/<name> [--no-labels]
 ```
 
 ### Arguments
@@ -196,31 +196,31 @@ PYTHONPATH=reorg/python python -m drawing run --type <type> --poly polyhedra/<cl
 
 ```bash
 # Visualize raw output for archimedean/s07
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/archimedean/s07
 
 # Visualize nonisomorphic output for archimedean/s07
-PYTHONPATH=reorg/python python -m drawing run --type noniso --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m drawing run --type noniso --poly polyhedra/archimedean/s07
 
 # Visualize raw output for johnson/n20
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/johnson/n20
 
 # Visualize nonisomorphic output for johnson/n20
-PYTHONPATH=reorg/python python -m drawing run --type noniso --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type noniso --poly polyhedra/johnson/n20
 
 # Visualize raw output for platonic/r01
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/platonic/r01
+PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/platonic/r01
 
 # Visualize exact output for archimedean/s07
-PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/archimedean/s07
 
 # Visualize exact output for johnson/n66
-PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66
+PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/johnson/n66
 
 # Visualize exact output without labels (polygons only)
-PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n66 --no-labels
+PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/johnson/n66 --no-labels
 
 # Visualize raw output without labels
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07 --no-labels
+PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/archimedean/s07 --no-labels
 ```
 
 ### Execution Model
@@ -228,15 +228,15 @@ PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archim
 The drawing utility operates in a **cwd-independent** manner:
 
 1. Resolves paths relative to the repository root
-2. Reads JSONL from: `reorg/output/polyhedra/<class>/<name>/<type>.jsonl`
-3. Writes SVG to: `reorg/output/polyhedra/<class>/<name>/draw/<type>/`
+2. Reads JSONL from: `output/polyhedra/<class>/<name>/<type>.jsonl`
+3. Writes SVG to: `output/polyhedra/<class>/<name>/draw/<type>/`
 4. Overwrites existing SVG files on re-execution
 
 描画ユーティリティは **cwd 非依存**で動作します：
 
 1. リポジトリルートを基準にパスを解決
-2. JSONL を読み込み: `reorg/output/polyhedra/<class>/<name>/<type>.jsonl`
-3. SVG を書き込み: `reorg/output/polyhedra/<class>/<name>/draw/<type>/`
+2. JSONL を読み込み: `output/polyhedra/<class>/<name>/<type>.jsonl`
+3. SVG を書き込み: `output/polyhedra/<class>/<name>/draw/<type>/`
 4. 再実行時に既存の SVG ファイルを上書き
 
 ---
@@ -357,38 +357,38 @@ The drawing utility does NOT guarantee:
 
 ```bash
 # Phase 1: Generate raw unfoldings
-PYTHONPATH=reorg/python python -m rotational_unfolding run --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/johnson/n20
 
 # Draw raw output (with labels)
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/johnson/n20
 
 # Phase 2: Remove isomorphic duplicates
-PYTHONPATH=reorg/python python -m nonisomorphic run --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m nonisomorphic run --poly polyhedra/johnson/n20
 
 # Draw noniso output (with labels)
-PYTHONPATH=reorg/python python -m drawing run --type noniso --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type noniso --poly polyhedra/johnson/n20
 
 # Phase 3: Exact overlap verification
-PYTHONPATH=reorg/python python -m exact run --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m exact run --poly polyhedra/johnson/n20
 
 # Draw exact output (shape only, no labels)
-PYTHONPATH=reorg/python python -m drawing run --type exact --poly polyhedra/johnson/n20
+PYTHONPATH=python python -m drawing run --type exact --poly polyhedra/johnson/n20
 ```
 
 ### Example: Debugging a Specific Record
 
 ```bash
 # Step 1: Generate raw.jsonl (Phase 1)
-PYTHONPATH=reorg/python python -m rotational_unfolding run --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m rotational_unfolding run --poly polyhedra/archimedean/s07
 
 # Step 2: Generate SVG files (drawing utility)
-PYTHONPATH=reorg/python python -m drawing run --type raw --poly polyhedra/archimedean/s07
+PYTHONPATH=python python -m drawing run --type raw --poly polyhedra/archimedean/s07
 
 # Step 3: Open SVG file 5 (corresponds to JSONL line 5, 0-based)
-open reorg/output/polyhedra/archimedean/s07/draw/raw/5.svg
+open output/polyhedra/archimedean/s07/draw/raw/5.svg
 
 # Step 4: If issue found, inspect JSONL line 5 (the 6th line)
-sed -n '6p' reorg/output/polyhedra/archimedean/s07/raw.jsonl | jq .
+sed -n '6p' output/polyhedra/archimedean/s07/raw.jsonl | jq .
 ```
 
 ---
