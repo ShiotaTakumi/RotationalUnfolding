@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="-0.977592898769642 -0.9899186938124422 2.7927259891872445 3.979837387624884" style="enable-background:new -0.977592898769642 -0.9899186938124422 2.7927259891872445 3.979837387624884;">
+<style type="text/css">
+  .face_stroke {fill:none; stroke:#000000; stroke-width:0.02; stroke-miterlimit:10;}
+  .face_text {fill:#000000; font-family:monospace;}
+  .edge_text {fill:#ff0000; font-family:monospace;}
+  .edge_bg {fill:#f3f3f3; stroke:#606060; stroke-width:0.01;}
+</style>
+<polygon class="face_stroke" points="0.6881909602355868,-0.5 -0.26286555605956674,-0.8090169943749475 -0.8506508083520399,-1.0417467896404342e-16 -0.2628655560595669,0.8090169943749473 0.6881909602355867,0.5000000000000001"/>
+<polygon class="face_stroke" points="0.6881909999999999,0.5 1.6881909999999998,0.5000000000000001 1.6881910000000007,-0.49999999999999944 0.6881909999999997,-0.4999999999999998"/>
+<polygon class="face_stroke" points="0.688191,0.4999999999999999 0.6881909999999999,1.5 1.6881909999999998,1.5 1.6881910000000007,0.5000000000000006"/>
+<polygon class="face_stroke" points="0.688191,1.5 0.6881909999999999,2.5 1.6881909999999998,2.5 1.6881910000000007,1.5000000000000004"/>
+<polygon class="face_stroke" points="0.6881909602355868,1.5 -0.26286555605956674,1.1909830056250525 -0.8506508083520399,2.0 -0.2628655560595669,2.8090169943749475 0.6881909602355867,2.5"/>
+<polygon class="face_stroke" points="0.6881907357043044,1.4999998650362512 0.48027904488654505,0.5218522643024454 -0.2628657805908493,1.1909828706613035"/>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 0.0 0.0)">0</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 1.188191 0.0)">3</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 1.188191 1.0)">2</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 1.188191 2.0)">19</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 0.0 2.0)">18</text>
+<text class="face_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 0.301868 1.070945)">1</text>
+<rect class="edge_bg" x="0.632336480216255" y="-0.055854519783744956" width="0.11170903956748979" height="0.11170903956748979"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 0.6881909999999999 -6.123233995736767e-17)">0</text>
+<rect class="edge_bg" x="1.1323364802162552" y="0.444145480216255" width="0.11170903956748979" height="0.11170903956748979"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 1.188191 0.4999999999999999)">3</text>
+<rect class="edge_bg" x="1.1323364802162552" y="1.444145480216255" width="0.11170903956748979" height="0.11170903956748979"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 1.188191 1.5)">29</text>
+<rect class="edge_bg" x="0.6323364404518419" y="1.944145480216255" width="0.11170903956748979" height="0.11170903956748979"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 0.6881909602355868 2.0)">25</text>
+<rect class="edge_bg" x="0.15680795777298265" y="1.2896368480650326" width="0.11170903956748979" height="0.11170903956748979"/>
+<text class="edge_text" text-anchor="middle" dominant-baseline="middle" transform="matrix(0.005585451978374489 0 0 0.005585451978374489 0.21266247755672754 1.3454913678487774)">28</text>
+</svg>
