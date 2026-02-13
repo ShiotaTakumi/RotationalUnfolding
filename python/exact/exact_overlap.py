@@ -569,24 +569,157 @@ def _polygons_overlap(poly1_verts, poly2_verts):
                 clear_touch
             )
             if ambiguous:
-                sympy_seg1 = Segment(
-                    Point(sympify(a1[0]), sympify(a1[1])),
-                    Point(sympify(a2[0]), sympify(a2[1]))
-                )
-                sympy_seg2 = Segment(
-                    Point(sympify(b1[0]), sympify(b1[1])),
-                    Point(sympify(b2[0]), sympify(b2[1]))
-                )
-                result = sympy_seg1.intersection(sympy_seg2)
-                if result:
-                    kind = _classify_intersection(result, sympy_seg1, sympy_seg2)
-                    p = _KIND_PRIORITY.get(kind, 0)
-                    if p >= 3:
-                        # face-face from exact phase — maximum priority, return immediately
-                        return (True, kind)
-                    if p > best_priority:
-                        best_kind = kind
-                        best_priority = p
+                # Use direct parametric intersection instead of Segment.intersection()
+                # to avoid slow/error-prone SymPy geometry operations
+                # 遅い/エラーが出やすい SymPy geometry 演算を回避するため、
+                # 直接パラメトリック表現で交差判定
+
+                # Convert to exact SymPy expressions
+                # 厳密な SymPy 式に変換
+                p1x, p1y = sympify(a1[0]), sympify(a1[1])
+                p2x, p2y = sympify(a2[0]), sympify(a2[1])
+                q1x, q1y = sympify(b1[0]), sympify(b1[1])
+                q2x, q2y = sympify(b2[0]), sympify(b2[1])
+
+                # Direction vectors
+                # 方向ベクトル
+                dx1 = p2x - p1x
+                dy1 = p2y - p1y
+                dx2 = q2x - q1x
+                dy2 = q2y - q1y
+
+                # Check for intersection using parametric form
+                # パラメトリック形式で交差判定
+                # Segment 1: P1 + t*(P2-P1), t ∈ [0,1]
+                # Segment 2: Q1 + s*(Q2-Q1), s ∈ [0,1]
+                # Solve: P1 + t*d1 = Q1 + s*d2
+
+                # Cross product for determinant: d1 × d2
+                # 行列式のための外積: d1 × d2
+                det = dx1 * dy2 - dy1 * dx2
+
+                # Check if segments are parallel (det ≈ 0)
+                # 平行かチェック (det ≈ 0)
+                if Abs(det) < sympify('1e-50'):
+                    # Parallel or collinear - check for overlap
+                    # 平行または同一直線上 - 重なりをチェック
+                    # Use simpler collinear overlap detection
+                    # より単純な同一直線重なり検出を使用
+
+                    # Check if endpoints are on the other segment
+                    # 端点が他のセグメント上にあるかチェック
+                    endpoints = [
+                        (p1x, p1y, "v1"), (p2x, p2y, "v2"),
+                        (q1x, q1y, "v3"), (q2x, q2y, "v4")
+                    ]
+
+                    # Count how many endpoints coincide or lie on the other segment
+                    # 一致または他のセグメント上にある端点の数をカウント
+                    touch_count = 0
+                    eps_val = sympify('1e-50')
+                    one = sympify(1)
+
+                    for px, py, label in endpoints[:2]:
+                        # Check if (px, py) is on segment 2
+                        # (px, py) がセグメント2上にあるかチェック
+                        try:
+                            if Abs(dx2) > Abs(dy2):
+                                if Abs(dx2) > eps_val:
+                                    s_val = (px - q1x) / dx2
+                                    # Use is_nonnegative to check range
+                                    # is_nonnegative で範囲チェック
+                                    s_min = (s_val + eps_val).simplify()
+                                    s_max = (one + eps_val - s_val).simplify()
+                                    if (s_min.is_nonnegative is not False) and (s_max.is_nonnegative is not False):
+                                        if Abs(py - (q1y + s_val * dy2)) < eps_val:
+                                            touch_count += 1
+                            else:
+                                if Abs(dy2) > eps_val:
+                                    s_val = (py - q1y) / dy2
+                                    s_min = (s_val + eps_val).simplify()
+                                    s_max = (one + eps_val - s_val).simplify()
+                                    if (s_min.is_nonnegative is not False) and (s_max.is_nonnegative is not False):
+                                        if Abs(px - (q1x + s_val * dx2)) < eps_val:
+                                            touch_count += 1
+                        except:
+                            # If checking fails, conservatively assume touch
+                            # チェックが失敗した場合、保守的に接触と仮定
+                            touch_count += 1
+
+                    if touch_count >= 2:
+                        # Edge-edge overlap (collinear)
+                        # 辺-辺の重なり（同一直線上）
+                        kind = "edge-edge"
+                        p = _KIND_PRIORITY.get(kind, 0)
+                        if p > best_priority:
+                            best_kind = kind
+                            best_priority = p
+                    elif touch_count == 1:
+                        # Single point contact
+                        # 1点接触
+                        kind = "edge-vertex"
+                        p = _KIND_PRIORITY.get(kind, 0)
+                        if p > best_priority:
+                            best_kind = kind
+                            best_priority = p
+                else:
+                    # Non-parallel: solve for intersection point
+                    # 非平行: 交点を解く
+                    # t = ((Q1-P1) × d2) / (d1 × d2)
+                    # s = ((Q1-P1) × d1) / (d1 × d2)
+
+                    cross1 = (q1x - p1x) * dy2 - (q1y - p1y) * dx2
+                    cross2 = (q1x - p1x) * dy1 - (q1y - p1y) * dx1
+
+                    t = cross1 / det
+                    s = cross2 / det
+
+                    # Check if intersection is within both segments
+                    # 交点が両セグメント内にあるかチェック
+                    eps_val = sympify('1e-50')
+                    one = sympify(1)
+
+                    # Use simplify to resolve the boolean
+                    # simplify で真偽値を確定
+                    try:
+                        t_min = (t + eps_val).simplify()
+                        t_max = (one + eps_val - t).simplify()
+                        s_min = (s + eps_val).simplify()
+                        s_max = (one + eps_val - s).simplify()
+
+                        # Check if all are non-negative
+                        # すべてが非負かチェック
+                        t_in_range = (t_min.is_nonnegative is not False) and (t_max.is_nonnegative is not False)
+                        s_in_range = (s_min.is_nonnegative is not False) and (s_max.is_nonnegative is not False)
+                    except:
+                        # If simplify fails, conservatively assume in range
+                        # simplify が失敗した場合、保守的に範囲内と仮定
+                        t_in_range = True
+                        s_in_range = True
+
+                    if t_in_range and s_in_range:
+                        # Classify intersection type
+                        # 交差種別を分類
+
+                        # Check if intersection is at endpoints
+                        # 交点が端点にあるかチェック
+                        t_is_endpoint = (Abs(t) < eps_val) or (Abs(t - one) < eps_val)
+                        s_is_endpoint = (Abs(s) < eps_val) or (Abs(s - one) < eps_val)
+
+                        if t_is_endpoint and s_is_endpoint:
+                            kind = "vertex-vertex"
+                        elif t_is_endpoint or s_is_endpoint:
+                            kind = "edge-vertex"
+                        else:
+                            kind = "face-face"  # Interior crossing
+
+                        p = _KIND_PRIORITY.get(kind, 0)
+                        if p >= 3:
+                            # face-face — maximum priority, return immediately
+                            return (True, kind)
+                        if p > best_priority:
+                            best_kind = kind
+                            best_priority = p
 
     if best_kind is not None:
         return (True, best_kind)
