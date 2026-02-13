@@ -19,7 +19,6 @@ import json
 from pathlib import Path
 
 from sympy import S, pi, sin, cos, tan, sympify, Abs
-from sympy.geometry import Point, Segment
 
 
 # ---------------------------------------------------------------------------
@@ -309,79 +308,6 @@ def _get_vertices_of_face(gon, cx, cy, ang):
         yk = cy + r * sin(theta)
         vertices.append((xk, yk))
     return vertices
-
-
-# ---------------------------------------------------------------------------
-# Intersection classification
-# 交差種別の分類
-# ---------------------------------------------------------------------------
-
-def _classify_intersection(intersection_result, seg1, seg2):
-    """
-    Classify the type of intersection between two segments.
-
-    SymPy の Segment.intersection() の結果から交差種別を分類します。
-
-    Classification rules:
-        - Segment in result with positive length → "edge-edge"
-        - Segment in result with zero length (degenerate) → classified as point contact
-        - Point in result (or degenerate Segment point):
-            - Endpoint of both segments → "vertex-vertex" (vertex contact)
-            - Endpoint of one segment only → "edge-vertex" (vertex on edge interior)
-            - Interior of both segments → "face-face" (proper crossing)
-
-    分類規則:
-        - 結果に Segment（正の長さ）→ "edge-edge"（辺の同一直線上重なり）
-        - 結果に Segment（長さ 0、退化）→ 点接触として分類
-        - 結果が Point（または退化 Segment の点）:
-            - 両セグメントの端点 → "vertex-vertex"（頂点接触）
-            - 片方のみの端点 → "edge-vertex"（辺内部への点接触）
-            - どちらの端点でもない → "face-face"（辺が内部で交差）
-
-    Args:
-        intersection_result: List of SymPy geometric objects from Segment.intersection()
-        seg1: First Segment
-        seg2: Second Segment
-
-    Returns:
-        str: One of "face-face", "edge-edge", "vertex-vertex", "edge-vertex"
-    """
-    # Helper: classify a single contact point by endpoint membership
-    # ヘルパー: 端点帰属で1つの接触点を分類する
-    def _classify_point(pt):
-        is_ep1 = pt.equals(seg1.p1) or pt.equals(seg1.p2)
-        is_ep2 = pt.equals(seg2.p1) or pt.equals(seg2.p2)
-        if is_ep1 and is_ep2:
-            return "vertex-vertex"
-        elif is_ep1 or is_ep2:
-            return "edge-vertex"
-        else:
-            return "face-face"  # interior crossing
-
-    # Check for Segment (collinear overlap) first — highest structural priority
-    # まず Segment（同一直線上の重なり）をチェック — 構造的に最優先
-    # A degenerate Segment (length 0) is treated as a Point contact instead.
-    # 退化 Segment（長さ 0）は Point 接触として分類する。
-    for obj in intersection_result:
-        if isinstance(obj, Segment):
-            dx = obj.p1.x - obj.p2.x
-            dy = obj.p1.y - obj.p2.y
-            length_sq = sympify(dx**2 + dy**2)
-            if length_sq != 0:
-                return "edge-edge"
-            # Degenerate Segment (length 0) — classify as point contact
-            # 退化 Segment（長さ 0）— 点接触として分類
-            return _classify_point(obj.p1)
-
-    # All remaining elements should be Points — classify by endpoint membership
-    # 残りはすべて Point のはず — 端点帰属で分類
-    for obj in intersection_result:
-        if isinstance(obj, Point):
-            return _classify_point(obj)
-
-    # Conservative fallback (should not normally be reached)
-    # 保守的なフォールバック（通常到達しない）
-    return "face-face"
 
 
 # ---------------------------------------------------------------------------
