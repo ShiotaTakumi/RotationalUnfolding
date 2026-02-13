@@ -2,9 +2,9 @@
   "schema_version": 1,
   "record_type": "run_metadata",
   "run": {
-    "run_id": "2026-02-08T105816Z",
-    "started_at_utc": "2026-02-08T10:58:06.118312+00:00",
-    "finished_at_utc": "2026-02-08T10:58:16.867998+00:00",
+    "run_id": "2026-02-13T045304Z",
+    "started_at_utc": "2026-02-13T04:52:50.711381+00:00",
+    "finished_at_utc": "2026-02-13T04:53:04.306171+00:00",
     "exit_code": 0
   },
   "command": {
