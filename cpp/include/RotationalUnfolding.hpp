@@ -4,31 +4,41 @@
 //
 // What this file does:
 //   Implements the core algorithm for exploring path-shaped partial unfoldings
-//   of a given polyhedron using rotational unfolding with pruning heuristics.
+//   of a given polyhedron using rotational unfolding with distance-based
+//   and symmetry-based pruning.
 //
 // このファイルの役割:
-//   枝刈りヒューリスティクスを用いた回転展開により、与えられた多面体の
-//   パス状の部分展開図を探索する中核アルゴリズムを実装する。
+//   与えられた多面体に対し、回転展開（rotational unfolding）と
+//   距離および対称性に基づく枝刈りを用いて、パス状の部分展開図を探索する
+//   中核アルゴリズムを実装する。
 //
 // Responsibility in the project:
-//   - Executes the recursive search for partial unfoldings
-//   - Checks for overlaps between the base face and the last face
+//   - Performs recursive search for path-shaped partial unfoldings
+//   - Checks for overlaps between the faces at both ends of the path
 //   - Applies distance-based and symmetry-based pruning
-//   - Outputs JSONL records for candidate unfoldings
+//   - Outputs partial unfoldings that may contain overlaps as JSONL records
 //   - Does NOT handle file I/O or CLI argument parsing
 //
 // プロジェクト内での責務:
-//   - 部分展開図の再帰的探索を実行
-//   - 基準面と最後の面の重なりをチェック
-//   - 距離ベースおよび対称性ベースの枝刈りを適用
-//   - 候補展開図をJSONLレコードとして出力
+//   - パス状の部分展開図の再帰的探索を実行
+//   - パスの両端に位置する面どうしの重なり判定を行う
+//   - 距離および対称性に基づく枝刈りを適用
+//   - 重なりを持つ可能性がある部分展開図をJSONLレコードとして出力
 //   - ファイルI/OやCLI引数の解析は担当しない
 //
 // Phase 1 における位置づけ:
-//   Core algorithm for Phase 1. This class is the heart of the search process.
-//   It produces raw partial unfoldings that will be post-processed in Phase 2+.
-//   Phase 1の中核アルゴリズム。この検索プロセスの心臓部である。
-//   Phase 2以降で後処理される生の部分展開図を生成する。
+//   Core algorithm for Phase 1.
+//   Since overlaps between faces are approximated by circumradius intersection,
+//   the output may include paths that do not actually overlap.
+//   It may also produce isomorphic paths as duplicates.
+//   Isomorphic path elimination is done in Phase 2,
+//   and exact overlap verification in Phase 3.
+//
+//   Phase 1の中核アルゴリズム。
+//   面どうしの重なりを外接円の交差で近似判定しているため、
+//   実際には重ならないパスも含まれうる。
+//   また、同型なパスも重複して生成される。
+//   同型なパスの除去はPhase 2、厳密な重なり検証はPhase 3で行う。
 //
 // ============================================================================
 
@@ -49,49 +59,56 @@
 // RotationalUnfolding
 // ============================================================================
 //
-// Explores path-shaped partial edge unfoldings of a polyhedron.
-// This class performs a depth-first search starting from a specified
-// base face and base edge, checking for overlaps at both endpoints.
+// Explores path-shaped partial unfoldings of a polyhedron.
+// Performs a depth-first search starting from a specified
+// base face (the face placed on the plane as the starting point)
+// and base edge (the edge used as the rotation axis for the first step),
+// checking for overlaps between the faces at both ends of the path.
 //
-// 多面体のパス状の部分辺展開図を探索する。
-// このクラスは、指定された基準面と基準辺から開始する深さ優先探索を実行し、
-// 両端点での重なりをチェックする。
+// 多面体のパス状の部分展開図を探索する。
+// 指定された基準面（展開の起点として平面に置く面）と
+// 基準辺（最初の回転軸となる辺）から深さ優先探索を行い、
+// パスの両端に位置する面どうしの重なりを判定する。
 //
 // Responsibility:
 //   - Manages the recursive search state
-//   - Applies pruning heuristics (distance, symmetry)
-//   - Detects potential overlaps based on circumradius proximity
-//   - Outputs candidate unfoldings in JSONL format
+//   - Applies distance-based and symmetry-based pruning
+//   - Detects potential overlaps based on circumradius intersection
+//   - Outputs candidate partial unfoldings in JSONL format
 //
 // 責務:
 //   - 再帰探索の状態を管理
-//   - 枝刈りヒューリスティクス（距離、対称性）を適用
-//   - 外接円半径の近接性に基づいて潜在的な重なりを検出
-//   - 候補展開図をJSONL形式で出力
+//   - 距離および対称性に基づく枝刈りを適用
+//   - 外接円の交差に基づいて重なりの可能性を判定
+//   - 候補となる部分展開図をJSONL形式で出力
 //
 // Does NOT handle:
-//   - Exact overlap verification (deferred to Phase 3)
-//   - Isomorphism detection (deferred to Phase 2)
+//   - Isomorphic partial unfolding elimination (done in Phase 2)
+//   - Exact overlap verification (done in Phase 3)
 //   - File I/O management
 //
 // 責務外:
-//   - 厳密な重なり検証（Phase 3に委譲）
-//   - 同型性判定（Phase 2に委譲）
+//   - 同型なパス状の部分展開図の除去（Phase 2で実施）
+//   - 厳密な重なり検証（Phase 3で実施）
 //   - ファイルI/O管理
 //
 // Algorithm overview:
-//   1. Start with the base face placed at the origin
+//   1. Place the base face so that its center is at the origin
+//      and the base edge is perpendicular to the positive x-axis
 //   2. Recursively add adjacent faces, rotating around shared edges
-//   3. Check if the last face's circumradius overlaps with the base face
-//   4. If overlap is detected, output the partial unfolding
-//   5. Apply pruning to avoid redundant or impossible branches
+//   3. Check at each step whether the circumradius of the last face
+//      in the path intersects with the circumradius of the base face
+//   4. If intersection is detected, output the partial unfolding as a candidate
+//      (since the faces may not actually overlap, the search continues)
+//   5. Reduce the search space by distance-based and symmetry-based pruning
 //
 // アルゴリズムの概要:
-//   1. 原点に配置された基準面から開始
-//   2. 共有辺の周りを回転しながら、隣接面を再帰的に追加
-//   3. 最後の面の外接円が基準面と重なるかをチェック
-//   4. 重なりが検出された場合、部分展開図を出力
-//   5. 冗長または不可能な枝を避けるために枝刈りを適用
+//   1. 基準面の中心が原点、基準辺がx軸正方向に垂直となるように配置する
+//   2. 共有辺を回転軸として、隣接面を再帰的に追加していく
+//   3. パスの最終面の外接円が基準面の外接円と交差するかを逐次判定する
+//   4. 交差が検出された場合、その部分展開図を候補として出力する
+//      （実際には重ならない可能性もあるため、検出後も探索を継続する）
+//   5. 距離および対称性に基づく枝刈りで探索空間を削減する
 //
 // ============================================================================
 class RotationalUnfolding {
@@ -102,27 +119,29 @@ public:
     //
     // Input:
     //   poly              : Reference to the polyhedron structure (immutable)
-    //   base_face         : ID of the base face (placed at origin)
-    //   base_edge         : ID of the base edge (used for the first rotation)
-    //   enable_symmetry   : Whether to enable y-axis symmetry pruning
-    //   y_moved_off_axis  : Initial state of y-movement tracking (usually same as enable_symmetry)
+    //   base_face         : ID of the base face (the face placed on the plane as the starting point)
+    //   base_edge         : ID of the base edge (the edge used as the rotation axis for the first step)
+    //   enable_symmetry   : Whether to enable y-axis symmetry-based pruning
+    //   y_moved_off_axis  : Whether no face center has yet moved away from y=0
+    //                       (used for symmetry pruning; usually same as enable_symmetry)
     //
     // 入力:
     //   poly              : 多面体構造への参照（不変）
-    //   base_face         : 基準面のID（原点に配置）
-    //   base_edge         : 基準辺のID（最初の回転に使用）
-    //   enable_symmetry   : y軸対称性枝刈りを有効にするか
-    //   y_moved_off_axis  : y移動追跡の初期状態（通常は enable_symmetry と同じ）
+    //   base_face         : 基準面のID（展開の起点として平面に置く面）
+    //   base_edge         : 基準辺のID（最初の回転軸となる辺）
+    //   enable_symmetry   : y軸対称性に基づく枝刈りを有効にするか
+    //   y_moved_off_axis  : 面の中心がまだy=0以外の値に移動していないか
+    //                       （対称性枝刈りの判定に使用。通常は enable_symmetry と同じ）
     //
     // Guarantee:
     //   - Initializes the search state
     //   - Does not modify the polyhedron structure
-    //   - No immediate computation; call runRotationalUnfolding to start search
+    //   - Does not start the search; call runRotationalUnfolding to begin
     //
     // 保証:
-    //   - 探索状態を初期化
+    //   - 探索状態を初期化する
     //   - 多面体構造を変更しない
-    //   - 即座の計算は行わない。探索を開始するには runRotationalUnfolding を呼ぶ
+    //   - コンストラクタでは探索を開始しない。探索開始には runRotationalUnfolding を呼ぶ
     //
     // ------------------------------------------------------------------------
     RotationalUnfolding(
@@ -143,47 +162,48 @@ public:
     // ------------------------------------------------------------------------
     //
     // Input:
-    //   jsonl_output : Output stream for JSONL records (one line per candidate unfolding)
+    //   jsonl_output : Output stream for JSONL records
+    //                  (one line per candidate path-shaped partial unfolding)
     //
     // 入力:
-    //   jsonl_output : JSONLレコード用の出力ストリーム（候補展開図ごとに1行）
+    //   jsonl_output : JSONLレコード用の出力ストリーム
+    //                  （候補となるパス状の部分展開図ごとに1行）
     //
     // Output:
-    //   Writes JSONL records to jsonl_output for all candidate partial unfoldings
-    //   found during the search.
+    //   Writes all candidates found during the search as JSONL records
+    //   to jsonl_output.
     //
     // 出力:
-    //   探索中に見つかったすべての候補部分展開図についてJSONLレコードを
+    //   探索中に見つかったすべての候補をJSONLレコードとして
     //   jsonl_output に書き込む。
     //
     // Guarantee:
-    //   - Explores all valid unfolding paths starting from the base face/edge
-    //   - Each output record represents a candidate where the base face and
-    //     the last face's circumradii are close enough to potentially overlap
-    //   - Applies pruning heuristics to reduce search space
+    //   - Explores all constructible paths starting from the base face/edge
+    //   - Each output record represents a partial unfolding where the circumradii
+    //     of the base face and the last face intersect
+    //   - Reduces the search space by distance-based and symmetry-based pruning
     //   - Does not modify the polyhedron structure
     //   - May write zero or more JSONL records depending on the polyhedron
     //
     // 保証:
-    //   - 基準面・辺から始まるすべての有効な展開パスを探索
-    //   - 各出力レコードは、基準面と最後の面の外接円が潜在的に重なるほど
-    //     近い候補を表す
-    //   - 探索空間を削減するために枝刈りヒューリスティクスを適用
+    //   - 基準面・基準辺から始まる、構成可能なすべてのパスを探索する
+    //   - 各出力レコードは、基準面と最終面の外接円が交差する部分展開図を表す
+    //   - 距離および対称性に基づく枝刈りで探索空間を削減する
     //   - 多面体構造を変更しない
-    //   - 多面体に応じて0個以上のJSONLレコードを書き込む可能性がある
+    //   - 多面体に応じて0個以上のJSONLレコードを書き込む
     //
     // ------------------------------------------------------------------------
     void runRotationalUnfolding(std::ostream& jsonl_output) {
 
-        // Initialize face usage tracking (true = unused, false = used)
-        // 面の使用状況追跡を初期化（true = 未使用、false = 使用済み）
+        // Initialize array tracking whether each face is used in the path (true = unused, false = used)
+        // 各面がパスに使用済みかどうかを管理する配列を初期化（true = 未使用、false = 使用済み）
         std::vector<bool> face_usage(polyhedron.num_faces, true);
         face_usage[base_face_id] = false;
 
         partial_unfolding.clear();
 
-        // Add the base face as the first element of the partial unfolding path
-        // 基準面を部分展開図パスの最初の要素として追加
+        // Add the base face as the first element of the path-shaped partial unfolding
+        // 基準面をパス状の部分展開図の最初の要素として追加する
         partial_unfolding.push_back({
             base_face_id,
             polyhedron.gon_list[base_face_id],
@@ -193,12 +213,14 @@ public:
             0.0     // angle: arbitrary for the base face
         });
 
-        // Compute the state of the second face (special case)
-        // 2つ目の面の状態を計算（特別なケース）
+        // Compute the state of the second face
+        // (derived directly from the initial placement, unlike the 3rd face onward which are computed recursively)
+        // 2番目の面の状態を計算する
+        // （基準面の初期配置から直接算出するため、再帰的に計算する3番目以降とは処理が異なる）
         FaceState second_face_state = getSecondFaceState();
 
-        // Start the recursive search
-        // 再帰探索を開始
+        // Start the recursive search from the second face
+        // 2番目の面から再帰探索を開始する
         searchPartialUnfoldings(second_face_state, face_usage, jsonl_output);
     }
 
@@ -207,30 +229,30 @@ private:
     // Private member variables
     // ------------------------------------------------------------------------
 
-    // Polyhedron structure (immutable reference)
-    // 多面体構造（不変参照）
+    // Reference to the polyhedron structure (immutable)
+    // 多面体構造への参照（不変）
     const Polyhedron& polyhedron;
 
-    // ID of the base face (placed at the origin)
-    // 基準面のID（原点に配置）
+    // ID of the base face (the face placed on the plane as the starting point)
+    // 基準面のID（展開の起点として平面に置く面）
     int base_face_id;
 
-    // ID of the base edge (used for the first rotation)
-    // 基準辺のID（最初の回転に使用）
+    // ID of the base edge (the edge used as the rotation axis for the first step)
+    // 基準辺のID（最初の回転軸となる辺）
     int base_edge_id;
 
-    // Flag indicating whether y-axis symmetry pruning is enabled
-    // y軸対称性枝刈りが有効かどうかを示すフラグ
+    // Whether to enable y-axis symmetry-based pruning
+    // y軸対称性に基づく枝刈りを有効にするか
     bool symmetry_enabled;
 
-    // Flag tracking whether any face center has moved off the y-axis
-    // (used only when symmetry_enabled is true)
-    // 任意の面の中心がy軸から外れたかを追跡するフラグ
-    // （symmetry_enabled が true の時にのみ使用）
+    // Whether no face center has yet moved away from y=0
+    // (used for symmetry pruning; usually same as enable_symmetry)
+    // 面の中心がまだy=0以外の値に移動していないか
+    // （対称性枝刈りの判定に使用。通常は enable_symmetry と同じ）
     bool y_moved_off_axis;
 
-    // Current partial unfolding path being explored
-    // 現在探索中の部分展開図パス
+    // Sequence of unfolded faces constituting the current path-shaped partial unfolding
+    // 現在探索中のパス状の部分展開図を構成する展開済みの面の列
     std::vector<UnfoldedFace> partial_unfolding;
 
     // ------------------------------------------------------------------------
@@ -242,29 +264,29 @@ private:
     // ------------------------------------------------------------------------
     //
     // Computes the state of the second face after unfolding around the base edge.
-    // This is a special case because the first rotation is determined by the
-    // base face and base edge placement.
+    // Derived directly from the initial placement, unlike the 3rd face onward
+    // which are computed recursively.
     //
-    // 基準辺の周りを展開した後の2つ目の面の状態を計算する。
-    // 基準面と基準辺の配置によって最初の回転が決定されるため、これは特別なケース。
+    // 基準辺を回転軸として展開した後の2番目の面の状態を計算する。
+    // 基準面の初期配置から直接算出するため、再帰的に計算する3番目以降とは処理が異なる。
     //
     // Guarantee:
-    //   - Returns a valid FaceState for the second face
+    //   - Returns a FaceState containing the ID, coordinates, angle, and symmetry pruning flags for the second face
     //   - The second face is adjacent to the base face via the base edge
-    //   - Positioned such that the base edge is perpendicular to the x-axis
+    //   - The base edge is positioned perpendicular to the x-axis
     //
     // 保証:
-    //   - 2つ目の面について有効な FaceState を返す
-    //   - 2つ目の面は基準辺を介して基準面に隣接している
-    //   - 基準辺がx軸に垂直になるように配置される
+    //   - 2番目の面のID・座標・角度・対称性枝刈りフラグを含む FaceState を返す
+    //   - 2番目の面は基準辺を介して基準面に隣接している
+    //   - 基準辺はx軸に垂直になるように配置される
     //
     // ------------------------------------------------------------------------
     FaceState getSecondFaceState() {
         int base_edge_pos = polyhedron.getEdgeIndex(base_face_id, base_edge_id);
 
-        // Calculate the sum of diameters of circumscribed circles of all
-        // remaining faces (excluding the base face)
-        // すべての残りの面（基準面を除く）の外接円の直径の合計を計算
+        // For distance-based pruning, calculate the sum of diameters of
+        // circumscribed circles of all faces excluding the base face
+        // 距離に基づく枝刈りのために、基準面を除くすべての面の外接円の直径の合計を計算する
         double remaining_distance = 0.0;
         for (int i = 0; i < polyhedron.num_faces; ++i) {
             if (i != base_face_id) {
@@ -278,21 +300,24 @@ private:
         double base_face_inradius = GeometryUtil::inradius(polyhedron.gon_list[base_face_id]);
         double second_face_inradius = GeometryUtil::inradius(polyhedron.gon_list[second_face_id]);
 
-        // Place the base edge perpendicular to the x-axis.
-        // For a regular-faced polyhedron, the second face's center has y = 0,
+        // Place the base edge perpendicular to the positive x-axis.
+        // For a convex regular-faced polyhedron, the second face's center has y = 0,
         // and its x-coordinate is the sum of the inradii of the base and second faces.
         //
-        // 基準辺をx軸に垂直に配置する。
-        // 正多面体の場合、2つ目の面の中心はy = 0であり、
-        // そのx座標は基準面と2つ目の面の内接円半径の合計となる。
+        // 基準辺をx軸正の方向に垂直に配置する。
+        // 整面凸多面体の場合、2番目の面の中心はy = 0であり、
+        // そのx座標は基準面と2番目の面の内接円半径の合計となる。
         double second_face_x = base_face_inradius + second_face_inradius;
         double second_face_y = 0.0;
 
-        // From the center of the second face, the base edge is at -180°,
-        // so the initial angle is set to -180°.
+        // The vector from the center of the second face to the center of the base face
+        // points in the negative x-direction, and the base edge is perpendicular to this vector.
+        // Since angles are measured from the positive x-axis in the range [-180°, 180°],
+        // the initial angle is set to -180°.
         //
-        // 2つ目の面の中心から見て、基準辺は -180° の位置にあるため、
-        // 初期角度は -180° に設定される。
+        // 2番目の面の中心から基準面の中心へ向かうベクトルの方向はx軸負方向であり、
+        // 基準辺はこのベクトルに直交する。
+        // 角度はx軸正方向を0°とし -180°以上180°以下で表すため、初期角度は -180° とする。
         double second_face_angle = -180.0;
 
         return {
