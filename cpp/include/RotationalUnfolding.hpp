@@ -336,20 +336,21 @@ private:
     // backtrackCurrentFace
     // ------------------------------------------------------------------------
     //
-    // Removes the currently added face from the partial unfolding path
+    // Removes the last face from the path-shaped partial unfolding
     // and marks it as unused.
     //
-    // 現在追加された面を部分展開図パスから削除し、未使用にマークする。
+    // パス状の部分展開図の末尾の面を削除し、その面を未使用に戻す。
     //
     // Guarantee:
-    //   - Removes the last face from partial_unfolding
-    //   - Marks current_face_id as unused in face_usage
-    //   - No side effects beyond these modifications
+    //   - Removes the last face from the path-shaped partial unfolding
+    //     (the last face always exists)
+    //   - Reverts the last face's ID (current_face_id) to unused
+    //   - No other modifications are made
     //
     // 保証:
-    //   - partial_unfolding から最後の面を削除
-    //   - face_usage で current_face_id を未使用にマーク
-    //   - これらの変更以外の副作用はない
+    //   - パス状の部分展開図から末尾の面を削除する（末尾の面は必ず存在する）
+    //   - パス状の部分展開図の末尾の面のID（current_face_id）を未使用に戻す
+    //   - 上記以外の変更は行わない
     //
     // ------------------------------------------------------------------------
     void backtrackCurrentFace(int current_face_id,
@@ -362,11 +363,11 @@ private:
     // searchPartialUnfoldings
     // ------------------------------------------------------------------------
     //
-    // Recursively searches for partial unfoldings by adding adjacent faces.
-    // At each step, checks for potential overlaps and applies pruning heuristics.
+    // Recursively searches for path-shaped partial unfoldings by adding adjacent faces one by one.
+    // At each step, checks for potential overlaps and applies pruning to reduce the search space.
     //
-    // 隣接面を追加することで部分展開図を再帰的に探索する。
-    // 各ステップで潜在的な重なりをチェックし、枝刈りヒューリスティクスを適用する。
+    // 隣接する面を順に追加しながらパス状の部分展開図を再帰的に探索する。
+    // 各ステップで重なりの可能性を判定し、枝刈りにより探索空間を削減する。
     //
     // Input:
     //   state        : State of the face to be added

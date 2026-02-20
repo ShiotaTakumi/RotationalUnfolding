@@ -14,8 +14,11 @@
 
 ## 修正済み範囲
 
-- **1〜225行目**: 修正済み（今回の作業以前に完了）
-- **226〜331行目**: 今回の作業で修正済み（privateメンバ変数 + getSecondFaceState）
+- **1〜225行目**: 修正済み（初回の作業で完了）
+- **226〜331行目**: 修正済み（privateメンバ変数 + getSecondFaceState）
+- **335〜359行目**: 修正済み（backtrackCurrentFace）
+- **362〜370行目**: 修正済み（searchPartialUnfoldings 説明）
+- **377〜380行目**: 承認済み・未適用（searchPartialUnfoldings 入力）
 
 ## 今回の修正内容（226〜331行目）
 
@@ -74,15 +77,41 @@
 - **英語**: 同様に4行に拡充
 - **理由**: 角度の定義が不明確だった。基準辺とベクトルの関係も明記
 
+## 今回の修正内容（335〜359行目）
+
+### コメント箇所 12: 339-342行目（backtrackCurrentFace 説明）
+- **日本語**: `現在追加された面をバックトラックし、未使用に戻す` → `パス状の部分展開図の末尾の面を削除し、その面を未使用に戻す。`
+- **英語**: `Backtracks the currently added face and marks it as unused` → `Removes the last face from the path-shaped partial unfolding and marks it as unused.`
+- **理由**: 「現在」が曖昧。プログラムの処理内容に即して具体的に記述
+
+### コメント箇所 13: 344-352行目（backtrackCurrentFace 保証）
+- **日本語**:
+  - `partial_unfolding から最後の面を削除` → `パス状の部分展開図から末尾の面を削除する（末尾の面は必ず存在する）`
+  - `face_usage で current_face_id を未使用にマーク` → `パス状の部分展開図の末尾の面のID（current_face_id）を未使用に戻す`
+  - `これらの変更以外の副作用はない` → `上記以外の変更は行わない`
+- **英語**:
+  - `Removes the last face from partial_unfolding` → `Removes the last face from the path-shaped partial unfolding (the last face always exists)`
+  - `Marks current_face_id as unused in face_usage` → `Reverts the last face's ID (current_face_id) to unused`
+  - `No side effects beyond these modifications` → `No other modifications are made`
+- **理由**: 変数名をそのまま使わず日本語で記述。末尾の面が必ず存在する前提を明示。「副作用」を避け平易な表現に統一
+
+## 今回の修正内容（362〜行目）
+
+### コメント箇所 14: 366-370行目（searchPartialUnfoldings 説明）
+- **日本語**: `隣接面を追加することで部分展開図を再帰的に探索する。/ 各ステップで潜在的な重なりをチェックし、枝刈りヒューリスティクスを適用する。` → `隣接する面を順に追加しながらパス状の部分展開図を再帰的に探索する。/ 各ステップで重なりの可能性を判定し、枝刈りにより探索空間を削減する。`
+- **英語**: `Recursively searches for partial unfoldings by adding adjacent faces. / At each step, checks for potential overlaps and applies pruning heuristics.` → `Recursively searches for path-shaped partial unfoldings by adding adjacent faces one by one. / At each step, checks for potential overlaps and applies pruning to reduce the search space.`
+- **理由**: 「パス状の部分展開図」で用語統一。「枝刈りヒューリスティクス」→「枝刈り」に簡潔化。探索空間の削減を明示
+
+### コメント箇所 15: 377-380行目（searchPartialUnfoldings 入力）— 日英承認済み・未適用
+- **日本語**: `追加する面の状態` → `パス状の部分展開図に次に追加する面の状態（面番号・座標・角度・残距離・対称性枝刈りフラグ）`。`すでに使用された面を追跡（その場で変更）` → `各面が使用済みかどうかを管理する配列（true = 未使用、false = 使用済み）`
+- **英語**: `State of the face to be added` → `State of the face to be added next to the path-shaped partial unfolding (face number, coordinates, angle, remaining distance, symmetry pruning flags)`。`Tracks which faces are already used (modified in-place)` → `Array tracking whether each face is used (true = unused, false = used)`
+- **理由**: FaceState の具体的内容を明示。face_usage は199行目の初期化コメントと統一。jsonl_output は変更なし
+
 ## 次回の再開箇所
 
-**335行目の `backtrackCurrentFace` から再開する。**
-
-```
-    // ------------------------------------------------------------------------
-    // backtrackCurrentFace
-    // ------------------------------------------------------------------------
-```
+**コメント箇所15の適用から再開する。**
+日英ともに承認済みだが、ファイルへの適用がまだ。
+適用後、searchPartialUnfoldings の保証セクション（382-392行目）に進む。
 
 ## コミットメッセージ（提案済み・未コミット）
 
